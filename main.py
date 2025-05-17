@@ -6,7 +6,7 @@ from common import (
 app = FastAPI()
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def index():
     return {"message": "License Server is live"}
 
