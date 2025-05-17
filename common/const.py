@@ -1,0 +1,11 @@
+CHARSET        = r"UTF-8"
+READ_KEY_MODE  = r"rb"
+BOOKS_DIR      = r"books"
+
+KEYS_DIR       = r"keys"
+APP_FX         = r"framix"
+APP_MX         = r"memrix"
+FX_PRIVATE_KEY = f"{APP_FX}_private_key.pem"
+MX_PRIVATE_KEY = f"{APP_MX}_private_key.pem"
+FX_CODES       = f"{APP_FX}_codes.json"
+MX_CODES       = f"{APP_MX}_codes.json"
