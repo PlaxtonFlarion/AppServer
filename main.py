@@ -18,13 +18,13 @@ async def status():
 
 @app.post(f"/sign/{const.APP_FX}")
 async def sign_fx(req: "utils.LicenseRequest"):
-    key_code = const.FX_CODES, const.FX_PRIVATE_KEY
+    key_code = const.APP_FX_DESC, const.FX_PRIVATE_KEY
     return utils.handle_signature(req, *key_code)
 
 
 @app.post(f"/sign/{const.APP_MX}")
 async def sign_mx(req: "utils.LicenseRequest"):
-    key_code = const.MX_CODES, const.MX_PRIVATE_KEY
+    key_code = const.APP_MX_DESC, const.MX_PRIVATE_KEY
     return utils.handle_signature(req, *key_code)
 
 
