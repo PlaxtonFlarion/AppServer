@@ -3,11 +3,8 @@ import httpx
 import typing
 import string
 import secrets
-from pathlib import Path
-from dotenv import load_dotenv
 from common import const
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 supabase_url = os.getenv(const.SUPABASE_URL)
 supabase_key = os.getenv(const.SUPABASE_KEY)
 

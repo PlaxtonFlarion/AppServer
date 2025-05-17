@@ -8,3 +8,7 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
+      - key: SUPABASE_URL
+        value: https://tyhcdhwxupgkaoekzgin.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aGNkaHd4dXBna2FvZWt6Z2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc1MDA3NzQsImV4cCI6MjA2MzA3Njc3NH0.PfhEsUalf3oMPJ2Z-4iaFtSJgMC9c62Yh2N5X8Gv1IM
