@@ -9,7 +9,7 @@ from common import (
     const, signature
 )
 
-DISKS: "Path" = Path("mnt", "data")
+JOB_DIR: "Path" = Path(__file__).resolve().parent.parent
 
 
 class LicenseRequest(BaseModel):
@@ -19,18 +19,18 @@ class LicenseRequest(BaseModel):
 
 def load_codes(code_file: str) -> typing.Any:
     codes = json.load(open(
-        DISKS / const.BOOKS_DIR / code_file, encoding=const.CHARSET
+        JOB_DIR / const.BOOKS_DIR / code_file, encoding=const.CHARSET
     ))
     return codes
 
 
 def save_codes(dst: typing.Any, code_file: str) -> None:
-    code_store = DISKS / const.BOOKS_DIR / code_file
+    code_store = JOB_DIR / const.BOOKS_DIR / code_file
     json.dump(dst, open(code_store, "w", encoding=const.CHARSET), indent=2)
 
 
 def load_private_key(key_file: str) -> typing.Any:
-    private_key_path = DISKS / const.KEYS_DIR / key_file
+    private_key_path = JOB_DIR / const.KEYS_DIR / key_file
     with open(private_key_path, const.READ_KEY_MODE) as f:
         return serialization.load_pem_private_key(f.read(), password=None)
 
