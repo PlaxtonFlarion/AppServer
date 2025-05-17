@@ -6,6 +6,16 @@ from common import (
 app = FastAPI()
 
 
+@app.get("/")
+async def index():
+    return {"message": "License Server is live"}
+
+
+@app.get("/status")
+async def status():
+    return {"ok": True}
+
+
 @app.post(f"/sign/{const.APP_FX}")
 async def sign_fx(req: "utils.LicenseRequest"):
     key_code = const.FX_CODES, const.FX_PRIVATE_KEY
