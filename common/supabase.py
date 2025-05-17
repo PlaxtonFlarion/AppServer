@@ -3,8 +3,11 @@ import httpx
 import typing
 import string
 import secrets
+from pathlib import Path
+from dotenv import load_dotenv
 from common import const
 
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 supabase_url = os.getenv(const.SUPABASE_URL)
 supabase_key = os.getenv(const.SUPABASE_KEY)
 
@@ -15,10 +18,10 @@ HEADERS = {
 }
 
 
-def generate_secure_code(prefix: str) -> str:
+def generate_secure_code(app: str) -> str:
     chars = string.ascii_uppercase + string.digits
     core = ''.join(secrets.choice(chars) for _ in range(24))
-    return f"{prefix}-{core[:8]}-{core[8:16]}-{core[16:]}"
+    return f"{app}-{core[:8]}-{core[8:16]}-{core[16:]}"
 
 
 def generate_and_upload(count: int, app: str, expire: str) -> None:
@@ -32,7 +35,7 @@ def upload_code_to_supabase(code: str, app: str, expire: str) -> None:
     json = {
         "code": code,
         "app": app,
-        "expires_at": expire,
+        "expire": expire,
         "is_used": False
     }
     response = httpx.post(url, headers=HEADERS, json=json)
