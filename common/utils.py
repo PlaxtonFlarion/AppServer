@@ -27,10 +27,13 @@ def handle_signature(req: "LicenseRequest", app: str, key_file: str) -> dict:
     if not codes:
         raise HTTPException(403, f"[!]通行证无效 -> {code}")
 
-    castle = req.castle
+    if codes["is_revoked"]:
+        raise HTTPException(403, f"[!]通行证已被吊销，请重新申请 ...")
 
-    if codes["is_used"] and (other := codes["castle"]) != castle:
-        raise HTTPException(403, f"[!]通行证已绑定其他设备 -> {other}")
+    cur_castle = req.castle
+
+    if codes["is_used"] and (pre_castle := codes["castle"]) != cur_castle:
+        raise HTTPException(403, f"[!]通行证已绑定其他设备 -> {pre_castle}")
 
     # 若已有其他进程 pending 此激活码，拒绝
     if codes.get("pending", False):
@@ -43,13 +46,13 @@ def handle_signature(req: "LicenseRequest", app: str, key_file: str) -> dict:
     try:
         # 使用私钥签发 LIC 文件内容
         license_data = signature.generate_license(
-            code, castle, codes["expire"], key_file
+            code, cur_castle, codes["expire"], key_file
         )
     except Exception as e:
         supabase.clear_code_pending(code, app)
         raise HTTPException(400, f"[!]授权失败，请稍后重试 -> {e}")
 
-    supabase.update_activation_status(code, app, castle)
+    supabase.update_activation_status(code, app, cur_castle)
     supabase.clear_code_pending(code, app)
 
     return license_data
