@@ -1,3 +1,10 @@
+#   __  __       _
+#  |  \/  | __ _(_)_ __
+#  | |\/| |/ _` | | '_ \
+#  | |  | | (_| | | | | |
+#  |_|  |_|\__,_|_|_| |_|
+#
+
 from fastapi import FastAPI
 from common import (
     utils, const
@@ -16,16 +23,14 @@ async def status():
     return {"ok": True}
 
 
-@app.post(f"/sign/{const.APP_FX}")
+@app.post(f"/sign/{const.APP_FX['app']}")
 async def sign_fx(req: "utils.LicenseRequest"):
-    key_code = const.APP_FX_DESC, const.FX_PRIVATE_KEY
-    return utils.handle_signature(req, *key_code)
+    return utils.handle_signature(req, const.APP_FX)
 
 
-@app.post(f"/sign/{const.APP_MX}")
+@app.post(f"/sign/{const.APP_MX['app']}")
 async def sign_mx(req: "utils.LicenseRequest"):
-    key_code = const.APP_MX_DESC, const.MX_PRIVATE_KEY
-    return utils.handle_signature(req, *key_code)
+    return utils.handle_signature(req, const.APP_MX)
 
 
 if __name__ == '__main__':
