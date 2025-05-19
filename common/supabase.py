@@ -10,6 +10,7 @@ import os
 import httpx
 import typing
 import string
+import hashlib
 import secrets
 from pathlib import Path
 from dotenv import load_dotenv
@@ -73,6 +74,11 @@ class Supabase(object):
         except Exception as e:
             return print(f"❌ 回写失败: {e}")
 
+    def increment_activation_count(self, count: int) -> bool:
+        json = {"activations": count}
+        response = httpx.patch(self.__url, headers=HEADERS, params=self.__params, json=json)
+        return response.status_code == 204
+
     def mark_code_pending(self) -> bool:
         json = {"pending": True}
         headers = HEADERS | {"Prefer": "return=minimal"}
@@ -87,6 +93,10 @@ class Supabase(object):
         httpx.patch(
             self.__url, headers=headers, params=self.__params, json=json
         )
+
+    def generate_license_id(self, issued_at: str) -> str:
+        raw = f"{self.app}:{self.code}:{issued_at}".encode(const.CHARSET)
+        return hashlib.sha256(raw).hexdigest()
 
     def upload_code(self, secure_code:str, expire: str) -> None:
         json = {

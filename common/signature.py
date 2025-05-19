@@ -8,19 +8,42 @@
 
 import json
 import base64
-from cryptography.hazmat.primitives import hashes
+import typing
+from pathlib import Path
+from cryptography.hazmat.primitives import (
+    hashes, serialization
+)
 from cryptography.hazmat.primitives.asymmetric import padding
-from common import utils
+from common import const
+
+JOB_DIR: "Path" = Path(__file__).resolve().parents[1]
 
 
-def generate_license(code: str, castle: str, expire: str, issued:str, key_file: str) -> dict:
-    private_key = utils.load_private_key(key_file)
+def load_private_key(key_file: str) -> typing.Any:
+    private_key_path = JOB_DIR / const.KEYS_DIR / key_file
+    with open(private_key_path, const.READ_KEY_MODE) as f:
+        return serialization.load_pem_private_key(f.read(), password=None)
+
+
+def generate_license(
+        code: str,
+        castle: str,
+        expire: str,
+        issued:str,
+        issued_at:str,
+        license_id: str,
+        key_file: str
+) -> dict:
+
+    private_key = load_private_key(key_file)
 
     license_info = {
         "code": code.strip(),
         "castle": castle,
         "expire": expire,
         "issued": issued,
+        "issued_at": issued_at,
+        "license_id": license_id
     }
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
 
@@ -28,21 +51,6 @@ def generate_license(code: str, castle: str, expire: str, issued:str, key_file: 
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
 
-    """
-    授权包结构如下：
-    {
-        "data": "<base64编码后的授权明文>",
-        "signature": "<base64编码后的签名>"
-    }
-    
-    其中 data 解码后格式为：
-    {
-        "code": "激活码",
-        "castle": "机器唯一标识码",
-        "expire": "授权到期时间，如 2025-12-31",
-        "issued": "授权签发时间，如 2025-05-18T03:45:00.123456+00:00"
-    }
-    """
     return {
         "data": base64.b64encode(message_bytes).decode(),
         "signature": base64.b64encode(signature).decode()
