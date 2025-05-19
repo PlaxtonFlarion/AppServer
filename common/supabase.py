@@ -19,10 +19,11 @@ from common import const
 # 判断是否是本地开发环境（存在 .env 文件）
 if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
     load_dotenv(env_path)
-
-# 加载 Supabase 配置
-supabase_url = os.getenv(const.SUPABASE_URL)
-supabase_key = os.getenv(const.SUPABASE_KEY)
+    supabase_url = os.getenv(const.SUPABASE_URL)
+    supabase_key = os.getenv(const.SUPABASE_KEY)
+else:
+    supabase_url = Path("etc") / "secrets" / const.SUPABASE_URL
+    supabase_key = Path("etc") / "secrets" / const.SUPABASE_KEY
 
 # 校验是否正确加载
 if not supabase_url or not supabase_key:

@@ -16,12 +16,16 @@ from cryptography.hazmat.primitives import (
 from cryptography.hazmat.primitives.asymmetric import padding
 from common import const
 
-JOB_DIR: "Path" = Path(__file__).resolve().parents[1]
-
 
 def load_private_key(key_file: str) -> typing.Any:
-    private_key_path = JOB_DIR / const.KEYS_DIR / key_file
-    with open(private_key_path, const.READ_KEY_MODE) as f:
+
+    def resolve_key_path() -> "Path":
+        if (is_render := Path("etc") / "secrets").exists():
+            return is_render / key_file
+        else:
+            return Path(__file__).resolve().parents[1] / const.KEYS_DIR / key_file
+
+    with open(resolve_key_path(), const.READ_KEY_MODE) as f:
         return serialization.load_pem_private_key(f.read(), password=None)
 
 
