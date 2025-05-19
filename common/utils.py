@@ -61,15 +61,13 @@ def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
         else:
             issued_at, license_id = issued, sup.generate_license_id(issued)
             sup.update_activation_status(
-                **{"castle": cur_castle, "is_used": True,
+                **{"castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1,
                    "issued": issued, "issued_at": issued, "license_id": license_id}
             )
 
         license_data = signature.generate_license(
             code, cur_castle, codes["expire"], issued, issued_at, license_id, apps["private_key"]
         )
-
-        sup.increment_activation_count(codes["activations"] + 1)
 
     except Exception as e:
         raise HTTPException(400, f"[!]授权失败，请稍后重试 -> {e}")
