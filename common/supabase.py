@@ -74,11 +74,6 @@ class Supabase(object):
         except Exception as e:
             return print(f"❌ 回写失败: {e}")
 
-    def increment_activation_count(self, count: int) -> bool:
-        json = {"activations": count}
-        response = httpx.patch(self.__url, headers=HEADERS, params=self.__params, json=json)
-        return response.status_code == 204
-
     def mark_code_pending(self) -> bool:
         json = {"pending": True}
         headers = HEADERS | {"Prefer": "return=minimal"}

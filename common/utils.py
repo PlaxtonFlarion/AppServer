@@ -56,14 +56,18 @@ def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
             if cur_license_id == pre_license_id:
                 sup.update_activation_status(**{"issued": issued})
             else:
-                sup.update_activation_status(**{"issued": issued, "issued_at": issued})
+                sup.update_activation_status(**{
+                    "issued": issued, "issued_at": issued, "license_id": license_id,
+                    "activations": codes["activations"] + 1
+                })
 
         else:
             issued_at, license_id = issued, sup.generate_license_id(issued)
-            sup.update_activation_status(
-                **{"castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1,
-                   "issued": issued, "issued_at": issued, "license_id": license_id}
-            )
+            sup.update_activation_status(**{
+                "castle": cur_castle, "is_used": True,
+                "issued": issued, "issued_at": issued, "license_id": license_id,
+                "activations": codes["activations"] + 1
+            })
 
         license_data = signature.generate_license(
             code, cur_castle, codes["expire"], issued, issued_at, license_id, apps["private_key"]
