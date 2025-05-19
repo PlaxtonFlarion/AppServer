@@ -20,7 +20,7 @@ from common import const
 def load_private_key(key_file: str) -> typing.Any:
 
     def resolve_key_path() -> "Path":
-        if (is_render := Path("etc", "secrets")).exists():
+        if (is_render := Path("/etc/secrets")).exists():
             return is_render / key_file
         else:
             return Path(__file__).resolve().parents[1] / const.KEYS_DIR / key_file
