@@ -19,7 +19,7 @@ from common import (
 class LicenseRequest(BaseModel):
     code: str
     castle: str
-    license_id: typing.Optional[str] = None
+    license_id: str
 
 
 def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
