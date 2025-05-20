@@ -22,8 +22,8 @@ if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
     supabase_url = os.getenv(const.SUPABASE_URL)
     supabase_key = os.getenv(const.SUPABASE_KEY)
 else:
-    supabase_url = Path("/etc/secrets", const.SUPABASE_URL).read_text().strip()
-    supabase_key = Path("/etc/secrets", const.SUPABASE_KEY).read_text().strip()
+    supabase_url = f"/etc/secrets/{const.SUPABASE_URL}".strip()
+    supabase_key = f"/etc/secrets/{const.SUPABASE_KEY}".strip()
 
 # 校验是否正确加载
 if not supabase_url or not supabase_key:
