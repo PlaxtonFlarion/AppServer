@@ -54,19 +54,7 @@ class Supabase(object):
         )
         return data[0] if (data := response.json()) else None
 
-    def update_activation_status(self, *_, **kwargs) -> typing.Optional[bool]:
-        try:
-            response = httpx.patch(
-                self.__url, headers=HEADERS, params=self.__params, json=kwargs
-            )
-            return response.status_code == 204
-        except Exception as e:
-            return print(f"❌ 回写失败: {e}")
-
-    def update_first_status(self, castle: str, issued: str, issued_at: str) -> typing.Optional[bool]:
-        json = {
-            "castle": castle, "is_used": True, "issued": issued, "issued_at": issued_at
-        }
+    def update_activation_status(self, json: dict, *_, **__) -> typing.Optional[bool]:
         try:
             response = httpx.patch(
                 self.__url, headers=HEADERS, params=self.__params, json=json
