@@ -23,6 +23,11 @@ async def status():
     return {"ok": True}
 
 
+@app.get("/ping")
+async def ping():
+    return {"status": "ok"}
+
+
 @app.post(f"/sign/{const.APP_FX['app']}")
 async def sign_fx(req: "utils.LicenseRequest"):
     return utils.handle_signature(req, const.APP_FX)
