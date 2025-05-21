@@ -5,6 +5,7 @@
 #  |_|  |_|\__,_|_|_| |_|
 #
 
+import asyncio
 from fastapi import FastAPI
 from common import (
     utils, const
@@ -25,7 +26,17 @@ async def status():
 
 @app.get("/ping")
 async def ping():
-    return {"status": "ok"}
+    # 模拟 CPU 占用
+    _ = sum(i * i for i in range(10000))
+
+    # 模拟 IO 操作（假装读取某配置）
+    asyncio.sleep(0.5)  # 延迟 0.5 秒
+
+    return {
+        "status": "pong",
+        "timestamp": time.time(),
+        "uptime_check": True
+    }
 
 
 @app.post(f"/sign/{const.APP_FX['app']}")
