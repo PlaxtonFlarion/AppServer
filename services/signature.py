@@ -95,9 +95,9 @@ def decrypt_data(data: str) -> str:
     return json.loads(decrypted_app_id)
 
 
-def verify_signature(x_app_id: str, x_app_token: str, public_key_path: str) -> dict:
+def verify_signature(x_app_token: str, public_key_path: str) -> dict:
     try:
-        _, app_token = x_app_id, json.loads(
+        app_token = json.loads(
             base64.b64decode(x_app_token).decode(const.CHARSET)
         )
         data = base64.b64decode(app_token["data"])
@@ -206,5 +206,4 @@ def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
 
 
 if __name__ == '__main__':
-    print(generate_x_app_token("Framix@1.0.0", "framix_private_key.pem"))
     pass
