@@ -32,7 +32,6 @@ async def cron_reset():
     return {"status": "cron jobs reset"}
 
 
-
 @app.get("/keep-alive")
 async def keep_alive():
     # 模拟密集 CPU 运算（素数计算）
