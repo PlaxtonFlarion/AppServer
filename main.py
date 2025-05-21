@@ -8,6 +8,7 @@
 import time
 import asyncio
 from fastapi import FastAPI
+from services import cron_job
 from common import (
     utils, const
 )
@@ -25,8 +26,15 @@ async def status():
     return {"ok": True}
 
 
-@app.get("/ping")
-async def ping():
+@app.get("/cron-reset")
+async def cron_reset():
+    await cron_job.reset_cron_jobs()
+    return {"status": "cron jobs reset"}
+
+
+
+@app.get("/keep-alive")
+async def keep_alive():
     # 模拟密集 CPU 运算（素数计算）
     def cpu_heavy_work():
         primes = []
