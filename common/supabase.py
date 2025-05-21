@@ -9,104 +9,69 @@
 import os
 import httpx
 import typing
-import string
-import hashlib
-import secrets
+from faker import Faker
 from pathlib import Path
 from dotenv import load_dotenv
-from common import const
 
-# 判断是否是本地开发环境（存在 .env 文件）
+fake = Faker()
+
 if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
     load_dotenv(env_path)
-    supabase_url = os.getenv(const.SUPABASE_URL)
-    supabase_key = os.getenv(const.SUPABASE_KEY)
+    cron_job_url = os.getenv(const.CRON_JOB_URL)
+    cron_job_key = os.getenv(const.CRON_JOB_KEY)
 else:
-    # supabase_url = f"/etc/secrets/{const.SUPABASE_URL}".strip()
-    # supabase_key = f"/etc/secrets/{const.SUPABASE_KEY}".strip()
-    supabase_url = Path("/etc/secrets", const.SUPABASE_URL).read_text().strip()
-    supabase_key = Path("/etc/secrets", const.SUPABASE_KEY).read_text().strip()
+    cron_job_url = Path("/etc/secrets", const.CRON_JOB_URL).read_text().strip()
+    cron_job_key = Path("/etc/secrets", const.CRON_JOB_KEY).read_text().strip()
 
 # 校验是否正确加载
-if not supabase_url or not supabase_key:
+if not cron_job_url or not cron_job_key:
     raise EnvironmentError("环境变量未正确加载，请检查 .env 或 Render 配置。")
 
 HEADERS = {
-    "apikey": supabase_key,
-    "Authorization": f"Bearer {supabase_key}",
-    "Content-Type": "application/json"
+    "Authorization": f"Bearer {cron_job_key}", "Content-Type": "application/json"
 }
 
+fake.user_agent()
 
-class Supabase(object):
 
-    def __init__(self, app: str, code: str, table: str):
-        self.app = app.capitalize()  # Notes: 首字母大写
-        self.code = code
-        self.table = table
+async def send(
+        client: "httpx.AsyncClient", method: str, url: str, *args, **kwargs
+) -> typing.Union["httpx.Response", None]:
 
-        self.__url = f"{supabase_url}/rest/v1/{self.table}"
-        self.__params = {
-            "app": "eq." + self.app, "code": "eq." + self.code
-        }
+    try:
+        return await client.request(method, url, *args, **kwargs)
+    except Exception as e:
+        print(f"❌ 请求失败: {e}")
 
-    def fetch_activation_code(self) -> dict | None:
-        response = httpx.get(
-            self.__url, headers=HEADERS, params=self.__params
-        )
-        return data[0] if (data := response.json()) else None
 
-    def update_activation_status(self, json: dict, *_, **__) -> typing.Optional[bool]:
-        try:
-            response = httpx.patch(
-                self.__url, headers=HEADERS, params=self.__params, json=json
-            )
-            return response.status_code == 204
-        except Exception as e:
-            return print(f"❌ 回写失败: {e}")
+async def update_keep_alive_jobs(client: "httpx.AsyncClient"):
+    response = await send(client, "get", f"{cron_job_url}/jobs")
 
-    def mark_code_pending(self) -> bool:
-        json = {"pending": True}
-        headers = HEADERS | {"Prefer": "return=minimal"}
-        response = httpx.patch(
-            self.__url, headers=headers, params=self.__params, json=json
-        )
-        return response.status_code == 204
+    for job in [job for job in response.json()["jobs"] if job["folderId"] == 47245]:
 
-    def wash_code_pending(self) -> None:
-        json = {"pending": False}
-        headers = HEADERS | {"Prefer": "return=minimal"}
-        httpx.patch(
-            self.__url, headers=headers, params=self.__params, json=json
-        )
-
-    def generate_license_id(self, issued_at: str) -> str:
-        raw = f"{self.app}:{self.code}:{issued_at}".encode(const.CHARSET)
-        return hashlib.sha256(raw).hexdigest()
-
-    def upload_code(self, secure_code:str, expire: str) -> None:
         json = {
-            "app": self.app,
-            "code": secure_code,
-            "expire": expire,
-            "is_used": False
+            "job": {
+                "folderId": 47245,
+                'schedule': {
+                    'timezone': fake.timezone(),
+                },
+                "extendedData": {
+                    "headers": {
+                        "User-Agent": fake.user_agent(),
+                    }
+                }
+            }
         }
-        response = httpx.post(self.__url, headers=HEADERS, json=json)
-        if response.status_code not in (200, 201):
-            print(f"❌ 插入失败: {secure_code} -> {response.status_code}: {response.text}")
-        else:
-            print(f"✅ 成功插入: {secure_code}")
-
-    def generate_and_upload(self, count: int, expire: str) -> None:
-
-        def secure_code() -> str:
-            chars = string.ascii_uppercase + string.digits
-            core = ''.join(secrets.choice(chars) for _ in range(36))
-            return f"{self.app}-Key-{core[:8]}-{core[8:16]}-{core[16:]}"
-
-        for _ in range(count):
-            self.upload_code(secure_code(), expire)
+        resp = await send(
+            client, "patch", f"{cron_job_url}/jobs/{(job_id := job['jobId'])}", json=json
+        )
+        print(f"update {job_id} -> [{resp.status_code}]")
 
 
-if __name__ == "__main__":
+async def update_cron_jobs():
+    async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
+        await update_keep_alive_jobs(client)
+
+
+if __name__ == '__main__':
     pass
