@@ -32,8 +32,8 @@ async def cron_reset():
     return {"status": "cron jobs reset"}
 
 
-@app.get("/keep-alive")
-async def keep_alive():
+@app.get("/keep-render-alive")
+async def keep_render_alive():
     # 模拟密集 CPU 运算（素数计算）
     def cpu_heavy_work():
         primes = []
