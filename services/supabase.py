@@ -6,28 +6,18 @@
 #              |_|
 #
 
-import os
 import httpx
 import typing
 import string
 import hashlib
 import secrets
-from pathlib import Path
-from dotenv import load_dotenv
-from common import const
+from common import (
+    utils, const
+)
 
-# 判断是否是本地开发环境（存在 .env 文件）
-if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
-    load_dotenv(env_path)
-    supabase_url = os.getenv(const.SUPABASE_URL)
-    supabase_key = os.getenv(const.SUPABASE_KEY)
-else:
-    supabase_url = f"/etc/secrets/{const.SUPABASE_URL}".strip()
-    supabase_key = f"/etc/secrets/{const.SUPABASE_KEY}".strip()
-
-# 校验是否正确加载
-if not supabase_url or not supabase_key:
-    raise EnvironmentError("环境变量未正确加载，请检查 .env 或 Render 配置。")
+supabase_url, supabase_key = utils.current_env(
+    const.SUPABASE_URL, const.SUPABASE_KEY
+)
 
 HEADERS = {
     "apikey": supabase_key,

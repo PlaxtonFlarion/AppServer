@@ -1,0 +1,210 @@
+#   ____  _                   _
+#  / ___|(_) __ _ _ __   __ _| |_ _   _ _ __ ___
+#  \___ \| |/ _` | '_ \ / _` | __| | | | '__/ _ \
+#   ___) | | (_| | | | | (_| | |_| |_| | | |  __/
+#  |____/|_|\__, |_| |_|\__,_|\__|\__,_|_|  \___|
+#           |___/
+#
+
+import json
+import time
+import base64
+import typing
+import secrets
+from pathlib import Path
+from datetime import (
+    datetime, timezone
+)
+from cryptography.hazmat.primitives import (
+    hashes, serialization
+)
+from cryptography.hazmat.primitives.asymmetric import (
+    padding, rsa
+)
+from pydantic import BaseModel
+from fastapi import HTTPException
+from services import supabase
+from common import const
+
+
+class LicenseRequest(BaseModel):
+    code: str
+    castle: str
+    license_id: typing.Optional[str] = None
+
+
+def load_private_key(key_file: str) -> typing.Any:
+    if (is_render := Path("/etc/secrets")).exists():
+        resolve_key_path = is_render / key_file
+    else:
+        resolve_key_path = Path(__file__).resolve().parents[1] / const.KEYS_DIR / key_file
+
+    with open(resolve_key_path, const.READ_KEY_MODE) as f:
+        return serialization.load_pem_private_key(f.read(), password=None)
+
+
+def generate_keys() -> None:
+    (key_folder := Path(__file__).resolve().parents[1] / const.KEYS_DIR).mkdir(exist_ok=True)
+
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    public_key = private_key.public_key()
+
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    (key_folder / const.APP_PRIVATE_KEY).write_bytes(private_pem)
+
+    public_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    (key_folder / const.APP_PUBLIC_KEY).write_bytes(public_pem)
+
+    return print(f"✓ 密钥已生成 -> {key_folder}")
+
+
+def generate_x_app_token(app: str, key_file: str) -> str:
+    private_key = load_private_key(key_file)
+
+    payload = {
+        "a": app, "t": int(time.time()), "n": secrets.token_hex(8)
+    }
+
+    message_bytes = json.dumps(payload, separators=(",", ":")).encode(const.CHARSET)
+
+    signature = private_key.sign(
+        message_bytes, padding.PKCS1v15(), hashes.SHA256()
+    )
+
+    token = {
+        "data": base64.b64encode(message_bytes).decode(),
+        "signature": base64.b64encode(signature).decode()
+    }
+
+    return base64.b64encode(json.dumps(token).encode()).decode()
+
+
+def decrypt_data(data: str) -> str:
+    private_key = load_private_key("framix_private_key.pem")
+
+    decrypted_app_id = private_key.decrypt(
+        base64.b64decode(data), padding.PKCS1v15()
+    )
+    return json.loads(decrypted_app_id)
+
+
+def verify_signature(x_app_id: str, x_app_token: str, public_key_path: str) -> dict:
+    try:
+        _, app_token = x_app_id, json.loads(
+            base64.b64decode(x_app_token).decode(const.CHARSET)
+        )
+        data = base64.b64decode(app_token["data"])
+        signature = base64.b64decode(app_token["signature"])
+
+        public_key = serialization.load_pem_public_key(open(public_key_path, "rb").read())
+
+        public_key.verify(
+            signature, data, padding.PKCS1v15(), hashes.SHA256()
+        )
+    except Exception:
+        raise HTTPException(403, f"签名无效")
+
+    return json.loads(data)
+
+
+def generate_license(
+        code: str,
+        castle: str,
+        expire: str,
+        issued:str,
+        issued_at:str,
+        license_id: str,
+        key_file: str
+) -> dict:
+
+    private_key = load_private_key(key_file)
+
+    license_info = {
+        "code": code.strip(),
+        "castle": castle,
+        "expire": expire,
+        "issued": issued,
+        "issued_at": issued_at,
+        "license_id": license_id
+    }
+    message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
+
+    signature = private_key.sign(
+        message_bytes, padding.PKCS1v15(), hashes.SHA256()
+    )
+
+    return {
+        "data": base64.b64encode(message_bytes).decode(),
+        "signature": base64.b64encode(signature).decode()
+    }
+
+
+def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
+    sup = supabase.Supabase(
+        apps["app"], code := req.code, apps["table"]["license"]
+    )
+
+    # 查询所有通行证记录
+    codes = sup.fetch_activation_code()
+    if not codes:
+        raise HTTPException(403, f"[!]通行证无效")
+
+    # 查询最大激活次数
+    if codes["activations"] >= codes["max_activations"]:
+        raise HTTPException(403, f"[!]超过最大激活次数")
+
+    # 查询通行证是否吊销
+    if codes["is_revoked"]:
+        raise HTTPException(403, f"[!]通行证已被吊销")
+
+    # 若已有其他进程 pending 此通行证，拒绝
+    if codes["pending"]:
+        raise HTTPException(423, f"[!]授权正在处理中")
+
+    pre_castle, cur_castle= codes["castle"], req.castle
+
+    try:
+        sup.mark_code_pending()  # pending 正在处理授权请求
+
+        # 本次授权请求签发时间
+        payload = {
+            "issued": (issued := datetime.now(timezone.utc).isoformat())
+        }
+
+        pre_license_id = codes["license_id"]
+
+        # 用户重复激活，同设备联网检查通行证状态
+        if codes["is_used"] and cur_castle == pre_castle and req.license_id == pre_license_id:
+            issued_at, license_id = codes["issued_at"], pre_license_id
+        else:
+            issued_at, license_id = issued, sup.generate_license_id(issued)
+            payload.update({
+                "castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1
+            })
+
+        license_data = generate_license(
+            code, cur_castle, codes["expire"], issued, issued_at, license_id, apps["private_key"]
+        )
+
+        sup.update_activation_status(payload | {"issued_at": issued_at, "license_id": license_id})
+
+    except Exception as e:
+        raise HTTPException(400, f"[!]授权失败，请稍后重试 -> {e}")
+
+    else:
+        return license_data
+
+    finally:
+        sup.wash_code_pending()  # 清除 pending 状态
+
+
+if __name__ == '__main__':
+    print(generate_x_app_token("Framix@1.0.0", "framix_private_key.pem"))
+    pass

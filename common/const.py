@@ -5,10 +5,12 @@
 #   \____\___/|_| |_|___/\__|
 #
 
-CHARSET          = r"UTF-8"
-READ_KEY_MODE    = r"rb"
+CHARSET           = r"UTF-8"
+READ_KEY_MODE     = r"rb"
 
-KEYS_DIR         = r"keys"
+KEYS_DIR          = r"keys"
+APP_PUBLIC_KEY    = r"app_public_key.pem"
+APP_PRIVATE_KEY   = r"app_private_key.pem"
 
 SUPABASE_URL     = r"SUPABASE_URL"
 SUPABASE_KEY     = r"SUPABASE_KEY"

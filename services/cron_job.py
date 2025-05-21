@@ -1,35 +1,46 @@
-import os
+#    ____                       _       _
+#   / ___|_ __ ___  _ __       | | ___ | |__
+#  | |   | '__/ _ \| '_ \   _  | |/ _ \| '_ \
+#  | |___| | | (_) | | | | | |_| | (_) | |_) |
+#   \____|_|  \___/|_| |_|  \___/ \___/|_.__/
+#
+
+import time
 import httpx
 import typing
-from faker import Faker
-from pathlib import Path
-from dotenv import load_dotenv
-from common import const
+import asyncio
+from common import (
+    utils, const
+)
 
-fake = Faker()
-
-if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
-    load_dotenv(env_path)
-    cron_job_url = os.getenv(const.CRON_JOB_URL)
-    cron_job_key = os.getenv(const.CRON_JOB_KEY)
-else:
-    cron_job_url = Path("/etc/secrets", const.CRON_JOB_URL).read_text().strip()
-    cron_job_key = Path("/etc/secrets", const.CRON_JOB_KEY).read_text().strip()
-
-# 校验是否正确加载
-if not cron_job_url or not cron_job_key:
-    raise EnvironmentError("环境变量未正确加载，请检查 .env 或 Render 配置。")
+cron_job_url, cron_job_key = utils.current_env(
+    const.CRON_JOB_URL, const.CRON_JOB_KEY
+)
 
 HEADERS = {
     "Authorization": f"Bearer {cron_job_key}", "Content-Type": "application/json"
 }
 
-fake.user_agent()
+
+async def cpu_heavy_work() -> dict:
+    primes = []
+    for num in range(10000, 10200):
+        for i in range(2, num):
+            if num % i == 0:
+                break
+        else:
+            primes.append(num)
+
+    await asyncio.sleep(1)
+
+    return {
+        "status": "pong", "cpu_cycles": len(primes), "timestamp": time.time()
+    }
 
 
 async def send(
         client: "httpx.AsyncClient", method: str, url: str, *args, **kwargs
-) -> typing.Union["httpx.Response", None]:
+) -> typing.Union[typing.Coroutine, typing.Any, "httpx.Response"]:
 
     try:
         return await client.request(method, url, *args, **kwargs)
@@ -37,7 +48,7 @@ async def send(
         print(f"❌ 请求失败: {e}")
 
 
-async def update_keep_alive_jobs(client: "httpx.AsyncClient"):
+async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutine | typing.Any:
     response = await send(client, "get", f"{cron_job_url}/jobs")
 
     for job in [job for job in response.json()["jobs"] if job["folderId"] == 47245]:
@@ -46,11 +57,11 @@ async def update_keep_alive_jobs(client: "httpx.AsyncClient"):
             "job": {
                 "folderId": 47245,
                 'schedule': {
-                    'timezone': fake.timezone(),
+                    'timezone': utils.fake.timezone(),
                 },
                 "extendedData": {
                     "headers": {
-                        "User-Agent": fake.user_agent(),
+                        "User-Agent": utils.fake.user_agent(),
                     }
                 }
             }
@@ -60,10 +71,12 @@ async def update_keep_alive_jobs(client: "httpx.AsyncClient"):
         )
         print(f"update {job_id} -> [{resp.status_code}]")
 
+    return {"status": "cron jobs update"}
 
-async def update_cron_jobs():
+
+async def update_cron_jobs() -> typing.Coroutine | typing.Any:
     async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
-        await update_keep_alive_jobs(client)
+        return await update_keep_alive_jobs(client)
 
 
 if __name__ == '__main__':

@@ -5,13 +5,13 @@
 #  |_|  |_|\__,_|_|_| |_|
 #
 
-import time
-import asyncio
-from fastapi import FastAPI
-from services import cron_job
-from common import (
-    utils, const
+from fastapi import (
+    Header, FastAPI
 )
+from services import (
+    cron_job, signature
+)
+from common import const
 
 app = FastAPI()
 
@@ -28,43 +28,31 @@ async def status():
 
 @app.get("/cron-job-update")
 async def cron_job_update():
-    await cron_job.update_cron_jobs()
-    return {"status": "cron jobs update"}
+    return await cron_job.update_cron_jobs()
 
 
 @app.get("/keep-render-alive")
 async def keep_render_alive():
-    # 模拟密集 CPU 运算（素数计算）
-    def cpu_heavy_work():
-        primes = []
-        for num in range(10000, 10200):
-            for i in range(2, num):
-                if num % i == 0:
-                    break
-            else:
-                primes.append(num)
-        return len(primes)
+    return await cron_job.cpu_heavy_work()
 
-    cpu_result = cpu_heavy_work()
 
-    # 模拟异步 IO 操作
-    await asyncio.sleep(1)
-
-    return {
-        "status": "pong",
-        "cpu_cycles": cpu_result,
-        "timestamp": time.time()
-    }
+@app.post(f"/sign")
+async def sign(
+        req: "signature.LicenseRequest",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+):
+    pass
 
 
 @app.post(f"/sign/{const.APP_FX['app']}")
-async def sign_fx(req: "utils.LicenseRequest"):
-    return utils.handle_signature(req, const.APP_FX)
+async def sign_fx(req: "signature.LicenseRequest"):
+    return signature.handle_signature(req, const.APP_FX)
 
 
 @app.post(f"/sign/{const.APP_MX['app']}")
-async def sign_mx(req: "utils.LicenseRequest"):
-    return utils.handle_signature(req, const.APP_MX)
+async def sign_mx(req: "signature.LicenseRequest"):
+    return signature.handle_signature(req, const.APP_MX)
 
 
 if __name__ == '__main__':
