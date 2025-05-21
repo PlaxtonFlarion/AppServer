@@ -26,10 +26,10 @@ async def status():
     return {"ok": True}
 
 
-@app.get("/cron-reset")
-async def cron_reset():
-    await cron_job.reset_cron_jobs()
-    return {"status": "cron jobs reset"}
+@app.get("/cron-job-update")
+async def cron_job_update():
+    await cron_job.update_cron_jobs()
+    return {"status": "cron jobs update"}
 
 
 @app.get("/keep-render-alive")
