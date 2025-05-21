@@ -26,16 +26,26 @@ async def status():
 
 @app.get("/ping")
 async def ping():
-    # 模拟 CPU 占用
-    _ = sum(i * i for i in range(10000))
+    # 模拟密集 CPU 运算（素数计算）
+    def cpu_heavy_work():
+        primes = []
+        for num in range(10000, 10200):
+            for i in range(2, num):
+                if num % i == 0:
+                    break
+            else:
+                primes.append(num)
+        return len(primes)
 
-    # 模拟 IO 操作（假装读取某配置）
-    asyncio.sleep(0.5)  # 延迟 0.5 秒
+    cpu_result = cpu_heavy_work()
+
+    # 模拟异步 IO 操作
+    await asyncio.sleep(1)
 
     return {
         "status": "pong",
-        "timestamp": time.time(),
-        "uptime_check": True
+        "cpu_cycles": cpu_result,
+        "timestamp": time.time()
     }
 
 
