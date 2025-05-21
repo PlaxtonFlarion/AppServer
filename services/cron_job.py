@@ -11,14 +11,14 @@ fake = Faker()
 
 # 判断运行环境并加载环境变量
 if Path("/etc/secrets").exists():
-    url_path = "/etc/secrets/CRON_URL"
-    key_path = "/etc/secrets/CRON_KEY"
+    url_path = "/etc/secrets/CRON_JOB_URL"
+    key_path = "/etc/secrets/CRON_JOB_KEY"
     CRON_URL = Path(url_path).read_text().strip()
     CRON_KEY = Path(key_path).read_text().strip()
 else:
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-    CRON_URL = os.getenv("CRON_URL")
-    CRON_KEY = os.getenv("CRON_KEY")
+    CRON_URL = os.getenv("CRON_JOB_URL")
+    CRON_KEY = os.getenv("CRON_JOB_KEY")
 
 HEADERS = {"Authorization": f"Bearer {CRON_KEY}"}
 
