@@ -13,6 +13,9 @@ KEYS_DIR         = r"keys"
 SUPABASE_URL     = r"SUPABASE_URL"
 SUPABASE_KEY     = r"SUPABASE_KEY"
 
+CRON_JOB_URL     = r"CRON_JOB_URL"
+CRON_JOB_KEY     = r"CRON_JOB_KEY"
+
 APP_FX = {
     "app": "framix",
     "private_key": "framix_private_key.pem",
