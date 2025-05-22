@@ -115,7 +115,7 @@ def generate_license(
 ) -> dict:
 
     license_info = {
-        "code": code.strip(),
+        "code": code,
         "castle": castle,
         "expire": expire,
         "issued": issued,
