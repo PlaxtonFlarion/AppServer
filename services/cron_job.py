@@ -13,9 +13,12 @@ from common import (
     utils, const
 )
 
-cron_job_url, cron_job_key = utils.current_env(
+env = utils.current_env(
     const.CRON_JOB_URL, const.CRON_JOB_KEY
 )
+
+cron_job_url = env[const.CRON_JOB_URL]
+cron_job_key = env[const.CRON_JOB_KEY]
 
 HEADERS = {
     "Authorization": f"Bearer {cron_job_key}", "Content-Type": "application/json"
