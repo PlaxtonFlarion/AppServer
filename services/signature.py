@@ -24,23 +24,15 @@ from cryptography.hazmat.primitives.asymmetric import (
 from pydantic import BaseModel
 from fastapi import HTTPException
 from services import supabase
-from common import const
+from common import (
+    const, utils
+)
 
 
 class LicenseRequest(BaseModel):
     code: str
     castle: str
     license_id: typing.Optional[str] = None
-
-
-def load_private_key(key_file: str) -> typing.Any:
-    if (is_render := Path("/etc/secrets")).exists():
-        resolve_key_path = is_render / key_file
-    else:
-        resolve_key_path = Path(__file__).resolve().parents[1] / const.KEYS_DIR / key_file
-
-    with open(resolve_key_path, const.READ_KEY_MODE) as f:
-        return serialization.load_pem_private_key(f.read(), password=None)
 
 
 def generate_keys() -> None:
@@ -71,7 +63,7 @@ def generate_x_app_token(app: str, key_file: str) -> str:
     }
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
     
-    private_key = load_private_key(key_file)
+    private_key = utils.load_private_key(key_file)
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
@@ -85,7 +77,7 @@ def generate_x_app_token(app: str, key_file: str) -> str:
 
 
 def decrypt_data(data: str) -> str:
-    private_key = load_private_key("framix_private_key.pem")
+    private_key = utils.load_private_key("framix_private_key.pem")
 
     decrypted_app_id = private_key.decrypt(
         base64.b64decode(data), padding.PKCS1v15()
@@ -93,7 +85,7 @@ def decrypt_data(data: str) -> str:
     return json.loads(decrypted_app_id)
 
 
-def verify_signature(x_app_token: str, public_key_path: str) -> dict:
+def verify_signature(x_app_token: str, key_file: str) -> dict:
     try:
         app_token = json.loads(
             base64.b64decode(x_app_token).decode(const.CHARSET)
@@ -101,7 +93,7 @@ def verify_signature(x_app_token: str, public_key_path: str) -> dict:
         data = base64.b64decode(app_token["data"])
         signature = base64.b64decode(app_token["signature"])
 
-        public_key = serialization.load_pem_public_key(open(public_key_path, "rb").read())
+        public_key = utils.load_public_key(key_file)
 
         public_key.verify(
             signature, data, padding.PKCS1v15(), hashes.SHA256()
@@ -132,7 +124,7 @@ def generate_license(
     }
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
     
-    private_key = load_private_key(key_file)
+    private_key = utils.load_private_key(key_file)
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
