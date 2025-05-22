@@ -15,9 +15,12 @@ from common import (
     utils, const
 )
 
-supabase_url, supabase_key = utils.current_env(
+env = utils.current_env(
     const.SUPABASE_URL, const.SUPABASE_KEY
 )
+
+supabase_url = env[const.SUPABASE_URL]
+supabase_key = env[const.SUPABASE_KEY]
 
 HEADERS = {
     "apikey": supabase_key,
