@@ -12,6 +12,7 @@ import base64
 import typing
 import secrets
 from pathlib import Path
+from loguru import logger
 from datetime import (
     datetime, timezone
 )
@@ -32,6 +33,9 @@ from common import (
 class LicenseRequest(BaseModel):
     code: str
     castle: str
+    a: str
+    t: int
+    n: str
     license_id: typing.Optional[str] = None
 
 
@@ -64,6 +68,7 @@ def generate_x_app_token(app: str, key_file: str) -> str:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
     
     private_key = utils.load_private_key(key_file)
+
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
@@ -85,8 +90,48 @@ def decrypt_data(data: str) -> str:
     return json.loads(decrypted_app_id)
 
 
-def verify_signature(x_app_token: str, key_file: str) -> dict:
+def generate_license(
+        app: str,
+        code: str,
+        castle: str,
+        expire: str,
+        issued: str,
+        issued_at: str,
+        license_id: str,
+        key_file: str
+) -> dict:
+
+    license_info = {
+        "app": app,
+        "code": code,
+        "castle": castle,
+        "expire": expire,
+        "issued": issued,
+        "issued_at": issued_at,
+        "license_id": license_id
+    }
+    message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
+
+    private_key = utils.load_private_key(key_file)
+
+    signature = private_key.sign(
+        message_bytes, padding.PKCS1v15(), hashes.SHA256()
+    )
+
+    logger.info(f"下发签名: {license_info}")
+
+    return {
+        "data": base64.b64encode(message_bytes).decode(),
+        "signature": base64.b64encode(signature).decode()
+    }
+
+
+def verify_signature(x_app_id: str, x_app_token: str, key_file: str) -> dict:
+    if not x_app_id or not x_app_token:
+        raise HTTPException(403, f"[!] 签名无效")
+
     try:
+        _ = x_app_id
         app_token = json.loads(
             base64.b64decode(x_app_token).decode(const.CHARSET)
         )
@@ -98,64 +143,49 @@ def verify_signature(x_app_token: str, key_file: str) -> dict:
         public_key.verify(
             signature, data, padding.PKCS1v15(), hashes.SHA256()
         )
-    except Exception:
-        raise HTTPException(403, f"签名无效")
 
-    return json.loads(data)
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(403, f"[!] 签名无效")
+
+    logger.info(f"验证签名: {(auth_info := json.loads(data))}")
+    return auth_info
 
 
-def generate_license(
-        code: str,
-        castle: str,
-        expire: str,
-        issued:str,
-        issued_at:str,
-        license_id: str,
-        key_file: str
+def handle_signature(
+        req: "LicenseRequest",
+        x_app_id: str,
+        x_app_token: str,
+        private_key: str,
+        public_key: str,
+        apps: dict
 ) -> dict:
 
-    license_info = {
-        "code": code,
-        "castle": castle,
-        "expire": expire,
-        "issued": issued,
-        "issued_at": issued_at,
-        "license_id": license_id
-    }
-    message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
-    
-    private_key = utils.load_private_key(key_file)
-    signature = private_key.sign(
-        message_bytes, padding.PKCS1v15(), hashes.SHA256()
-    )
+    verify_signature(x_app_id, x_app_token, public_key)
 
-    return {
-        "data": base64.b64encode(message_bytes).decode(),
-        "signature": base64.b64encode(signature).decode()
-    }
-
-
-def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
     sup = supabase.Supabase(
-        apps["app"], code := req.code, apps["table"]["license"]
+        req.a, code := req.code, apps["table"]["license"]
     )
 
     # 查询所有通行证记录
-    codes = sup.fetch_activation_code()
-    if not codes:
-        raise HTTPException(403, f"[!]通行证无效")
-
-    # 查询最大激活次数
-    if codes["activations"] >= codes["max_activations"]:
-        raise HTTPException(403, f"[!]超过最大激活次数")
+    if not (codes := sup.fetch_activation_code()):
+        raise HTTPException(403, f"[!] 通行证无效")
 
     # 查询通行证是否吊销
     if codes["is_revoked"]:
-        raise HTTPException(403, f"[!]通行证已被吊销")
+        raise HTTPException(403, f"[!] 通行证已被吊销")
+
+    # 查询最大激活次数
+    if codes["activations"] >= codes["max_activations"]:
+        raise HTTPException(403, f"[!] 超过最大激活次数")
 
     # 若已有其他进程 pending 此通行证，拒绝
     if codes["pending"]:
-        raise HTTPException(423, f"[!]授权正在处理中")
+        raise HTTPException(423, f"[!] 授权正在处理中")
+
+    # 防重放：如果 nonce 相同则拒绝
+    if req.n == codes["last_nonce"]:
+        raise HTTPException(409, "[!] 重放请求被拒绝")
 
     pre_castle, cur_castle= codes["castle"], req.castle
 
@@ -169,6 +199,11 @@ def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
 
         pre_license_id = codes["license_id"]
 
+        logger.info(f"pre_castle {pre_castle}")
+        logger.info(f"cur_castle {cur_castle}")
+        logger.info(f"pre_license_id {pre_license_id}")
+        logger.info(f"cur_license_id {req.license_id}")
+
         # 用户重复激活，同设备联网检查通行证状态
         if codes["is_used"] and cur_castle == pre_castle and req.license_id == pre_license_id:
             issued_at, license_id = codes["issued_at"], pre_license_id
@@ -179,13 +214,23 @@ def handle_signature(req: "LicenseRequest", apps: dict) -> dict:
             })
 
         license_data = generate_license(
-            code, cur_castle, codes["expire"], issued, issued_at, license_id, apps["private_key"]
+            req.a,
+            code,
+            cur_castle,
+            codes["expire"],
+            issued,
+            issued_at,
+            license_id,
+            private_key
         )
 
-        sup.update_activation_status(payload | {"issued_at": issued_at, "license_id": license_id})
+        sup.update_activation_status(
+            payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}
+        )
 
     except Exception as e:
-        raise HTTPException(400, f"[!]授权失败，请稍后重试 -> {e}")
+        logger.error(e)
+        raise HTTPException(400, f"[!] 授权失败，请稍后重试")
 
     else:
         return license_data

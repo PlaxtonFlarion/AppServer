@@ -21,6 +21,7 @@ CRON_JOB_KEY     = r"CRON_JOB_KEY"
 APP_FX = {
     "app": "framix",
     "private_key": "framix_private_key.pem",
+    "public_key": "framix_public_key.pem",
     "table": {
         "license": "framix_license_codes",
     }
@@ -29,6 +30,7 @@ APP_FX = {
 APP_MX = {
     "app": "memrix",
     "private_key": "memrix_private_key.pem",
+    "public_key": "memrix_public_key.pem",
     "table": {
         "license": "memrix_license_codes",
     }

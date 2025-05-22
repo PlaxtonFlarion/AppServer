@@ -5,15 +5,18 @@
 #  |_|  |_|\__,_|_|_| |_|
 #
 
+from loguru import logger
 from fastapi import (
     Header, FastAPI
 )
 from services import (
     cron_job, signature
 )
-from common import const
+from common import (
+    const, craft
+)
 
-app = FastAPI()
+app, *_ = FastAPI(), craft.init_logger()
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
@@ -39,20 +42,19 @@ async def keep_render_alive():
 @app.post(f"/sign")
 async def sign(
         req: "signature.LicenseRequest",
-        x_app_id: str = Header(..., alias="X-App-ID"),
-        x_app_token: str = Header(..., alias="X-App-Token"),
+        x_app_id: str = Header(default=None, alias="X-App-ID"),
+        x_app_token: str = Header(default=None, alias="X-App-Token"),
 ):
-    signature.verify_signature(x_app_token)
+    logger.info(f"signing request: {req}")
 
-
-@app.post(f"/sign/{const.APP_FX['app']}")
-async def sign_fx(req: "signature.LicenseRequest"):
-    return signature.handle_signature(req, const.APP_FX)
-
-
-@app.post(f"/sign/{const.APP_MX['app']}")
-async def sign_mx(req: "signature.LicenseRequest"):
-    return signature.handle_signature(req, const.APP_MX)
+    return signature.handle_signature(
+        req,
+        x_app_id,
+        x_app_token,
+        const.APP_FX["private_key"],
+        const.APP_FX["public_key"],
+        const.APP_FX
+    )
 
 
 if __name__ == '__main__':
