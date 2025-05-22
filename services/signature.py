@@ -66,14 +66,12 @@ def generate_keys() -> None:
 
 
 def generate_x_app_token(app: str, key_file: str) -> str:
-    private_key = load_private_key(key_file)
-
-    payload = {
+    license_info = {
         "a": app, "t": int(time.time()), "n": secrets.token_hex(8)
     }
-
-    message_bytes = json.dumps(payload, separators=(",", ":")).encode(const.CHARSET)
-
+    message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
+    
+    private_key = load_private_key(key_file)
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
@@ -124,8 +122,6 @@ def generate_license(
         key_file: str
 ) -> dict:
 
-    private_key = load_private_key(key_file)
-
     license_info = {
         "code": code.strip(),
         "castle": castle,
@@ -135,7 +131,8 @@ def generate_license(
         "license_id": license_id
     }
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
-
+    
+    private_key = load_private_key(key_file)
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
