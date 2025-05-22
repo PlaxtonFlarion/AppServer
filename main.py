@@ -42,7 +42,7 @@ async def sign(
         x_app_id: str = Header(..., alias="X-App-ID"),
         x_app_token: str = Header(..., alias="X-App-Token"),
 ):
-    pass
+    signature.verify_signature(x_app_token)
 
 
 @app.post(f"/sign/{const.APP_FX['app']}")
