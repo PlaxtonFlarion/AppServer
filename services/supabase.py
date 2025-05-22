@@ -89,7 +89,7 @@ class Supabase(object):
         }
         response = httpx.post(url, headers=HEADERS, json=json)
         if response.status_code not in (200, 201):
-            logger.info(f"❌ 插入失败: {secure_code} -> {response.status_code}: {response.text}")
+            logger.error(f"❌ 插入失败: {secure_code} -> {response.status_code}: {response.text}")
         else:
             logger.info(f"✅ 成功插入: {secure_code}")
 

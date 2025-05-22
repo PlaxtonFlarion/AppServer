@@ -9,6 +9,7 @@ import time
 import httpx
 import typing
 import asyncio
+from loguru import logger
 from common import (
     utils, const
 )
@@ -48,7 +49,7 @@ async def send(
     try:
         return await client.request(method, url, *args, **kwargs)
     except Exception as e:
-        print(f"❌ 请求失败: {e}")
+        return logger.error(f"❌ 请求失败 -> {e}")
 
 
 async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutine | typing.Any:
@@ -72,7 +73,7 @@ async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutin
         resp = await send(
             client, "patch", f"{cron_job_url}/jobs/{(job_id := job['jobId'])}", json=json
         )
-        print(f"update {job_id} -> [{resp.status_code}]")
+        logger.info(f"update {job_id} -> [{resp.status_code}]")
 
     return {"status": "cron jobs update"}
 
