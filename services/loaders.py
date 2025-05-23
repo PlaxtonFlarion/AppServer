@@ -1,26 +1,26 @@
 import time
-import typing
 from loguru import logger
 from fastapi import (
     Request, HTTPException
 )
-from common import const
+from common import (
+    const, utils
+)
 from services import signature
+
+env = utils.current_env(const.ACTIVATION_URL)
+activation_url = env[const.ACTIVATION_URL]
 
 BOOTSTRAP_RATE_LIMIT = {}
 
 
-def enforce_rate_limit(
-        request: typing.Union["Request", "signature.LicenseRequest"],
-        limit: int = 5,
-        window: int = 60
-) -> None:
+def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
     """
     对请求 IP 进行限流控制，防止过于频繁的访问。
 
     Parameters
     ----------
-    request : Union[Request, signature.LicenseRequest]
+    request : Request
         当前的 HTTP 请求对象，需包含客户端 IP 地址字段。
 
     limit : int, optional
@@ -115,7 +115,7 @@ def resolve_bootstrap(
     )
 
     license_info = {
-        "activation_url": f"https://license-server-s68o.onrender.com/sign",
+        "activation_url": activation_url,
         "region": x_app_region,
         "version": x_app_version,
         "ttl": 86400,

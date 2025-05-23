@@ -20,3 +20,5 @@ LICENSE_CODES      = r"license_codes"
 
 CRON_JOB_URL       = r"CRON_JOB_URL"
 CRON_JOB_KEY       = r"CRON_JOB_KEY"
+
+ACTIVATION_URL     = r"ACTIVATION_URL"
