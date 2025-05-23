@@ -74,8 +74,6 @@ async def sign(
         req,
         x_app_id,
         x_app_token,
-        const.APP_FX["private_key"],
-        const.APP_FX["public_key"],
         const.APP_FX
     )
 

@@ -83,8 +83,6 @@ def decrypt_data(data: str, private_key_file: str) -> str:
 def signature_license(license_info: dict, private_key_file: str, compress: bool = False) -> str | dict:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
 
-    logger.info(f"下发签名: {license_info}")
-
     private_key = utils.load_private_key(private_key_file)
 
     signature = private_key.sign(
@@ -134,16 +132,15 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> d
 def handle_signature(
         req: "LicenseRequest",
         x_app_id: str,
-        x_app_token: str,
-        private_key_file: str,
-        public_key_file: str,
-        apps: dict
+        x_app_token: str
 ) -> dict:
 
-    verify_signature(x_app_id, x_app_token, public_key_file)
+    app_name = req.a.lower().strip()
+
+    verify_signature(x_app_id, x_app_token, public_key_file=f"{app_name}_{const.BASE_PUBLIC_KEY}")
 
     sup = supabase.Supabase(
-        req.a, code := req.code, apps["table"]["license"]
+        req.a, code := req.code, table=f"{app_name}_{const.LICENSE_CODES}"
     )
 
     # 查询所有通行证记录
@@ -201,7 +198,9 @@ def handle_signature(
             "issued_at": issued_at,
             "license_id": license_id
         }
-        license_data = signature_license(license_info, private_key_file)
+        license_data = signature_license(
+            license_info, private_key_file=f"{req.a}_{const.BASE_PRIVATE_KEY}"
+        )
 
         sup.update_activation_status(
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}

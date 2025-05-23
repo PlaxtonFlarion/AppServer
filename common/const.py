@@ -5,33 +5,18 @@
 #   \____\___/|_| |_|___/\__|
 #
 
-CHARSET           = r"UTF-8"
-READ_KEY_MODE     = r"rb"
+CHARSET            = r"UTF-8"
+READ_KEY_MODE      = r"rb"
 
-KEYS_DIR          = r"keys"
-APP_PUBLIC_KEY    = r"app_public_key.pem"
-APP_PRIVATE_KEY   = r"app_private_key.pem"
+KEYS_DIR           = r"keys"
+BASE_PRIVATE_KEY   = r"private_key.pem"
+BASE_PUBLIC_KEY    = r"public_key.pem"
+APP_PRIVATE_KEY    = f"app_{BASE_PRIVATE_KEY}"
+APP_PUBLIC_KEY     = f"app_{BASE_PUBLIC_KEY}"
 
-SUPABASE_URL     = r"SUPABASE_URL"
-SUPABASE_KEY     = r"SUPABASE_KEY"
+SUPABASE_URL       = r"SUPABASE_URL"
+SUPABASE_KEY       = r"SUPABASE_KEY"
+LICENSE_CODES      = r"license_codes"
 
-CRON_JOB_URL     = r"CRON_JOB_URL"
-CRON_JOB_KEY     = r"CRON_JOB_KEY"
-
-APP_FX = {
-    "app": "framix",
-    "private_key": "framix_private_key.pem",
-    "public_key": "framix_public_key.pem",
-    "table": {
-        "license": "framix_license_codes",
-    }
-}
-
-APP_MX = {
-    "app": "memrix",
-    "private_key": "memrix_private_key.pem",
-    "public_key": "memrix_public_key.pem",
-    "table": {
-        "license": "memrix_license_codes",
-    }
-}
+CRON_JOB_URL       = r"CRON_JOB_URL"
+CRON_JOB_KEY       = r"CRON_JOB_KEY"
