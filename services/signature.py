@@ -71,9 +71,20 @@ def generate_x_app_token(app: str) -> dict:
     }
 
 
-def signature_data(license_info: dict, private_key_file: str) -> str:
+def decrypt_data(data: str, private_key_file: str) -> str:
+    private_key = utils.load_private_key(private_key_file)
+
+    decrypted = private_key.decrypt(
+        base64.b64decode(data), padding.PKCS1v15()
+    )
+    return json.loads(decrypted)
+
+
+def signature_license(license_info: dict, private_key_file: str, compress: bool = False) -> str | dict:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
-    
+
+    logger.info(f"下发签名: {license_info}")
+
     private_key = utils.load_private_key(private_key_file)
 
     signature = private_key.sign(
@@ -85,54 +96,11 @@ def signature_data(license_info: dict, private_key_file: str) -> str:
         "signature": base64.b64encode(signature).decode()
     }
 
-    # Notes: Header 不支持复杂结构，双层 B64 保证纯文本安全
-    return base64.b64encode(json.dumps(token).encode()).decode()
-
-
-def decrypt_data(data: str, private_key_file: str) -> str:
-    private_key = utils.load_private_key(private_key_file)
-
-    decrypted = private_key.decrypt(
-        base64.b64decode(data), padding.PKCS1v15()
-    )
-    return json.loads(decrypted)
-
-
-def generate_license(
-        app: str,
-        code: str,
-        castle: str,
-        expire: str,
-        issued: str,
-        issued_at: str,
-        license_id: str,
-        private_key_file: str
-) -> dict:
-
-    license_info = {
-        "app": app,
-        "code": code,
-        "castle": castle,
-        "expire": expire,
-        "issued": issued,
-        "issued_at": issued_at,
-        "license_id": license_id
-    }
-    message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
-
-    private_key = utils.load_private_key(private_key_file)
-
-    signature = private_key.sign(
-        message_bytes, padding.PKCS1v15(), hashes.SHA256()
-    )
-
     logger.info(f"下发签名: {license_info}")
 
-    # Notes: JSON 本身已是结构格式，不需要再 B64 整体加壳
-    return {
-        "data": base64.b64encode(message_bytes).decode(),
-        "signature": base64.b64encode(signature).decode()
-    }
+    if compress:
+        return base64.b64encode(json.dumps(token).encode()).decode()
+    return token
 
 
 def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> dict:
@@ -224,16 +192,16 @@ def handle_signature(
                 "castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1
             })
 
-        license_data = generate_license(
-            req.a,
-            code,
-            cur_castle,
-            codes["expire"],
-            issued,
-            issued_at,
-            license_id,
-            private_key_file
-        )
+        license_info = {
+            "app": req.a,
+            "code": code,
+            "castle": cur_castle,
+            "expire": codes["expire"],
+            "issued": issued,
+            "issued_at": issued_at,
+            "license_id": license_id
+        }
+        license_data = signature_license(license_info, private_key_file, compress=False)
 
         sup.update_activation_status(
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}
