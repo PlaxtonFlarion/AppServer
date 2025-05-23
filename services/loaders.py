@@ -1,5 +1,8 @@
 import time
-from fastapi import Request, HTTPException
+from loguru import logger
+from fastapi import (
+    Request, HTTPException
+)
 
 BOOTSTRAP_RATE_LIMIT = {}
 
@@ -7,6 +10,8 @@ BOOTSTRAP_RATE_LIMIT = {}
 def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
     ip = request.client.host
     now = time.time()
+
+    logger.info(f"ip address: {ip}")
 
     BOOTSTRAP_RATE_LIMIT.setdefault(ip, [])
     BOOTSTRAP_RATE_LIMIT[ip] = [
