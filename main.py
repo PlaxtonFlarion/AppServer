@@ -12,9 +12,7 @@ from fastapi import (
 from services import (
     cron_job, loaders, signature
 )
-from common import (
-    const, craft
-)
+from common import craft
 
 app, *_ = FastAPI(), craft.init_logger()
 
