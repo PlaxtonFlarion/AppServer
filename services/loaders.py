@@ -1,4 +1,5 @@
 import time
+import typing
 from loguru import logger
 from fastapi import (
     Request, HTTPException
@@ -10,7 +11,7 @@ BOOTSTRAP_RATE_LIMIT = {}
 
 
 def enforce_rate_limit(
-        request: "Request",
+        request: typing.Union["Request", "signature.LicenseRequest"],
         limit: int = 5,
         window: int = 60
 ) -> None:
@@ -19,7 +20,7 @@ def enforce_rate_limit(
 
     Parameters
     ----------
-    request : Request
+    request : Union[Request, signature.LicenseRequest]
         当前的 HTTP 请求对象，需包含客户端 IP 地址字段。
 
     limit : int, optional
