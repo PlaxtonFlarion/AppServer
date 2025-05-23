@@ -122,9 +122,12 @@ def resolve_bootstrap(
         "message": f"Use activation node"
     }
 
-    return signature.signature_license(
-        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
-    )
+    return {
+        "msg": "success",
+        "sign": signature.signature_license(
+            license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+        )
+    }
 
 
 if __name__ == '__main__':

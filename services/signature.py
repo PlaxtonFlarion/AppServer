@@ -217,7 +217,7 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
 if __name__ == '__main__':
     a = signature_license(
         generate_x_app_token(
-            "Framix  Technologies Inc."
+            "Framix Technologies Inc."
         ), "framix_private_key.pem", True
     )
     print(a)
