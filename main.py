@@ -48,7 +48,7 @@ async def bootstrap(
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n"),
 ):
-    logger.info(f"bootstrap request: {request}")
+    logger.info(f"bootstrap request: {request.url}")
 
     loaders.enforce_rate_limit(request)
 
