@@ -142,7 +142,7 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
 
     # 查询所有通行证记录
     if not (codes := sup.fetch_activation_code()):
-        raise HTTPException(409, f"[!] 通行证无效")
+        raise HTTPException(403, f"[!] 通行证无效")
 
     # 查询通行证是否吊销
     if codes["is_revoked"]:

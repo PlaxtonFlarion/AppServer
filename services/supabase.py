@@ -48,8 +48,8 @@ class Supabase(object):
         )
         try:
             return data[0] if (data := response.json()) else None
-        except KeyError:
-            return None
+        except KeyError as e:
+            return logger.error(f"❌ 查询失败: {e}")
 
     def update_activation_status(self, json: dict, *_, **__) -> typing.Optional[bool]:
         url = f"{supabase_url}/rest/v1/{self.table}"
