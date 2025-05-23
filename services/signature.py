@@ -140,7 +140,7 @@ def handle_signature(
     verify_signature(x_app_id, x_app_token, public_key_file=f"{app_name}_{const.BASE_PUBLIC_KEY}")
 
     sup = supabase.Supabase(
-        req.a, code := req.code, table=f"{app_name}_{const.LICENSE_CODES}"
+        app_name, code := req.code, table=f"{app_name}_{const.LICENSE_CODES}"
     )
 
     # 查询所有通行证记录
