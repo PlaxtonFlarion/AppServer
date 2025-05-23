@@ -83,6 +83,7 @@ def generate_x_app_token(app: str, private_key_file: str) -> str:
         "signature": base64.b64encode(signature).decode()
     }
 
+    # Notes: Header 不支持复杂结构，双层 B64 保证纯文本安全
     return base64.b64encode(json.dumps(token).encode()).decode()
 
 
@@ -125,6 +126,7 @@ def generate_license(
 
     logger.info(f"下发签名: {license_info}")
 
+    # Notes: JSON 本身已是结构格式，不需要再 B64 整体加壳
     return {
         "data": base64.b64encode(message_bytes).decode(),
         "signature": base64.b64encode(signature).decode()
