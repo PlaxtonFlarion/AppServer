@@ -6,10 +6,12 @@
 #           |___/
 #
 
-import json
+import uuid
 import time
+import json
 import base64
 import typing
+import hashlib
 import secrets
 from pathlib import Path
 from loguru import logger
@@ -61,13 +63,16 @@ def generate_keys() -> None:
     return print(f"✓ 密钥已生成 -> {key_folder}")
 
 
-def generate_x_app_token(app: str, key_file: str) -> str:
+def generate_x_app_token(app: str, private_key_file: str) -> str:
     license_info = {
-        "a": app, "t": int(time.time()), "n": secrets.token_hex(8)
+        "a": app, 
+        "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
+        "n": (n := uuid.uuid4().hex.upper()[:12]),
+        "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
     }
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
     
-    private_key = utils.load_private_key(key_file)
+    private_key = utils.load_private_key(private_key_file)
 
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
@@ -98,7 +103,7 @@ def generate_license(
         issued: str,
         issued_at: str,
         license_id: str,
-        key_file: str
+        private_key_file: str
 ) -> dict:
 
     license_info = {
@@ -112,7 +117,7 @@ def generate_license(
     }
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode()
 
-    private_key = utils.load_private_key(key_file)
+    private_key = utils.load_private_key(private_key_file)
 
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
@@ -126,7 +131,7 @@ def generate_license(
     }
 
 
-def verify_signature(x_app_id: str, x_app_token: str, key_file: str) -> dict:
+def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> dict:
     if not x_app_id or not x_app_token:
         raise HTTPException(403, f"[!] 签名无效")
 
@@ -138,7 +143,7 @@ def verify_signature(x_app_id: str, x_app_token: str, key_file: str) -> dict:
         data = base64.b64decode(app_token["data"])
         signature = base64.b64decode(app_token["signature"])
 
-        public_key = utils.load_public_key(key_file)
+        public_key = utils.load_public_key(public_key_file)
 
         public_key.verify(
             signature, data, padding.PKCS1v15(), hashes.SHA256()
@@ -156,12 +161,12 @@ def handle_signature(
         req: "LicenseRequest",
         x_app_id: str,
         x_app_token: str,
-        private_key: str,
-        public_key: str,
+        private_key_file: str,
+        public_key_file: str,
         apps: dict
 ) -> dict:
 
-    verify_signature(x_app_id, x_app_token, public_key)
+    verify_signature(x_app_id, x_app_token, public_key_file)
 
     sup = supabase.Supabase(
         req.a, code := req.code, apps["table"]["license"]
@@ -221,7 +226,7 @@ def handle_signature(
             issued,
             issued_at,
             license_id,
-            private_key
+            private_key_file
         )
 
         sup.update_activation_status(
