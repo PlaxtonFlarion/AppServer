@@ -38,7 +38,7 @@ class Supabase(object):
         self.table = table
 
         self.__params = {
-            "app": "eq." + self.app, "code": "eq." + self.code
+            "app": f"eq.{self.app}", "code": f"eq.{self.code}"
         }
 
     def fetch_activation_code(self) -> dict | None:
@@ -82,7 +82,7 @@ class Supabase(object):
     def upload_code(self, secure_code:str, expire: str) -> None:
         url = f"{supabase_url}/rest/v1/{self.table}"
         json = {
-            "app": self.app.capitalize(),
+            "app": self.app,
             "code": secure_code,
             "expire": expire,
             "is_used": False
