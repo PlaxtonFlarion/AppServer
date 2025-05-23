@@ -62,13 +62,16 @@ def generate_keys() -> None:
     return print(f"✓ 密钥已生成 -> {key_folder}")
 
 
-def generate_x_app_token(app: str, private_key_file: str) -> str:
-    license_info = {
+def generate_x_app_token(app: str) -> dict:
+    return {
         "a": (a := app),
         "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
         "n": (n := uuid.uuid4().hex.upper()[:12]),
         "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
     }
+
+
+def signature_data(license_info: dict, private_key_file: str) -> str:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
     
     private_key = utils.load_private_key(private_key_file)
