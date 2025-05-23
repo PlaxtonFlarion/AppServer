@@ -135,12 +135,12 @@ def handle_signature(
         x_app_token: str
 ) -> dict:
 
-    app_name = req.a.lower().strip()
+    app_name, app_desc, activation_code = req.a.lower().strip(), req.a.capitalize(), req.code.strip()
 
     verify_signature(x_app_id, x_app_token, public_key_file=f"{app_name}_{const.BASE_PUBLIC_KEY}")
 
     sup = supabase.Supabase(
-        app_name, code := req.code, table=f"{app_name}_{const.LICENSE_CODES}"
+        app_desc, activation_code, table=f"{app_name}_{const.LICENSE_CODES}"
     )
 
     # 查询所有通行证记录
@@ -190,8 +190,8 @@ def handle_signature(
             })
 
         license_info = {
-            "app": req.a,
-            "code": code,
+            "app": app_desc,
+            "code": activation_code,
             "castle": cur_castle,
             "expire": codes["expire"],
             "issued": issued,
@@ -199,7 +199,7 @@ def handle_signature(
             "license_id": license_id
         }
         license_data = signature_license(
-            license_info, private_key_file=f"{req.a}_{const.BASE_PRIVATE_KEY}"
+            license_info, private_key_file=f"{app_name}_{const.BASE_PRIVATE_KEY}"
         )
 
         sup.update_activation_status(
