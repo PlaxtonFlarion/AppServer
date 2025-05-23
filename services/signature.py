@@ -137,7 +137,7 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
     )
 
     sup = supabase.Supabase(
-        app_desc, activation_code, table=f"{app_name}_{const.LICENSE_CODES}"
+        app_desc, activation_code, const.LICENSE_CODES
     )
 
     # 查询所有通行证记录
