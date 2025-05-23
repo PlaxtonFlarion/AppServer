@@ -46,6 +46,7 @@ class Supabase(object):
         response = httpx.get(
             url, headers=HEADERS, params=self.__params
         )
+        logger.warning(response.json())
         try:
             return data[0] if (data := response.json()) else None
         except KeyError as e:
