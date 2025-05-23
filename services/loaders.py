@@ -44,7 +44,7 @@ def resolve_bootstrap(
         "message": "Use default activation node"
     }
 
-    return signature.signature_license(license_info, private_key_file, compress=True)
+    return signature.signature_license(license_info, private_key_file)
 
 
 if __name__ == '__main__':

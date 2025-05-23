@@ -201,7 +201,7 @@ def handle_signature(
             "issued_at": issued_at,
             "license_id": license_id
         }
-        license_data = signature_license(license_info, private_key_file, compress=False)
+        license_data = signature_license(license_info, private_key_file)
 
         sup.update_activation_status(
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}
