@@ -7,7 +7,7 @@
 
 from loguru import logger
 from fastapi import (
-    Request, Header, FastAPI
+    Request, Header, Query, FastAPI
 )
 from services import (
     cron_job, loaders, signature
@@ -45,10 +45,12 @@ async def bootstrap(
     x_app_id: str = Header(..., alias="X-App-ID"),
     x_app_token: str = Header(..., alias="X-App-Token"),
     x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version")
+    x_app_version: str = Header(..., alias="X-App-Version"),
+    a: str = Query(..., alias="a"),
+    t: int = Query(..., alias="t"),
+    n: str = Query(..., alias="n"),
 ):
-    logger.warning(x_app_region)
-    logger.warning(x_app_version)
+    logger.info(f"bootstrap request: {request}")
 
     loaders.enforce_rate_limit(request)
 
@@ -57,8 +59,9 @@ async def bootstrap(
         x_app_token,
         x_app_region,
         x_app_version,
-        const.APP_FX["private_key"],
-        const.APP_FX["public_key"]
+        a,
+        t,
+        n
     )
 
 
@@ -66,15 +69,14 @@ async def bootstrap(
 async def sign(
         req: "signature.LicenseRequest",
         x_app_id: str = Header(default=None, alias="X-App-ID"),
-        x_app_token: str = Header(default=None, alias="X-App-Token")
+        x_app_token: str = Header(default=None, alias="X-App-Token"),
 ):
-    logger.info(f"signing request: {req}")
+    logger.info(f"sign request: {req}")
 
     return signature.handle_signature(
         req,
         x_app_id,
-        x_app_token,
-        const.APP_FX
+        x_app_token
     )
 
 

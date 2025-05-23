@@ -3,6 +3,7 @@ from loguru import logger
 from fastapi import (
     Request, HTTPException
 )
+from common import const
 from services import signature
 
 BOOTSTRAP_RATE_LIMIT = {}
@@ -30,11 +31,16 @@ def resolve_bootstrap(
         x_app_token: str,
         x_app_region: str,
         x_app_version: str,
-        private_key_file: str,
-        public_key_file: str
+        a: str,
+        t: int,
+        n: str
 ) -> dict:
 
-    signature.verify_signature(x_app_id, x_app_token, public_key_file)
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    signature.verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
 
     license_info = {
         "activation_url": f"https://license-server-s68o.onrender.com/sign",
@@ -44,7 +50,9 @@ def resolve_bootstrap(
         "message": f"Use default activation node"
     }
 
-    return signature.signature_license(license_info, private_key_file)
+    return signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
 
 
 if __name__ == '__main__':
