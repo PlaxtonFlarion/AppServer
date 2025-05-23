@@ -71,8 +71,8 @@ def generate_x_app_token(app: str) -> dict:
     }
 
 
-def decrypt_data(data: str, private_key_file: str) -> str:
-    private_key = utils.load_private_key(private_key_file)
+def decrypt_data(data: str, private_key: str) -> str:
+    private_key = utils.load_private_key(private_key)
 
     decrypted = private_key.decrypt(
         base64.b64decode(data), padding.PKCS1v15()
@@ -80,10 +80,10 @@ def decrypt_data(data: str, private_key_file: str) -> str:
     return json.loads(decrypted)
 
 
-def signature_license(license_info: dict, private_key_file: str, compress: bool = False) -> str | dict:
+def signature_license(license_info: dict, private_key: str, compress: bool = False) -> str | dict:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
 
-    private_key = utils.load_private_key(private_key_file)
+    private_key = utils.load_private_key(private_key)
 
     signature = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
@@ -101,7 +101,7 @@ def signature_license(license_info: dict, private_key_file: str, compress: bool 
     return token
 
 
-def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> dict:
+def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     if not x_app_id or not x_app_token:
         raise HTTPException(403, f"[!] 签名无效")
 
@@ -115,7 +115,7 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> d
         data = base64.b64decode(app_token["data"])
         signature = base64.b64decode(app_token["signature"])
 
-        public_key = utils.load_public_key(public_key_file)
+        public_key = utils.load_public_key(public_key)
 
         public_key.verify(
             signature, data, padding.PKCS1v15(), hashes.SHA256()
@@ -129,15 +129,10 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> d
     return auth_info
 
 
-def handle_signature(
-        req: "LicenseRequest",
-        x_app_id: str,
-        x_app_token: str
-) -> dict:
-
+def handle_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
     app_name, app_desc, activation_code = req.a.lower().strip(), req.a.capitalize(), req.code.strip()
 
-    verify_signature(x_app_id, x_app_token, public_key_file=f"{app_name}_{const.BASE_PUBLIC_KEY}")
+    verify_signature(x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}")
 
     sup = supabase.Supabase(
         app_desc, activation_code, table=f"{app_name}_{const.LICENSE_CODES}"
@@ -198,9 +193,7 @@ def handle_signature(
             "issued_at": issued_at,
             "license_id": license_id
         }
-        license_data = signature_license(
-            license_info, private_key_file=f"{app_name}_{const.BASE_PRIVATE_KEY}"
-        )
+        license_data = signature_license(license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}")
 
         sup.update_activation_status(
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}
