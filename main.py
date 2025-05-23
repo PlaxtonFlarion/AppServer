@@ -7,7 +7,7 @@
 
 from loguru import logger
 from fastapi import (
-    Header, FastAPI
+    Request, Header, FastAPI
 )
 from services import (
     cron_job, signature
@@ -39,11 +39,28 @@ async def keep_render_alive():
     return await cron_job.cpu_heavy_work()
 
 
+@app.get("/bootstrap")
+async def bootstrap(
+    request: "Request",
+    x_app_id: str = Header(..., alias="X-App-ID"),
+    x_app_token: str = Header(..., alias="X-App-Token"),
+    x_app_region: str = Header(..., alias="X-App-Region"),
+    x_app_version: str = Header(..., alias="X-App-Version")
+):
+    return {
+        "activation_url": "https://api.framix.dev/v1/activate",
+        "version": version,
+        "region": region,
+        "ttl": 86400,
+        "message": "Use default activation node"
+    }
+
+
 @app.post(f"/sign")
 async def sign(
         req: "signature.LicenseRequest",
         x_app_id: str = Header(default=None, alias="X-App-ID"),
-        x_app_token: str = Header(default=None, alias="X-App-Token"),
+        x_app_token: str = Header(default=None, alias="X-App-Token")
 ):
     logger.info(f"signing request: {req}")
 
