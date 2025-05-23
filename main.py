@@ -57,6 +57,7 @@ async def bootstrap(
         x_app_token,
         x_app_region,
         x_app_version,
+        const.APP_FX["private_key"],
         const.APP_FX["public_key"]
     )
 

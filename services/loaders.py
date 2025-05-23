@@ -30,6 +30,7 @@ def resolve_bootstrap(
         x_app_token: str,
         x_app_region: str,
         x_app_version: str,
+        private_key_file: str,
         public_key_file: str
 ) -> dict:
 
@@ -43,7 +44,7 @@ def resolve_bootstrap(
         "message": "Use default activation node"
     }
 
-    return signature.signature_license(license_info, public_key_file, compress=True)
+    return signature.signature_license(license_info, private_key_file, compress=True)
 
 
 if __name__ == '__main__':
