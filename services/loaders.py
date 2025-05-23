@@ -10,8 +10,7 @@ BOOTSTRAP_RATE_LIMIT = {}
 
 
 def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
-    ip = request.client.host
-    now = time.time()
+    ip, now = request.client.host, time.time()
 
     logger.info(f"ip address: {ip}")
 
@@ -21,7 +20,7 @@ def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> 
     ]
 
     if len(BOOTSTRAP_RATE_LIMIT[ip]) >= limit:
-        raise HTTPException(status_code=429, detail="Too many requests")
+        raise HTTPException(429, f"Too many requests")
 
     BOOTSTRAP_RATE_LIMIT[ip].append(now)
 
@@ -47,7 +46,7 @@ def resolve_bootstrap(
         "region": x_app_region,
         "version": x_app_version,
         "ttl": 86400,
-        "message": f"Use default activation node"
+        "message": f"Use activation node"
     }
 
     return signature.signature_license(
