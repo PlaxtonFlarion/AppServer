@@ -63,7 +63,7 @@ async def sign(
         x_app_id: str = Header(default=None, alias="X-App-ID"),
         x_app_token: str = Header(default=None, alias="X-App-Token"),
 ):
-    logger.info(f"sign request: {req}")
+    logger.info(f"signature request: {req}")
 
     return signature.deal_with_signature(
         req, x_app_id, x_app_token
