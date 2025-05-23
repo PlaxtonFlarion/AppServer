@@ -35,13 +35,15 @@ def resolve_bootstrap(
 
     signature.verify_signature(x_app_id, x_app_token, public_key_file)
 
-    return {
+    license_info = {
         "activation_url": f"https://license-server-s68o.onrender.com/sign",
         "region": x_app_region,
         "version": x_app_version,
         "ttl": 86400,
         "message": "Use default activation node"
     }
+
+    return signature.signature_license(license_info, public_key_file, compress=True)
 
 
 if __name__ == '__main__':
