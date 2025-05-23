@@ -41,7 +41,7 @@ def resolve_bootstrap(
         "region": x_app_region,
         "version": x_app_version,
         "ttl": 86400,
-        "message": "Use default activation node"
+        "message": f"Use default activation node"
     }
 
     return signature.signature_license(license_info, private_key_file)
