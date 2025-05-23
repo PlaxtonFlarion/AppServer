@@ -46,7 +46,10 @@ class Supabase(object):
         response = httpx.get(
             url, headers=HEADERS, params=self.__params
         )
-        return data[0] if (data := response.json()) else None
+        try:
+            return data[0] if (data := response.json()) else None
+        except KeyError:
+            return None
 
     def update_activation_status(self, json: dict, *_, **__) -> typing.Optional[bool]:
         url = f"{supabase_url}/rest/v1/{self.table}"
