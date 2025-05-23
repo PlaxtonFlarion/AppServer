@@ -49,8 +49,8 @@ async def bootstrap(
 ):
     return {
         "activation_url": "https://api.framix.dev/v1/activate",
-        "version": version,
-        "region": region,
+        "version": "1.0.0",
+        "region": "CN",
         "ttl": 86400,
         "message": "Use default activation node"
     }
