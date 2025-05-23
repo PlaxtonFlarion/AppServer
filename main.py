@@ -49,8 +49,16 @@ async def bootstrap(
 ):
     logger.warning(x_app_region)
     logger.warning(x_app_version)
+
     loaders.enforce_rate_limit(request)
-    return loaders.resolve_bootstrap(x_app_region, x_app_version)
+
+    return loaders.resolve_bootstrap(
+        x_app_id,
+        x_app_token,
+        x_app_region,
+        x_app_version,
+        const.APP_FX["public_key"]
+    )
 
 
 @app.post(f"/sign")
