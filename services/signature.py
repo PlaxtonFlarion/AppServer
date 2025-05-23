@@ -105,8 +105,8 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     if not x_app_id or not x_app_token:
         raise HTTPException(403, f"[!] 签名无效")
 
-    logger.info(x_app_id)
-    logger.info(x_app_token)
+    logger.info(f"X-App-ID: {x_app_id}")
+    logger.info(f"X-App-Token: {x_app_token}")
     
     try:
         app_token = json.loads(
@@ -142,7 +142,7 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
 
     # 查询所有通行证记录
     if not (codes := sup.fetch_activation_code()):
-        raise HTTPException(403, f"[!] 通行证无效")
+        raise HTTPException(409, f"[!] 通行证无效")
 
     # 查询通行证是否吊销
     if codes["is_revoked"]:
@@ -215,4 +215,10 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
 
 
 if __name__ == '__main__':
+    a = signature_license(
+        generate_x_app_token(
+            "Framix  Technologies Inc."
+        ), "framix_private_key.pem", True
+    )
+    print(a)
     pass
