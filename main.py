@@ -10,7 +10,7 @@ from fastapi import (
     Request, Header, FastAPI
 )
 from services import (
-    cron_job, signature
+    cron_job, loaders, signature
 )
 from common import (
     const, craft
@@ -47,13 +47,10 @@ async def bootstrap(
     x_app_region: str = Header(..., alias="X-App-Region"),
     x_app_version: str = Header(..., alias="X-App-Version")
 ):
-    return {
-        "activation_url": "https://api.framix.dev/v1/activate",
-        "version": "1.0.0",
-        "region": "CN",
-        "ttl": 86400,
-        "message": "Use default activation node"
-    }
+    logger.warning(x_app_region)
+    logger.warning(x_app_version)
+    loaders.enforce_rate_limit(request)
+    return loaders.resolve_bootstrap(x_app_region, x_app_version)
 
 
 @app.post(f"/sign")

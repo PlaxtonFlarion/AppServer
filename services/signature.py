@@ -12,7 +12,6 @@ import json
 import base64
 import typing
 import hashlib
-import secrets
 from pathlib import Path
 from loguru import logger
 from datetime import (
@@ -65,7 +64,7 @@ def generate_keys() -> None:
 
 def generate_x_app_token(app: str, private_key_file: str) -> str:
     license_info = {
-        "a": app, 
+        "a": (a := app),
         "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
         "n": (n := uuid.uuid4().hex.upper()[:12]),
         "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
