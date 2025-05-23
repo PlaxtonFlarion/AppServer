@@ -86,13 +86,13 @@ def generate_x_app_token(app: str, private_key_file: str) -> str:
     return base64.b64encode(json.dumps(token).encode()).decode()
 
 
-def decrypt_data(data: str) -> str:
-    private_key = utils.load_private_key("framix_private_key.pem")
+def decrypt_data(data: str, private_key_file: str) -> str:
+    private_key = utils.load_private_key(private_key_file)
 
-    decrypted_app_id = private_key.decrypt(
+    decrypted = private_key.decrypt(
         base64.b64decode(data), padding.PKCS1v15()
     )
-    return json.loads(decrypted_app_id)
+    return json.loads(decrypted)
 
 
 def generate_license(
@@ -135,8 +135,10 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key_file: str) -> d
     if not x_app_id or not x_app_token:
         raise HTTPException(403, f"[!] 签名无效")
 
+    logger.info(x_app_id)
+    logger.info(x_app_token)
+    
     try:
-        _ = x_app_id
         app_token = json.loads(
             base64.b64decode(x_app_token).decode(const.CHARSET)
         )
