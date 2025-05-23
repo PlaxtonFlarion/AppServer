@@ -129,10 +129,12 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     return auth_info
 
 
-def handle_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
+def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
     app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
 
-    verify_signature(x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}")
+    verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
 
     sup = supabase.Supabase(
         app_desc, activation_code, table=f"{app_name}_{const.LICENSE_CODES}"
@@ -193,7 +195,9 @@ def handle_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> 
             "issued_at": issued_at,
             "license_id": license_id
         }
-        license_data = signature_license(license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}")
+        license_data = signature_license(
+            license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+        )
 
         sup.update_activation_status(
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}

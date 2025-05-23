@@ -53,13 +53,7 @@ async def bootstrap(
     loaders.enforce_rate_limit(request)
 
     return loaders.resolve_bootstrap(
-        x_app_id,
-        x_app_token,
-        x_app_region,
-        x_app_version,
-        a,
-        t,
-        n
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n
     )
 
 
@@ -71,10 +65,8 @@ async def sign(
 ):
     logger.info(f"sign request: {req}")
 
-    return signature.handle_signature(
-        req,
-        x_app_id,
-        x_app_token
+    return signature.deal_with_signature(
+        req, x_app_id, x_app_token
     )
 
 
