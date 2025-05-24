@@ -14,6 +14,8 @@ BASE_PUBLIC_KEY    = r"public_key.pem"
 APP_PRIVATE_KEY    = f"app_{BASE_PRIVATE_KEY}"
 APP_PUBLIC_KEY     = f"app_{BASE_PUBLIC_KEY}"
 
+TEMPLATES          = r"templates"
+
 SUPABASE_URL       = r"SUPABASE_URL"
 SUPABASE_KEY       = r"SUPABASE_KEY"
 LICENSE_CODES      = r"license_codes"

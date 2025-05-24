@@ -9,8 +9,9 @@ from loguru import logger
 from fastapi import (
     Request, Header, Query, FastAPI
 )
+from fastapi.responses import PlainTextResponse
 from services import (
-    cron_job, loaders, signature
+    cron_job, loaders, signature, stencil
 )
 from common import craft
 
@@ -67,6 +68,23 @@ async def sign(
 
     return signature.deal_with_signature(
         req, x_app_id, x_app_token
+    )
+
+
+@app.get("/viewer-template", response_class=PlainTextResponse)
+async def viewer_template(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+        page: str = Query(..., alias="page"),
+):
+    logger.info(f"templates request: {request.url}")
+
+    return stencil.stencil_plate(
+        x_app_id, x_app_token, a, t, n, page
     )
 
 
