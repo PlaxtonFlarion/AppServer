@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: license-server
+    name: AppServer
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
