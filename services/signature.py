@@ -190,7 +190,8 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
             "expire": codes["expire"],
             "issued": issued,
             "issued_at": issued_at,
-            "license_id": license_id
+            "license_id": license_id,
+            "interval": codes["interval"]
         }
         license_data = signature_license(
             license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
