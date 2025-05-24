@@ -115,19 +115,16 @@ def resolve_bootstrap(
     )
 
     license_info = {
-        "activation_url": activation_url,
+        "url": activation_url,
+        "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
-        "ttl": 86400,
         "message": f"Use activation node"
     }
 
-    return {
-        "msg": "success",
-        "sign": signature.signature_license(
-            license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
-        )
-    }
+    return signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
 
 
 if __name__ == '__main__':
