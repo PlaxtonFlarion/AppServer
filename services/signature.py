@@ -169,10 +169,10 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
 
         pre_license_id = codes["license_id"]
 
-        logger.info(f"pre_castle {pre_castle}")
-        logger.info(f"cur_castle {cur_castle}")
-        logger.info(f"pre_license_id {pre_license_id}")
-        logger.info(f"cur_license_id {req.license_id}")
+        logger.info(f"pre_castle: {pre_castle}")
+        logger.info(f"cur_castle: {cur_castle}")
+        logger.info(f"pre_license_id: {pre_license_id}")
+        logger.info(f"cur_license_id: {req.license_id}")
 
         # 用户重复激活，同设备联网检查通行证状态
         if codes["is_used"] and cur_castle == pre_castle and req.license_id == pre_license_id:

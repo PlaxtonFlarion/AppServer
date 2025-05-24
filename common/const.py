@@ -15,6 +15,7 @@ APP_PRIVATE_KEY    = f"app_{BASE_PRIVATE_KEY}"
 APP_PUBLIC_KEY     = f"app_{BASE_PUBLIC_KEY}"
 
 TEMPLATES          = r"templates"
+TEMPLATE_VERSION   = r"template_version.json"
 
 SUPABASE_URL       = r"SUPABASE_URL"
 SUPABASE_KEY       = r"SUPABASE_KEY"

@@ -71,8 +71,25 @@ async def sign(
     )
 
 
-@app.get("/viewer-template", response_class=PlainTextResponse)
-async def viewer_template(
+@app.get("/template-meta")
+async def template_meta(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+):
+    # logger.info(f"templates request: {request.url}")
+    #
+    # return await stencil.stencil_meta(
+    #     x_app_id, x_app_token, a, t, n
+    # )
+    pass
+
+
+@app.get("/template-viewer", response_class=PlainTextResponse)
+async def template_viewer(
         request: "Request",
         x_app_id: str = Header(..., alias="X-App-ID"),
         x_app_token: str = Header(..., alias="X-App-Token"),
@@ -83,7 +100,7 @@ async def viewer_template(
 ):
     # logger.info(f"templates request: {request.url}")
     #
-    # return stencil.stencil_plate(
+    # return await stencil.stencil_viewer(
     #     x_app_id, x_app_token, a, t, n, page
     # )
     pass
