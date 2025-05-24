@@ -18,7 +18,7 @@ def stencil_plate(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    html_template = utils.resolve_template(f"template_{page}.html")
+    html_template = utils.resolve_template(page)
     return html_template.read_text(encoding=const.CHARSET)
 
 

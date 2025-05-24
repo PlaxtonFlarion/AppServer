@@ -81,11 +81,12 @@ async def viewer_template(
         n: str = Query(..., alias="n"),
         page: str = Query(..., alias="page"),
 ):
-    logger.info(f"templates request: {request.url}")
-
-    return stencil.stencil_plate(
-        x_app_id, x_app_token, a, t, n, page
-    )
+    # logger.info(f"templates request: {request.url}")
+    #
+    # return stencil.stencil_plate(
+    #     x_app_id, x_app_token, a, t, n, page
+    # )
+    pass
 
 
 if __name__ == '__main__':
