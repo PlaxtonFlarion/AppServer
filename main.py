@@ -60,8 +60,8 @@ async def bootstrap(
 @app.post(f"/sign")
 async def sign(
         req: "signature.LicenseRequest",
-        x_app_id: str = Header(default=None, alias="X-App-ID"),
-        x_app_token: str = Header(default=None, alias="X-App-Token"),
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
 ):
     logger.info(f"signature request: {req}")
 

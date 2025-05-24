@@ -22,3 +22,6 @@ CRON_JOB_URL       = r"CRON_JOB_URL"
 CRON_JOB_KEY       = r"CRON_JOB_KEY"
 
 ACTIVATION_URL     = r"ACTIVATION_URL"
+
+PRINT_FORMAT       = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
+WRITE_FORMAT       = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"

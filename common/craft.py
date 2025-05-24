@@ -8,23 +8,25 @@
 import sys
 from pathlib import Path
 from loguru import logger
+from common import const
 
 
-def init_logger(level: str = "INFO") -> None:
+def init_logger() -> None:
     (log_dir := Path("logs")).mkdir(parents=True, exist_ok=True)
+    log_level = "INFO"
 
     logger.remove()
 
     logger.add(
         sys.stdout,
-        level=level,
-        format="<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
+        level=log_level,
+        format=const.PRINT_FORMAT
     )
 
     logger.add(
         log_dir / f"app_server.log",
-        level=level,
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+        level=log_level,
+        format=const.WRITE_FORMAT,
         rotation="1 MB",
         retention="7 days",
         compression="zip"
