@@ -8,7 +8,6 @@
 import os
 from faker import Faker
 from pathlib import Path
-from dotenv import load_dotenv
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.types import (
     PrivateKeyTypes, PublicKeyTypes
@@ -18,13 +17,22 @@ from common import const
 fake = Faker()
 
 
+def load_env_file(env_path: "Path") -> None:
+    if env_path.exists():
+        for line in env_path.read_text(encoding=const.CHARSET).splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, value = line.partition("=")
+                os.environ[key.strip()] = value.strip()
+
+
 def current_env(*args, **__) -> dict[str, str]:
     if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
-        load_dotenv(env_path)
+        load_env_file(env_path)
         return {
             arg: os.getenv(arg) for arg in args
         }
-    
+
     return {
         arg: Path(f"/etc/secrets/{arg}").read_text().strip() for arg in args
     }
