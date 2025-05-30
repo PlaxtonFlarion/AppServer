@@ -104,7 +104,7 @@ def signature_license(license_info: dict, private_key: str, compress: bool = Fal
 def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     logger.info(f"X-App-ID: {x_app_id}")
     logger.info(f"X-App-Token: {x_app_token}")
-    
+
     try:
         app_token = json.loads(
             base64.b64decode(x_app_token).decode(const.CHARSET)
@@ -143,7 +143,7 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
 
     # 查询通行证是否吊销
     if codes["is_revoked"]:
-        raise HTTPException(403, f"[!] 通行证已被吊销")
+        raise HTTPException(403, f"[!] 通行证已吊销")
 
     # 查询最大激活次数
     if codes["activations"] >= codes["max_activations"]:
@@ -153,9 +153,13 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
     if codes["pending"]:
         raise HTTPException(423, f"[!] 授权正在处理中")
 
-    # 防重放：如果 nonce 相同则拒绝
+    # 如果 nonce 相同则拒绝
     if req.n == codes["last_nonce"]:
-        raise HTTPException(409, "[!] 重放请求被拒绝")
+        raise HTTPException(409, f"[!] 重放请求被拒绝")
+
+    # 判断是否过期
+    if datetime.now(timezone.utc).date() > datetime.fromisoformat(codes["expire"]).date():
+        raise HTTPException(403, f"[!] 通行证已过期")
 
     pre_castle, cur_castle= codes["castle"], req.castle
 
