@@ -1,0 +1,653 @@
+<!--
+  _____                    _      _____                    _       _
+ |  ___| __ __ _ _ __ ___ (_)_  _|_   _|__ _ __ ___  _ __ | | __ _| |_ ___
+ | |_ | '__/ _` | '_ ` _ \| \ \/ / | |/ _ \ '_ ` _ \| '_ \| |/ _` | __/ _ \
+ |  _|| | | (_| | | | | | | |>  <  | |  __/ | | | | | |_) | | (_| | ||  __/
+ |_|  |_|  \__,_|_| |_| |_|_/_/\_\ |_|\___|_| |_| |_| .__/|_|\__,_|\__\___|
+                                                    |_|
+
+Copyright (c) 2024  Framix :: 画帧秀
+This file is licensed under the Framix :: 画帧秀 License. See the LICENSE.md file for more details.
+-->
+
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ app_desc }} - Atom - Total</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+</head>
+<style>
+    /* 定义滚动条的宽度 */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    /* 定义滚动条轨道的样式 */
+    ::-webkit-scrollbar-track {
+        box-shadow: inset 0 0 5px grey;
+        border-radius: 10px;
+    }
+    /* 定义滚动滑块的样式 */
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    /* 当滑块被鼠标悬停或点击时，改变颜色 */
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* 加载动画 */
+    #loader-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+    #loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .circle {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background-color: #34d9db;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        animation: circleAnimation 1.5s ease-in-out infinite;
+    }
+    .circle:nth-child(1) {
+        animation-delay: 0s;
+    }
+    .circle:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+    .circle:nth-child(3) {
+        animation-delay: 1s;
+    }
+    @keyframes circleAnimation {
+        0% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    /* 主体部分 */
+    .container {
+        max-width: 80%;
+        margin: 20px;
+        background-color: {{ background_color }};
+    }
+    body {
+        background-color: {{ background_color }};
+        margin-bottom: 40px;
+    }
+    .card-body {
+        background-color: {{ background_color }};
+    }
+    .footer {
+        position: relative;
+        height: 40px;
+        bottom: 20px;
+        left: 0px;
+        right: 0px;
+        text-align: center;
+        background-color: {{ background_color }};
+    }
+
+    /* 一组图片容器 */
+    .thumbnail-list {
+        margin-bottom: 30px;
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+    /* 图片容器 */
+    .thumbnails {
+        width: 15%;
+        height: 15%;
+        display: inline-block;
+        text-align: center;
+        margin: 20px 0;
+        transition: all 0.3s ease;
+    }
+    /* 图片 */
+    .thumbnail {
+        width: 90%;
+        height: 90%;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+    .thumbnail:hover {
+        transform: scale(0.98);
+        border-radius: 20px;
+        transition: transform 0.3s ease;
+    }
+    .thumbnail:active {
+        transform: scale(0.95);
+    }
+    .thumbnails p {
+        margin: 0;
+        font-weight: bold;
+    }
+
+    /* 图片被选择 */
+    .selected {
+        box-shadow: 0px 0px 2px 2px rgba(228, 133, 26, 0.9);
+        transition: all 0.3s ease;
+    }
+
+    /* 分割线 */
+    .line {
+        height: 4px;
+        background: linear-gradient(to right, green, purple);
+        border: none;
+    }
+
+    /* 警告提示框 */
+    .alert {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+    .alert-btn {
+        padding: 1px 8px;
+        border-radius: 10px;
+        background-color: #a3e20d;
+    }
+    .alert-btn:hover {
+        background-color: #e2dc0d;
+        transition: background-color 0.3s ease;
+    }
+    .alert-btn:active {
+        transform: scale(0.95);
+    }
+    .alert-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #fff;
+        box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+    }
+    .alert-message {
+        margin-right: 10px;
+    }
+
+    /* 通知 */
+    #notification {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 15px;
+        background-color: rgba(0,0,0,0.7);
+        color: white;
+        border-radius: 5px;
+        z-index: 9999;
+    }
+
+    /* 灯箱查看器 */
+    #lightbox {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 999;
+    }
+    .lightbox-content {
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        box-shadow: 0px 0px 20px 2px rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+    }
+    .btn-div {
+        display: flex;
+        justify-content: center;
+    }
+    .image-wrapper {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .image-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+    }
+    .image-box img {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 80%;
+        max-height: 80%;
+        object-fit: contain;
+        border-radius: 10px;
+    }
+    .img1:hover, .img2:hover {
+        cursor: grab;
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(100, 200, 255, 0.4);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .img1:active, .img2:active {
+        transform: scale(0.97);
+    }
+    #difference {
+        padding: 5px 30px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: 10px;
+        background: #bedc15;
+    }
+    #difference:hover {
+        background-color: #fff58a;
+        transition: background-color 0.3s ease;
+    }
+    #difference:active {
+        transform: scale(0.8);
+        transition: transform 0.3s ease;
+    }
+
+    #frame-info p {
+        position: fixed; /* Ensure position is fixed */
+        display: none; /* Hide by default */
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px;
+        border-radius: 5px;
+        z-index: 1000; /* Ensure it is above other elements */
+        pointer-events: none; /* Ensure p tags don't interfere with mouse events */
+    }
+
+    /* 横屏模式 */
+    @media screen and (orientation: landscape) {
+        .lightbox-content {
+            width: 60%;
+            height: 80%;
+        }
+    }
+    /* 竖屏模式 */
+    @media screen and (orientation: portrait) {
+        .lightbox-content {
+            width: 95%;
+            height: 55%;
+        }
+    }
+</style>
+<body>
+<div id="loader-wrapper">
+  <div id="loader">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+  </div>
+</div>
+
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="https://github.com/PlaxtonFlarion/NexaFlow" target="_blank">{{ app_desc }}</a>
+</nav>
+
+<nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" data-toggle="tab" href="#nav-stages" role="tab"
+           aria-controls="nav-stages" aria-selected="true">阶段信息</a>
+        <a class="nav-item nav-link" data-toggle="tab" href="#nav-others" role="tab"
+           aria-controls="nav-others" aria-selected="false">其他信息</a>
+    </div>
+</nav>
+
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-stages" role="tabpanel">
+        {% if thumbnail_list %}
+        <div class="container">
+            <div class="card border-light">
+                <div class="card-body">
+                    {% for item_dict in thumbnail_list %}
+                    {% for title, images in item_dict.items() %}
+                    <h5> {{ title }} </h5>
+                    <div class="thumbnail-list">
+                        {% for info in images %}
+                        <div class="thumbnails">
+                            <p class="frame">{{ info.frame_id }}</p>
+                            <p class="timestamp">{{ info.timestamp }}</p>
+                            <img class="thumbnail" src="{{ info.image }}"/>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="nav-others" role="tabpanel">
+        {% if cost_dict %}
+        <div class="container">
+            <div class="card border-light">
+                <div class="card-body">
+                    <h2>阶段耗时</h2>
+                    <hr class="line">
+                    <p> 计算阶段更改所花费的时间 </p>
+                    {% for name, result in cost_dict.items() %}
+                    <h4> 阶段 {{ name }} </h4>
+                    <ul>
+                        <li>范围: {{ result[0].frame_id }} - {{ result[1].frame_id }} ({{ result[0].timestamp }} - {{ result[1].timestamp }})</li>
+                        <li>耗时: {{ result[1].timestamp - result[0].timestamp }}</li>
+                    </ul>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if extras %}
+        <div class="container">
+            <div class="card border-light">
+                <div class="card-body">
+                    <h2>信息</h2>
+                    <hr class="line">
+                    {% for name, value in extras.items() %}
+                    <h4> {{ name }} </h4>
+                    <p> {{ value }} </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<div id="lightbox">
+    <div class="lightbox-content">
+        <div class="btn-div">
+            <button id="difference"></button>
+        </div>
+        <div class="image-wrapper">
+            <div class="image-box">
+                <img class="img1" src="">
+            </div>
+            <div class="image-box">
+                <img class="img2" src="">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="frame-info">
+    <p class="frame1"></p>
+    <p class="timestamp1"></p>
+    <p class="frame2"></p>
+    <p class="timestamp2"></p>
+</div>
+
+<div id="custom-alert" class="alert">
+    <div class="alert-content">
+        <span class="alert-message"></span>
+        <button onclick="closeAlert()">确定</button>
+    </div>
+</div>
+
+<div id="notification">数据已复制到剪贴板</div>
+
+<footer class="footer">
+    <div class="container-fluid">
+        <HR>
+        <span class="text-muted">
+            Built with @{{ app_desc }} ver {{ version_code }}
+            Report Create: {{ timestamp }}
+        </span>
+    </div>
+</footer>
+
+<script>
+    // 监听图片的点击事件
+    var thumbs = Array.from(document.querySelectorAll('.thumbnail'));
+    thumbs.forEach((thumb, index) => {
+        thumb.addEventListener('click', function(e) {
+            let pTag = thumb.parentElement.querySelectorAll('p');
+            const parentDiv = thumb.closest('.thumbnail-list');
+            const h5Element = parentDiv.previousElementSibling;
+            if (thumb.classList.contains('selected')) {
+                thumb.classList.remove('selected');
+                pTag.forEach(tag => {
+                    tag.style.color = '';
+                });
+                h5Element.style.color = '';
+            } else {
+                let thumbMark = Array.from(document.querySelectorAll('.selected'));
+                if (thumbMark.length < 2) {
+                    thumb.classList.add('selected');
+                    pTag.forEach(tag => {
+                        tag.style.color = 'crimson';
+                    });
+                    h5Element.style.color = 'crimson';
+                } else {
+                    showAlert('已经选择了两个标记，请先取消一个标记再进行操作！');
+                    return;
+                }
+            }
+
+            // 获取所有被选择的图片
+            const selects = document.querySelectorAll('.selected');
+            if (selects.length === 2) {
+                infoObject = calculate(selects);
+                populateLightbox(infoObject);
+            }
+        });
+    });
+
+    function calculate(selects) {
+        let frame1 = Number(selects[0].parentElement.querySelector('.frame').textContent);
+        let frame2 = Number(selects[1].parentElement.querySelector('.frame').textContent);
+        let timestamp1 = Number(selects[0].parentElement.querySelector('.timestamp').textContent);
+        let timestamp2 = Number(selects[1].parentElement.querySelector('.timestamp').textContent);
+        let img1 = selects[0].parentElement.querySelector('.thumbnail').src
+        let img2 = selects[1].parentElement.querySelector('.thumbnail').src
+        // 计算时间戳差值并取五位小数
+        let diff = Math.abs(timestamp2 - timestamp1);
+        diff = diff.toFixed(5);
+        // 打包为一个对象
+        const infoObject = {
+            frame1: frame1,
+            frame2: frame2,
+            timestamp1: timestamp1,
+            timestamp2: timestamp2,
+            img1: img1,
+            img2: img2,
+            diff: diff
+        };
+        return infoObject;  // 返回给灯箱查看器
+    }
+
+    function populateLightbox(info) {
+        // 设置图片内容
+        const img1 = document.querySelector('#lightbox .img1');
+        const img2 = document.querySelector('#lightbox .img2');
+
+        img1.src = info.img1;
+        img2.src = info.img2;
+
+        // 清除旧样式
+        img1.style.removeProperty('width');
+        img1.style.removeProperty('height');
+        img2.style.removeProperty('width');
+        img2.style.removeProperty('height');
+
+        // 加载后判断宽高比
+        img1.onload = () => {
+            if (img1.naturalHeight > img1.naturalWidth) {
+                img1.style.height = "80%";
+            } else {
+                img1.style.width = "80%";
+            }
+        };
+
+        img2.onload = () => {
+            if (img2.naturalHeight > img2.naturalWidth) {
+                img2.style.height = "80%";
+            } else {
+                img2.style.width = "80%";
+            }
+        };
+
+        // 更新文本信息
+        document.querySelector('#frame-info .frame1').textContent = info.frame1;
+        document.querySelector('#frame-info .frame2').textContent = info.frame2;
+        document.querySelector('#frame-info .timestamp1').textContent = info.timestamp1.toFixed(5);
+        document.querySelector('#frame-info .timestamp2').textContent = info.timestamp2.toFixed(5);
+        document.querySelector('#lightbox #difference').textContent = `${info.diff}`;
+
+        // 显示lightbox
+        document.querySelector('#lightbox').style.display = 'flex';
+    }
+
+    // 点击空白处或者图片关闭lightbox
+    document.querySelector('#lightbox').addEventListener('click', function(e) {
+        if (e.target.id === 'lightbox' || e.target.tagName === 'IMG') {
+            document.querySelector('#lightbox').style.display = 'none';
+            let thumbMark = Array.from(document.querySelectorAll('.selected'));
+            thumbMark.forEach((thumb, index) => {
+                thumb.classList.remove('selected');
+                let pTag = thumb.parentElement.querySelectorAll('p');
+                pTag.forEach(tag => {
+                    tag.style.color = '';
+                });
+                const parentDiv = thumb.closest('.thumbnail-list');
+                const h5Element = parentDiv.previousElementSibling;
+                h5Element.style.color = '';
+            });
+        }
+    });
+
+    // 复制结果按钮
+    var diffBtn = document.getElementById('difference')
+    diffBtn.addEventListener('click', function(e) {
+        let rawContent = diffBtn.textContent;
+        // 尝试将内容转换为数字并保留小数点后五位
+        let numberContent = parseFloat(rawContent);
+        if (!isNaN(numberContent)) {
+            rawContent = numberContent.toFixed(5);
+        }
+        // 去除换行、空白等格式
+        let cleanContent = rawContent.trim().replace(/\s+/g, ' ');
+        // 显示通知
+        copyAction(cleanContent);
+    });
+
+    async function copyAction(content) {
+        try {
+            await navigator.clipboard.writeText(content);
+            console.log('Data successfully copied to clipboard!');
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => notification.style.display = 'none', 1000);
+        } catch (err) {
+            console.error('Unable to copy data to clipboard:', err);
+        }
+    }
+
+    // 开启警告提示框
+    function showAlert(message) {
+        document.getElementById('custom-alert').style.display = 'block';
+        document.querySelector('.alert-message').innerText = message;
+    }
+
+    // 关闭警告提示框
+    function closeAlert() {
+        document.getElementById('custom-alert').style.display = 'none';
+    }
+</script>
+
+<script>
+    window.addEventListener("load", function() {
+        setTimeout(function() {
+            var loader = document.getElementById("loader-wrapper");
+            loader.style.opacity = "0";
+            setTimeout(function(){
+                loader.style.display = "none";
+            }, 500);
+        }, 1000); // 强制等待
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const images = document.querySelectorAll(".image-box img");
+        images.forEach(image => {
+            image.addEventListener("mousemove", function(event) {
+                let frame, timestamp;
+                if (this.classList.contains("img1")) {
+                    frame = document.querySelector(".frame1");
+                    timestamp = document.querySelector(".timestamp1");
+                } else if (this.classList.contains("img2")) {
+                    frame = document.querySelector(".frame2");
+                    timestamp = document.querySelector(".timestamp2");
+                }
+
+                frame.style.display = "block";
+                frame.style.left = `${event.clientX + 20}px`;
+                frame.style.top = `${event.clientY - 90}px`;
+
+                timestamp.style.display = "block";
+                timestamp.style.left = `${event.clientX + 20}px`;
+                timestamp.style.top = `${event.clientY - 50}px`;
+            });
+
+            image.addEventListener("mouseleave", function() {
+                let frame, timestamp;
+                if (this.classList.contains("img1")) {
+                    frame = document.querySelector(".frame1");
+                    timestamp = document.querySelector(".timestamp1");
+                } else if (this.classList.contains("img2")) {
+                    frame = document.querySelector(".frame2");
+                    timestamp = document.querySelector(".timestamp2");
+                }
+
+                frame.style.display = "none";
+                timestamp.style.display = "none";
+            });
+        });
+    });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/js/bootstrap.min.js"></script>
+</body>
+</html>
