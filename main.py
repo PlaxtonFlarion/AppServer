@@ -80,12 +80,11 @@ async def template_meta(
         t: int = Query(..., alias="t"),
         n: str = Query(..., alias="n"),
 ):
-    # logger.info(f"templates request: {request.url}")
-    #
-    # return await stencil.stencil_meta(
-    #     x_app_id, x_app_token, a, t, n
-    # )
-    pass
+    logger.info(f"templates request: {request.url}")
+
+    return await stencil.stencil_meta(
+        x_app_id, x_app_token, a, t, n
+    )
 
 
 @app.get("/template-viewer", response_class=PlainTextResponse)
