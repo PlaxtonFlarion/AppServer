@@ -19,7 +19,8 @@ async def stencil_meta(
     )
 
     version_file = utils.resolve_template_ver()
-    return json.loads(version_file.read_text())
+    version_dict = json.loads(version_file.read_text())
+    return version_dict.get(app_desc, {})
 
 
 async def stencil_viewer(
