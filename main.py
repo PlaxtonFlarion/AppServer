@@ -66,9 +66,7 @@ async def sign(
 ):
     logger.info(f"signature request: {req}")
 
-    return signature.deal_with_signature(
-        req, x_app_id, x_app_token
-    )
+    return signature.manage_signature(req, x_app_id, x_app_token)
 
 
 @app.get("/template-meta")

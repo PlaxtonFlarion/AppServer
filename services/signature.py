@@ -62,13 +62,20 @@ def generate_keys() -> None:
     return print(f"✓ 密钥已生成 -> {key_folder}")
 
 
-def generate_x_app_token(app: str) -> dict:
-    return {
-        "a": (a := app),
-        "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
-        "n": (n := uuid.uuid4().hex.upper()[:12]),
-        "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
-    }
+def generate_x_app_token(app_desc: str) -> str:
+    x_app_token = signature_license(
+        {
+            "a": (a := app_desc.strip()),
+            "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
+            "n": (n := uuid.uuid4().hex.upper()[:12]),
+            "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
+        }, f"{app_desc.lower().strip()}_{const.BASE_PRIVATE_KEY}"
+    )
+
+    x_app_token_str = base64.b64encode(json.dumps(x_app_token).encode()).decode()
+    logger.info(x_app_token_str)
+
+    return x_app_token_str
 
 
 def decrypt_data(data: str, private_key: str) -> str:
@@ -80,7 +87,7 @@ def decrypt_data(data: str, private_key: str) -> str:
     return json.loads(decrypted)
 
 
-def signature_license(license_info: dict, private_key: str, compress: bool = False) -> str | dict:
+def signature_license(license_info: dict, private_key: str) -> dict:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
 
     private_key = utils.load_private_key(private_key)
@@ -89,16 +96,11 @@ def signature_license(license_info: dict, private_key: str, compress: bool = Fal
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
 
-    token = {
+    logger.info(f"下发签名: {license_info}")
+    return {
         "data": base64.b64encode(message_bytes).decode(),
         "signature": base64.b64encode(signature).decode()
     }
-
-    logger.info(f"下发签名: {license_info}")
-
-    if compress:
-        return base64.b64encode(json.dumps(token).encode()).decode()
-    return token
 
 
 def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
@@ -126,7 +128,7 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     return auth_info
 
 
-def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
+def manage_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
     app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
 
     verify_signature(
@@ -145,9 +147,9 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
     if codes["is_revoked"]:
         raise HTTPException(403, f"[!] 通行证已吊销")
 
-    # 查询最大激活次数
-    if codes["activations"] >= codes["max_activations"]:
-        raise HTTPException(403, f"[!] 超过最大激活次数")
+    # 判断是否过期
+    if datetime.now(timezone.utc).date() > datetime.fromisoformat(codes["expire"]).date():
+        raise HTTPException(403, f"[!] 通行证已过期")
 
     # 若已有其他进程 pending 此通行证，拒绝
     if codes["pending"]:
@@ -156,10 +158,6 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
     # 如果 nonce 相同则拒绝
     if req.n == codes["last_nonce"]:
         raise HTTPException(409, f"[!] 重放请求被拒绝")
-
-    # 判断是否过期
-    if datetime.now(timezone.utc).date() > datetime.fromisoformat(codes["expire"]).date():
-        raise HTTPException(403, f"[!] 通行证已过期")
 
     pre_castle, cur_castle= codes["castle"], req.castle
 
@@ -181,7 +179,12 @@ def deal_with_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) 
         # 用户重复激活，同设备联网检查通行证状态
         if codes["is_used"] and cur_castle == pre_castle and req.license_id == pre_license_id:
             issued_at, license_id = codes["issued_at"], pre_license_id
+
         else:
+            # 查询最大激活次数
+            if codes["activations"] >= codes["max_activations"]:
+                raise HTTPException(403, f"[!] 超过最大激活次数")
+
             issued_at, license_id = issued, sup.generate_license_id(issued)
             payload.update({
                 "castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1

@@ -23,8 +23,10 @@ LICENSE_CODES      = r"license_codes"
 
 CRON_JOB_URL       = r"CRON_JOB_URL"
 CRON_JOB_KEY       = r"CRON_JOB_KEY"
+FOLDER_ID          = 47245
 
 ACTIVATION_URL     = r"ACTIVATION_URL"
 
+SHOW_LEVEL         = r"INFO"
 PRINT_FORMAT       = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
 WRITE_FORMAT       = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"

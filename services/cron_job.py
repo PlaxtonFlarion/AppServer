@@ -55,11 +55,11 @@ async def send(
 async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutine | typing.Any:
     response = await send(client, "get", f"{cron_job_url}/jobs")
 
-    for job in [job for job in response.json()["jobs"] if job["folderId"] == 47245]:
+    for job in [job for job in response.json()["jobs"] if job["folderId"] == const.FOLDER_ID]:
 
         json = {
             "job": {
-                "folderId": 47245,
+                "folderId": const.FOLDER_ID,
                 'schedule': {
                     'timezone': utils.fake.timezone(),
                 },
