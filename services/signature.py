@@ -62,14 +62,14 @@ def generate_keys() -> None:
     return print(f"✓ 密钥已生成 -> {key_folder}")
 
 
-def generate_x_app_token(app_desc: str) -> str:
+def generate_x_app_token(app_name: str, app_desc: str) -> str:
     x_app_token = signature_license(
         {
             "a": (a := app_desc.strip()),
             "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
             "n": (n := uuid.uuid4().hex.upper()[:12]),
             "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
-        }, f"{app_desc.lower().strip()}_{const.BASE_PRIVATE_KEY}"
+        }, f"{app_name.lower().strip()}_{const.BASE_PRIVATE_KEY}"
     )
 
     x_app_token_str = base64.b64encode(json.dumps(x_app_token).encode()).decode()
