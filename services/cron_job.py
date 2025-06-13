@@ -5,10 +5,8 @@
 #   \____|_|  \___/|_| |_|  \___/ \___/|_.__/
 #
 
-import time
 import httpx
 import typing
-import asyncio
 from loguru import logger
 from common import (
     utils, const
@@ -24,22 +22,6 @@ cron_job_key = env[const.CRON_JOB_KEY]
 HEADERS = {
     "Authorization": f"Bearer {cron_job_key}", "Content-Type": "application/json"
 }
-
-
-async def cpu_heavy_work() -> dict:
-    primes = []
-    for num in range(10000, 10200):
-        for i in range(2, num):
-            if num % i == 0:
-                break
-        else:
-            primes.append(num)
-
-    await asyncio.sleep(1)
-
-    return {
-        "status": "pong", "cpu_cycles": len(primes), "timestamp": time.time()
-    }
 
 
 async def send(

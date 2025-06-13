@@ -11,7 +11,7 @@ from fastapi import (
 )
 from fastapi.responses import PlainTextResponse
 from services import (
-    cron_job, loaders, signature, stencil
+    cron_job, keep_alive, loaders, signature, stencil
 )
 from common import craft
 
@@ -35,12 +35,12 @@ async def cron_job_update():
 
 @app.get("/keep-render-alive")
 async def keep_render_alive():
-    return await cron_job.cpu_heavy_work()
+    return await keep_alive.cpu_heavy_work()
 
 
 @app.get("/keep-supabase-alive")
 async def keep_supabase_alive():
-    pass
+    return await keep_alive.single_query()
 
 
 @app.get("/bootstrap")
