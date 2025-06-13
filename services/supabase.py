@@ -109,13 +109,13 @@ class Supabase(object):
 
     def keep_alive(self) -> None:
         url = f"{supabase_url}/rest/v1/{self.table}"
-        params = {"select": (select := "id"), "limit": 1}
+        params = {"select": "id", "limit": 1}
         try:
             response = httpx.get(
                 url, headers=HEADERS, params=params, timeout=self.timeout
             )
             response.raise_for_status()
-            return logger.info(f"🟢 Supabase 保活成功: {response.json()[0][select]}")
+            return logger.info(f"🟢 Supabase 保活成功")
         except httpx.HTTPStatusError as e:
             return logger.warning(f"🟡 Supabase 保活异常: {e.response.status_code} {e.response.text}")
         except Exception as e:
