@@ -49,7 +49,7 @@ class Supabase(object):
         )
         try:
             return data[0] if (data := response.json()) else None
-        except KeyError as e:
+        except Exception as e:
             return logger.error(f"❌ 查询失败: {e}")
 
     def update_activation_status(self, json: dict, *_, **__) -> typing.Optional[bool]:
@@ -71,13 +71,14 @@ class Supabase(object):
         )
         return response.status_code == 204
 
-    def wash_code_pending(self) -> None:
+    def wash_code_pending(self) -> bool:
         url = f"{supabase_url}/rest/v1/{self.table}"
         json = {"pending": False}
         headers = HEADERS | {"Prefer": "return=minimal"}
-        httpx.patch(
+        response = httpx.patch(
             url, headers=headers, params=self.params, json=json, timeout=self.timeout
         )
+        return response.status_code == 204
 
     def generate_license_id(self, issued_at: str) -> str:
         raw = f"{self.app}:{self.code}:{issued_at}".encode(const.CHARSET)
@@ -95,9 +96,11 @@ class Supabase(object):
             json = {
                 "app": self.app, "code": code, "expire": expire, "is_used": False
             }
-            response = httpx.post(url, headers=HEADERS, json=json)
-            if response.status_code not in (200, 201):
-                logger.error(f"❌ 插入失败: {code} -> {response.status_code}: {response.text}")
+            try:
+                response = httpx.post(url, headers=HEADERS, json=json)
+                response.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                logger.error(f"❌ 插入失败: {code} -> {e.response.status_code}: {e.response.text}")
             else:
                 logger.info(f"✅ 成功插入: {code}")
 
@@ -112,13 +115,11 @@ class Supabase(object):
                 url, headers=HEADERS, params=params, timeout=self.timeout
             )
             response.raise_for_status()
-            return logger.info("🟢 Supabase 保活成功")
+            return logger.info(f"🟢 Supabase 保活成功: {response.json()}")
         except httpx.HTTPStatusError as e:
             return logger.warning(f"🟡 Supabase 保活异常: {e.response.status_code} {e.response.text}")
         except Exception as e:
             return logger.error(f"🔴 Supabase 保活失败: {e}")
-
-
 
 
 if __name__ == "__main__":
