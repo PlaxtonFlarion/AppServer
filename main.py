@@ -20,7 +20,7 @@ app, *_ = FastAPI(), craft.init_logger()
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def index():
-    return {"message": "License Server is live"}
+    return {"message": "App Server is live"}
 
 
 @app.get("/status")
@@ -36,6 +36,11 @@ async def cron_job_update():
 @app.get("/keep-render-alive")
 async def keep_render_alive():
     return await cron_job.cpu_heavy_work()
+
+
+@app.get("/keep-supabase-alive")
+async def keep_supabase_alive():
+    pass
 
 
 @app.get("/bootstrap")
