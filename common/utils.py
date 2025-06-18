@@ -44,12 +44,8 @@ def resolve_key(key_file: str) -> "Path":
     ).exists() else Path(__file__).resolve().parents[1] / const.KEYS_DIR) / key_file
 
 
-def resolve_template_ver() -> "Path":
-    return Path(__file__).resolve().parents[1] / const.TEMPLATES / const.TEMPLATE_VERSION
-
-
-def resolve_template(template_file: str) -> "Path":
-    return Path(__file__).resolve().parents[1] / const.TEMPLATES / template_file
+def resolve_template(directory: str, template_file: str) -> "Path":
+    return Path(__file__).resolve().parents[1] / const.TEMPLATES/ directory / template_file
 
 
 def load_private_key(key_file: str) -> "PrivateKeyTypes":

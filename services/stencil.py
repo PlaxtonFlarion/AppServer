@@ -25,8 +25,8 @@ async def stencil_meta(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    version_file = utils.resolve_template_ver()
-    version_dict = json.loads(version_file.read_text())
+    version_file = utils.resolve_template("html", const.TEMPLATE_VERSION)
+    version_dict = json.loads(version_file.read_text(encoding=const.CHARSET))
     return version_dict.get(app_desc, {})
 
 
@@ -44,7 +44,7 @@ async def stencil_viewer(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    html_template = utils.resolve_template(page)
+    html_template = utils.resolve_template("html", page)
     return html_template.read_text(encoding=const.CHARSET)
 
 
@@ -62,7 +62,7 @@ async def stencil_case(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    business_file = utils.resolve_template(case)
+    business_file = utils.resolve_template("case", case)
     business_dict = json.loads(business_file.read_text(encoding=const.CHARSET))
     return business_dict
 
