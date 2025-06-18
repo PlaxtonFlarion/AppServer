@@ -6,6 +6,7 @@
 #
 
 import json
+from fastapi import HTTPException
 from common import (
     const, utils
 )
@@ -62,9 +63,15 @@ async def stencil_case(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    business_file = utils.resolve_template("case", case)
-    business_dict = json.loads(business_file.read_text(encoding=const.CHARSET))
-    return business_dict
+    try:
+        business_file = utils.resolve_template("case", case)
+        return json.loads(business_file.read_text(encoding=const.CHARSET))
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"文件不存在")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail=f"文件格式错误")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"内部错误: {e}")
 
 
 if __name__ == '__main__':
