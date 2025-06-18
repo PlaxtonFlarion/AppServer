@@ -107,5 +107,22 @@ async def template_viewer(
     )
 
 
+@app.get("/business-case")
+async def business_case(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+        case: str = Query(..., alias="case"),
+):
+    logger.info(f"business request: {request.url}")
+
+    return await stencil.stencil_case(
+        x_app_id, x_app_token, a, t, n, case
+    )
+
+
 if __name__ == '__main__':
     pass

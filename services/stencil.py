@@ -1,3 +1,10 @@
+#   ____  _                  _ _
+#  / ___|| |_ ___ _ __   ___(_) |
+#  \___ \| __/ _ \ '_ \ / __| | |
+#   ___) | ||  __/ | | | (__| | |
+#  |____/ \__\___|_| |_|\___|_|_|
+#
+
 import json
 from common import (
     const, utils
@@ -39,6 +46,25 @@ async def stencil_viewer(
 
     html_template = utils.resolve_template(page)
     return html_template.read_text(encoding=const.CHARSET)
+
+
+async def stencil_case(
+        x_app_id: str,
+        x_app_token: str,
+        a: str,
+        t: int,
+        n: str,
+        case: str,
+) -> str:
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    signature.verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
+
+    business_file = utils.resolve_template(case)
+    business_dict = json.loads(business_file.read_text(encoding=const.CHARSET))
+    return business_dict
 
 
 if __name__ == '__main__':
