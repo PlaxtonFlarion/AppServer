@@ -67,9 +67,9 @@ async def stencil_case(
         business_file = utils.resolve_template("case", case)
         return json.loads(business_file.read_text(encoding=const.CHARSET))
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail=f"文件不存在")
+        raise HTTPException(status_code=404, detail=f"文件名不存在: {case}")
     except json.JSONDecodeError:
-        raise HTTPException(status_code=422, detail=f"文件格式错误")
+        raise HTTPException(status_code=422, detail=f"文件格式错误: {case}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"内部错误: {e}")
 
