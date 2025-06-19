@@ -11,7 +11,7 @@ from fastapi import (
 )
 from fastapi.responses import PlainTextResponse
 from services import (
-    cron_job, keep_alive, loaders, signature, stencil
+    azure, cron_job, keep_alive, loaders, signature, stencil
 )
 from common import craft
 
@@ -122,6 +122,24 @@ async def business_case(
     return await stencil.stencil_case(
         x_app_id, x_app_token, a, t, n, case
     )
+
+
+@app.get("/speech-voice")
+async def speech_voice(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+        speak: str = Query(..., alias="speak"),
+        voice: str = Query("zh-CN-XiaoxiaoNeural", alias="voice"),
+):
+    logger.info(f"voice request: {request.url}")
+
+    return await azure.SpeechEngine(
+        x_app_id, x_app_token, a, t, n
+    ).tts_audio(speak, voice)
 
 
 if __name__ == '__main__':
