@@ -137,13 +137,13 @@ async def speech_voice(
     ssml = await azure.SpeechEngine.build_ssml(
         speak=req.speak,
         voice=req.voice,
-        rate=req.rate,
+        rater=req.rater,
         pitch=req.pitch,
         volume=req.volume,
-        style=req.style,
-        style_degree=req.style_degree,
+        manner=req.manner,
+        degree=req.degree,
     )
-    return azure.SpeechEngine.tts_audio(ssml)
+    return await azure.SpeechEngine.tts_audio(ssml)
 
 
 if __name__ == '__main__':

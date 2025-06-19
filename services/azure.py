@@ -40,8 +40,8 @@ class SpeechEngine(object):
                 response.raise_for_status()
                 return StreamingResponse(
                     io.BytesIO(response.content),
+                    headers={"Content-Disposition": 'inline; filename="speech.mp3"'},
                     media_type="audio/mpeg",
-                    headers={"Content-Disposition": 'inline; filename="speech.mp3"'}
                 )
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")
@@ -51,23 +51,23 @@ class SpeechEngine(object):
     async def build_ssml(
             speak: str,
             voice: str,
-            rate: str,
+            rater: str,
             pitch: str,
             volume: str,
-            style: typing.Optional[str] = None,
-            style_degree: typing.Optional[str] = None
+            manner: typing.Optional[str] = None,
+            degree: typing.Optional[str] = None
     ) -> str:
 
         logger.info(f"{voice} -> {speak}")
 
-        prosody = f"<prosody rate='{rate}' pitch='{pitch}' volume='{volume}'>{speak}</prosody>"
+        prosody = f"<prosody rate='{rater}' pitch='{pitch}' volume='{volume}'>{speak}</prosody>"
 
-        if style:
-            style_tag = f"<mstts:express-as style='{style}'"
-            if style_degree:
-                style_tag += f" styledegree='{style_degree}'"
-            style_tag += f">{prosody}</mstts:express-as>"
-            body = style_tag
+        if manner:
+            manner_tag = f"<mstts:express-as style='{manner}'"
+            if degree:
+                manner_tag += f" styledegree='{degree}'"
+            manner_tag += f">{prosody}</mstts:express-as>"
+            body = manner_tag
         else:
             body = prosody
 
@@ -78,7 +78,6 @@ class SpeechEngine(object):
             <voice name='{voice}'>{body}</voice>
         </speak>
         """.strip()
-
 
 
 if __name__ == '__main__':

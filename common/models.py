@@ -24,11 +24,11 @@ class SpeechRequest(BaseModel):
     speak: str = Field(..., description="文本内容")
     voice: str = Field("zh-CN-XiaoxiaoNeural", description="语音名称")
 
-    rate: typing.Optional[str] = Field("0%", description="语速，如 +20%、-10%")
+    rater: typing.Optional[str] = Field("0%", description="语速，如 +20%、-10%")
     pitch: typing.Optional[str] = Field("0%", description="语调，如 +5%")
     volume: typing.Optional[str] = Field("default", description="音量，如 +0dB")
-    style: typing.Optional[str] = Field(None, description="情感风格，如 cheerful")
-    style_degree: typing.Optional[str] = Field(None, description="风格强度，如 1.0, 2.0")
+    manner: typing.Optional[str] = Field(None, description="情感风格，如 cheerful")
+    degree: typing.Optional[str] = Field(None, description="风格强度，如 1.0, 2.0")
 
 
 if __name__ == '__main__':
