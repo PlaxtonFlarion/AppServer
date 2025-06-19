@@ -12,11 +12,13 @@ from pydantic import (
 
 
 class LicenseRequest(BaseModel):
-    code: str
-    castle: str
     a: str
     t: int
     n: str
+
+    code: str
+    castle: str
+
     license_id: typing.Optional[str] = None
 
 
