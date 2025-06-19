@@ -52,11 +52,12 @@ class SpeechEngine(object):
         </speak>
         """
 
+        logger.info(f"{voice} -> {speak}")
+
         async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
             response = await client.request(
                 "POST", azure_tts_url, content=ssml.encode(const.CHARSET)
             )
-            logger.info(response.json())
             return response.content
 
 
