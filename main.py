@@ -130,20 +130,15 @@ async def business_case(
 
 @app.post("/speech-voice", response_class=StreamingResponse)
 async def speech_voice(
-        req: "models.SpeechRequest"
+        req: "models.SpeechRequest",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
 ):
     logger.info(f"voice request: {req}")
 
-    ssml = await azure.SpeechEngine.build_ssml(
-        speak=req.speak,
-        voice=req.voice,
-        rater=req.rater,
-        pitch=req.pitch,
-        volume=req.volume,
-        manner=req.manner,
-        degree=req.degree,
+    return await azure.SpeechEngine.tts_audio(
+        req, x_app_id, x_app_token
     )
-    return await azure.SpeechEngine.tts_audio(ssml)
 
 
 if __name__ == '__main__':

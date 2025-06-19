@@ -21,6 +21,10 @@ class LicenseRequest(BaseModel):
 
 
 class SpeechRequest(BaseModel):
+    a: str
+    t: int
+    n: str
+
     speak: str = Field(..., description="文本内容")
     voice: str = Field("zh-CN-XiaoxiaoNeural", description="语音名称")
 

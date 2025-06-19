@@ -7,12 +7,12 @@
 
 import io
 import httpx
-import typing
 from loguru import logger
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
+from services.signature import verify_signature
 from common import (
-    utils, const
+    const, models, utils
 )
 
 env = utils.current_env(
@@ -33,7 +33,34 @@ HEADERS = {
 class SpeechEngine(object):
 
     @staticmethod
-    async def tts_audio(ssml: str) -> "StreamingResponse":
+    async def tts_audio(req: "models.SpeechRequest", x_app_id: str, x_app_token: str) -> "StreamingResponse":
+        app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
+
+        verify_signature(
+            x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+        )
+
+        logger.info(f"{req.voice} -> {req.speak}")
+
+        prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
+
+        if req.manner:
+            manner_tag = f"<mstts:express-as style='{req.manner}'"
+            if req.degree:
+                manner_tag += f" styledegree='{req.degree}'"
+            manner_tag += f">{prosody}</mstts:express-as>"
+            body = manner_tag
+        else:
+            body = prosody
+
+        ssml = f"""
+        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
+               xmlns:mstts='http://www.w3.org/2001/mstts'
+               xml:lang='zh-CN'>
+            <voice name='{req.voice}'>{body}</voice>
+        </speak>
+        """.strip()
+
         try:
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
@@ -46,38 +73,6 @@ class SpeechEngine(object):
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")
             raise HTTPException(status_code=500, detail=f"内部错误: {e}")
-
-    @staticmethod
-    async def build_ssml(
-            speak: str,
-            voice: str,
-            rater: str,
-            pitch: str,
-            volume: str,
-            manner: typing.Optional[str] = None,
-            degree: typing.Optional[str] = None
-    ) -> str:
-
-        logger.info(f"{voice} -> {speak}")
-
-        prosody = f"<prosody rate='{rater}' pitch='{pitch}' volume='{volume}'>{speak}</prosody>"
-
-        if manner:
-            manner_tag = f"<mstts:express-as style='{manner}'"
-            if degree:
-                manner_tag += f" styledegree='{degree}'"
-            manner_tag += f">{prosody}</mstts:express-as>"
-            body = manner_tag
-        else:
-            body = prosody
-
-        return f"""
-        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
-               xmlns:mstts='http://www.w3.org/2001/mstts'
-               xml:lang='zh-CN'>
-            <voice name='{voice}'>{body}</voice>
-        </speak>
-        """.strip()
 
 
 if __name__ == '__main__':
