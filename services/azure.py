@@ -5,9 +5,11 @@
 #  /_/   \_\/___|\__,_|_|  \___|
 #
 
+import io
 import httpx
 from loguru import logger
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 from common import (
     utils, const
 )
@@ -44,7 +46,7 @@ class SpeechEngine(object):
             self.x_app_id, self.x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
         )
 
-    async def tts_audio(self, speak: str, voice: str) -> bytes:
+    async def tts_audio(self, speak: str, voice: str) -> "StreamingResponse":
         await self.authorization()
 
         ssml = f"""
@@ -59,7 +61,7 @@ class SpeechEngine(object):
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
                 response.raise_for_status()
-                return response.content
+                return StreamingResponse(io.BytesIO(response.content), media_type="audio/mpeg")
 
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")
