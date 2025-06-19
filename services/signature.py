@@ -10,7 +10,6 @@ import uuid
 import time
 import json
 import base64
-import typing
 import hashlib
 from pathlib import Path
 from loguru import logger
@@ -23,21 +22,11 @@ from cryptography.hazmat.primitives import (
 from cryptography.hazmat.primitives.asymmetric import (
     padding, rsa
 )
-from pydantic import BaseModel
 from fastapi import HTTPException
 from services import supabase
 from common import (
-    const, utils
+    const, models, utils
 )
-
-
-class LicenseRequest(BaseModel):
-    code: str
-    castle: str
-    a: str
-    t: int
-    n: str
-    license_id: typing.Optional[str] = None
 
 
 def generate_keys() -> None:
@@ -128,7 +117,7 @@ def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     return auth_info
 
 
-def manage_signature(req: "LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
+def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
     app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
 
     verify_signature(

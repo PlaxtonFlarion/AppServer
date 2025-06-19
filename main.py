@@ -9,11 +9,15 @@ from loguru import logger
 from fastapi import (
     Request, Header, Query, FastAPI
 )
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import (
+    PlainTextResponse, StreamingResponse
+)
 from services import (
     azure, cron_job, keep_alive, loaders, signature, stencil
 )
-from common import craft
+from common import (
+    craft, models
+)
 
 app, *_ = FastAPI(), craft.init_logger()
 
@@ -45,14 +49,14 @@ async def keep_supabase_alive():
 
 @app.get("/bootstrap")
 async def bootstrap(
-    request: "Request",
-    x_app_id: str = Header(..., alias="X-App-ID"),
-    x_app_token: str = Header(..., alias="X-App-Token"),
-    x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version"),
-    a: str = Query(..., alias="a"),
-    t: int = Query(..., alias="t"),
-    n: str = Query(..., alias="n"),
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        x_app_region: str = Header(..., alias="X-App-Region"),
+        x_app_version: str = Header(..., alias="X-App-Version"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
 ):
     logger.info(f"bootstrap request: {request.url}")
 
@@ -65,7 +69,7 @@ async def bootstrap(
 
 @app.post(f"/sign")
 async def sign(
-        req: "signature.LicenseRequest",
+        req: "models.LicenseRequest",
         x_app_id: str = Header(..., alias="X-App-ID"),
         x_app_token: str = Header(..., alias="X-App-Token"),
 ):
@@ -124,22 +128,22 @@ async def business_case(
     )
 
 
-@app.get("/speech-voice")
+@app.post("/speech-voice", response_class=StreamingResponse)
 async def speech_voice(
-        request: "Request",
-        x_app_id: str = Header(..., alias="X-App-ID"),
-        x_app_token: str = Header(..., alias="X-App-Token"),
-        a: str = Query(..., alias="a"),
-        t: int = Query(..., alias="t"),
-        n: str = Query(..., alias="n"),
-        speak: str = Query(..., alias="speak"),
-        voice: str = Query("zh-CN-XiaoxiaoNeural", alias="voice"),
+        req: "models.SpeechRequest"
 ):
-    logger.info(f"voice request: {request.url}")
+    logger.info(f"voice request: {req.url}")
 
-    return await azure.SpeechEngine(
-        x_app_id, x_app_token, a, t, n
-    ).tts_audio(speak, voice)
+    ssml = await azure.SpeechEngine.build_ssml(
+        speak=req.speak,
+        voice=req.voice,
+        rate=req.rate,
+        pitch=req.pitch,
+        volume=req.volume,
+        style=req.style,
+        style_degree=req.style_degree,
+    )
+    return azure.SpeechEngine.tts_audio(ssml)
 
 
 if __name__ == '__main__':

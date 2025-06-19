@@ -7,13 +7,13 @@
 
 import io
 import httpx
+import typing
 from loguru import logger
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from common import (
     utils, const
 )
-from services import signature
 
 env = utils.current_env(
     const.AZURE_TTS_URL, const.AZURE_TTS_KEY
@@ -32,40 +32,52 @@ HEADERS = {
 
 class SpeechEngine(object):
 
-    def __init__(self, x_app_id: str, x_app_token: str, a: str, t: int, n: str):
-        self.x_app_id = x_app_id
-        self.x_app_token = x_app_token
-        self.a = a
-        self.t = t
-        self.n = n
-
-    async def authorization(self) -> None:
-        app_name, app_desc, *_ = self.a.lower().strip(), self.a, self.t, self.n
-
-        signature.verify_signature(
-            self.x_app_id, self.x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-        )
-
-    async def tts_audio(self, speak: str, voice: str) -> "StreamingResponse":
-        await self.authorization()
-
-        ssml = f"""
-        <speak version='1.0' xml:lang='zh-CN'>
-            <voice name='{voice}'>{speak}</voice>
-        </speak>
-        """
-
-        logger.info(f"{voice} -> {speak}")
-
+    @staticmethod
+    async def tts_audio(ssml: str) -> "StreamingResponse":
         try:
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
                 response.raise_for_status()
-                return StreamingResponse(io.BytesIO(response.content), media_type="audio/mpeg")
-
+                return StreamingResponse(
+                    io.BytesIO(response.content),
+                    media_type="audio/mpeg",
+                    headers={"Content-Disposition": 'inline; filename="speech.mp3"'}
+                )
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")
             raise HTTPException(status_code=500, detail=f"内部错误: {e}")
+
+    @staticmethod
+    async def build_ssml(
+            speak: str,
+            voice: str,
+            rate: str,
+            pitch: str,
+            volume: str,
+            style: typing.Optional[str] = None,
+            style_degree: typing.Optional[str] = None
+    ) -> str:
+
+        logger.info(f"{voice} -> {speak}")
+
+        prosody = f"<prosody rate='{rate}' pitch='{pitch}' volume='{volume}'>{speak}</prosody>"
+
+        if style:
+            style_tag = f"<mstts:express-as style='{style}'"
+            if style_degree:
+                style_tag += f" styledegree='{style_degree}'"
+            style_tag += f">{prosody}</mstts:express-as>"
+            body = style_tag
+        else:
+            body = prosody
+
+        return f"""
+        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
+               xmlns:mstts='http://www.w3.org/2001/mstts'
+               xml:lang='zh-CN'>
+            <voice name='{voice}'>{body}</voice>
+        </speak>
+        """.strip()
 
 
 
