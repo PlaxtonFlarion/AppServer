@@ -26,12 +26,15 @@ HEADERS = {
 
 async def send(
         client: "httpx.AsyncClient", method: str, url: str, *args, **kwargs
-) -> typing.Union[typing.Coroutine, typing.Any, "httpx.Response"]:
+) -> typing.Optional["httpx.Response"]:
 
     try:
-        return await client.request(method, url, *args, **kwargs)
-    except Exception as e:
-        return logger.error(f"❌ 请求失败 -> {e}")
+        response = await client.request(method, url, *args, **kwargs)
+        response.raise_for_status()
+        return response
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"❌ {e.response.status_code} {e.response.text}")
 
 
 async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutine | typing.Any:

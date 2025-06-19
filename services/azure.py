@@ -7,6 +7,7 @@
 
 import httpx
 from loguru import logger
+from fastapi import HTTPException
 from common import (
     utils, const
 )
@@ -54,11 +55,16 @@ class SpeechEngine(object):
 
         logger.info(f"{voice} -> {speak}")
 
-        async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
-            response = await client.request(
-                "POST", azure_tts_url, content=ssml.encode(const.CHARSET)
-            )
-            return response.content
+        try:
+            async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
+                response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
+                response.raise_for_status()
+                return response.content
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"❌ {e.response.status_code} {e.response.text}")
+            raise HTTPException(status_code=500, detail=f"内部错误: {e}")
+
 
 
 if __name__ == '__main__':
