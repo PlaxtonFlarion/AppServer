@@ -34,7 +34,7 @@ class SpeechEngine(object):
 
     @staticmethod
     async def tts_audio(req: "models.SpeechRequest", x_app_id: str, x_app_token: str) -> "StreamingResponse":
-        app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
+        app_name, app_desc = req.a.lower().strip(), req.a
 
         verify_signature(
             x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
