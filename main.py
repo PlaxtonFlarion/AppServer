@@ -132,7 +132,7 @@ async def business_case(
 async def speech_voice(
         req: "models.SpeechRequest"
 ):
-    logger.info(f"voice request: {req.url}")
+    logger.info(f"voice request: {req}")
 
     ssml = await azure.SpeechEngine.build_ssml(
         speak=req.speak,
