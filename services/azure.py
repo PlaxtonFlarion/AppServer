@@ -46,7 +46,9 @@ class SpeechEngine(object):
             x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
         )
 
-        return {"formats": ["mp3"]}
+        return {
+            "formats": ["mp3"]
+        }
 
     @staticmethod
     async def tts_audio(
@@ -106,6 +108,7 @@ class SpeechEngine(object):
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
                 response.raise_for_status()
+                logger.info(f"下发音频 -> {cfg}")
                 return StreamingResponse(
                     io.BytesIO(response.content),
                     headers={"Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'},
