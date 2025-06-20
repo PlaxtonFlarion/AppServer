@@ -6,8 +6,8 @@
 #
 
 import json
-import redis
 import typing
+import redis.asyncio as redis
 from common import (
     utils, const
 )
@@ -30,25 +30,25 @@ class RedisCache(object):
         )
         self.prefix = prefix
 
-    async def make_key(self, key: str) -> str:
+    def make_key(self, key: str) -> str:
         return f"{self.prefix}{key}"
 
     async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> bool:
         try:
             val = json.dumps(value)
-            return bool(await self.client.set(await self.make_key(key), val, ex=ex))
+            return bool(await self.client.set(self.make_key(key), val, ex=ex))
         except (json.JSONDecodeError, TypeError):
             return False
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
-        val = await self.client.get(await self.make_key(key))
+        val = await self.client.get(self.make_key(key))
         try:
             return json.loads(val)
         except (json.JSONDecodeError, TypeError):
             return val
 
     async def redis_delete(self, key: str) -> int:
-        return await self.client.delete(await self.make_key(key))
+        return await self.client.delete(self.make_key(key))
 
 
 if __name__ == '__main__':
