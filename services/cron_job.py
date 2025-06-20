@@ -20,7 +20,8 @@ cron_job_url = env[const.CRON_JOB_URL]
 cron_job_key = env[const.CRON_JOB_KEY]
 
 HEADERS = {
-    "Authorization": f"Bearer {cron_job_key}", "Content-Type": "application/json"
+    "Authorization": f"Bearer {cron_job_key}",
+    "Content-Type": "application/json"
 }
 
 

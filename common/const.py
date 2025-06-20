@@ -28,8 +28,15 @@ FOLDER_ID          = 47245
 AZURE_TTS_URL      = r"AZURE_TTS_URL"
 AZURE_TTS_KEY      = r"AZURE_TTS_KEY"
 
+REDIS_CACHE_URL      = r"REDIS_CACHE_URL"
+REDIS_CACHE_KEY      = r"REDIS_CACHE_KEY"
+
 ACTIVATION_URL     = r"ACTIVATION_URL"
 
 SHOW_LEVEL         = r"INFO"
 PRINT_FORMAT       = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
 WRITE_FORMAT       = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
+
+
+if __name__ == '__main__':
+    pass

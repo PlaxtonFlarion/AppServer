@@ -13,13 +13,18 @@ from fastapi.responses import (
     PlainTextResponse, StreamingResponse
 )
 from services import (
-    azure, cron_job, keep_alive, loaders, signature, stencil
+    azure, cron_job, keep_alive, loaders,
+    redis_cache, signature, stencil
 )
 from common import (
     craft, models
 )
 
-app, *_ = FastAPI(), craft.init_logger()
+app = FastAPI()
+cache = redis_cache.RedisCache(
+    redis_cache.redis_client, prefix="app:"
+)
+craft.init_logger()
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
