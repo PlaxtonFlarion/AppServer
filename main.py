@@ -139,7 +139,7 @@ async def speech_meta(
 ):
     logger.info(f"voice request: {request.url}")
 
-    return {"formats": ["mp3"]}
+    return {"formats": []}
 
 
 @app.post("/speech-voice", response_class=StreamingResponse)
