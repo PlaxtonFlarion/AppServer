@@ -130,15 +130,12 @@ class SpeechEngine(object):
                 response.raise_for_status()
 
                 audio_bytes = response.content
-                headers = {
-                    "Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'
-                }
+                headers = {"Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'}
                 media_type = cfg["mime"]
 
+                logger.info(f"生成缓存 -> {cache_key}")
                 await cache.redis_set(cache_key, json.dumps({
-                    "content": base64.b64encode(audio_bytes).decode(),
-                    "headers": headers,
-                    "media_type": media_type
+                    "content": base64.b64encode(audio_bytes).decode(), "headers": headers, "media_type": media_type
                 }), ex=86400)
 
                 logger.info(f"下发音频 -> {cfg}")
