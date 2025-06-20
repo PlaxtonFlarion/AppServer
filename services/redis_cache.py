@@ -6,8 +6,8 @@
 #
 
 import json
-import redis
 import typing
+import redis.asyncio as aioredis
 from loguru import logger
 from common import (
     utils, const
@@ -24,7 +24,7 @@ redis_cache_key = env[const.REDIS_CACHE_KEY]
 class RedisCache(object):
 
     def __init__(self, prefix: str = "app:"):
-        self.client = redis.Redis.from_url(
+        self.client = aioredis.Redis.from_url(
             url=f"rediss://default:{redis_cache_key}@{redis_cache_url}",
             decode_responses=True,
             encoding=const.CHARSET
@@ -34,13 +34,12 @@ class RedisCache(object):
     def make_key(self, key: str) -> str:
         return f"{self.prefix}{key}"
 
-    async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> bool:
+    async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
         try:
             val = json.dumps(value)
             return bool(await self.client.set(self.make_key(key), val, ex=ex))
         except (json.JSONDecodeError, TypeError) as e:
             logger.error(e)
-            return False
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
         val = await self.client.get(self.make_key(key))
@@ -48,7 +47,6 @@ class RedisCache(object):
             return val if isinstance(val, dict) else json.loads(val)
         except (json.JSONDecodeError, TypeError) as e:
             logger.error(e)
-            return val
 
     async def redis_delete(self, key: str) -> int:
         return await self.client.delete(self.make_key(key))
