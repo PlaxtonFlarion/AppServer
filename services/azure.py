@@ -14,7 +14,7 @@ from loguru import logger
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from services import (
-    redis_cache, signature
+    r2_storage, redis_cache, signature
 )
 from common import (
     const, models, utils
@@ -75,56 +75,75 @@ class SpeechEngine(object):
             f"{req.voice}|{req.speak}".encode(const.CHARSET)
         ).hexdigest()
 
-        if cached := await cache.redis_get(cache_key):
-            cached = json.loads(cached)
-            logger.info(f"下发缓存 -> {cache_key}")
-            return StreamingResponse(
-                io.BytesIO(base64.b64decode(cached["content"])),
-                headers=cached["headers"],
-                media_type=cached["media_type"]
-            )
-
-        prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
-
-        if req.manner:
-            manner_tag = f"<mstts:express-as style='{req.manner}'"
-            if req.degree:
-                manner_tag += f" styledegree='{req.degree}'"
-            manner_tag += f">{prosody}</mstts:express-as>"
-            body = manner_tag
-        else:
-            body = prosody
-
-        ssml = f"""
-        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
-               xmlns:mstts='http://www.w3.org/2001/mstts'
-               xml:lang='zh-CN'>
-            <voice name='{req.voice}'>{body}</voice>
-        </speak>
-        """.strip()
-
-        waver_map = {
-            "mp3": {
-                "waver": "audio-16khz-128kbitrate-mono-mp3",
-                "mime": "audio/mpeg",
-                "ext": "mp3"
-            },
-            "wav": {
-                "waver": "riff-16khz-16bit-mono-pcm",
-                "mime": "audio/wav",
-                "ext": "wav"
-            },
-            "ogg": {
-                "waver": "ogg-16khz-16bit-mono-opus",
-                "mime": "audio/ogg",
-                "ext": "ogg"
-            }
-        }
-
-        cfg = waver_map.get(req.waver.lower(), waver_map["mp3"])
-        HEADERS["X-Microsoft-OutputFormat"] = cfg["waver"]
-
         try:
+            # 👉 优先读取 Redis
+            if cached := await cache.redis_get(cache_key):
+                cached = json.loads(cached)
+                logger.info(f"下发缓存 -> {cache_key}")
+                return StreamingResponse(
+                    io.BytesIO(base64.b64decode(cached["content"])),
+                    headers=cached["headers"],
+                    media_type=cached["media_type"]
+                )
+
+            # 👉 构建 R2 的对象路径
+            r2_key = f"speech-cache/{cache_key}.{req.waver}"
+
+            # 👉 如果 R2 中已存在，直接返回 URL 流式
+            if r2_storage.file_exists(r2_key):
+                logger.info(f"R2 已存在 -> {r2_key}")
+                url = f"{r2_storage.r2_public_url}/{r2_key}"
+                async with httpx.AsyncClient(timeout=10) as client:
+                    response = await client.request("GET", url)
+                    response.raise_for_status()
+                    return StreamingResponse(
+                        io.BytesIO(response.content),
+                        headers={"Content-Disposition": f'inline; filename="{r2_key.split("/")[-1]}"'},
+                        media_type="audio/mpeg"
+                    )
+
+            # 👉 生成 SSML
+            prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
+
+            if req.manner:
+                manner_tag = f"<mstts:express-as style='{req.manner}'"
+                if req.degree:
+                    manner_tag += f" styledegree='{req.degree}'"
+                manner_tag += f">{prosody}</mstts:express-as>"
+                body = manner_tag
+            else:
+                body = prosody
+
+            ssml = f"""
+            <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
+                   xmlns:mstts='http://www.w3.org/2001/mstts'
+                   xml:lang='zh-CN'>
+                <voice name='{req.voice}'>{body}</voice>
+            </speak>
+            """.strip()
+
+            # 👉 音频格式配置
+            waver_map = {
+                "mp3": {
+                    "waver": "audio-16khz-128kbitrate-mono-mp3",
+                    "mime": "audio/mpeg",
+                    "ext": "mp3"
+                },
+                "wav": {
+                    "waver": "riff-16khz-16bit-mono-pcm",
+                    "mime": "audio/wav",
+                    "ext": "wav"
+                },
+                "ogg": {
+                    "waver": "ogg-16khz-16bit-mono-opus",
+                    "mime": "audio/ogg",
+                    "ext": "ogg"
+                }
+            }
+
+            cfg = waver_map.get(req.waver.lower(), waver_map["mp3"])
+            HEADERS["X-Microsoft-OutputFormat"] = cfg["waver"]
+
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
                 response.raise_for_status()
@@ -133,6 +152,15 @@ class SpeechEngine(object):
                 headers = {"Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'}
                 media_type = cfg["mime"]
 
+                # 👉 上传至 R2
+                r2_storage.upload_audio(
+                    key=r2_key,
+                    content=audio_bytes,
+                    content_type=cfg["mime"],
+                    disposition_filename=f"speech.{cfg['ext']}"
+                )
+
+                # 👉 写缓存（base64）
                 logger.info(f"生成缓存 -> {cache_key}")
                 await cache.redis_set(cache_key, json.dumps({
                     "content": base64.b64encode(audio_bytes).decode(), "headers": headers, "media_type": media_type
