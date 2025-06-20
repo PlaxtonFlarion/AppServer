@@ -62,6 +62,7 @@ class SpeechEngine(object):
             x_app_token: str,
             cache: "redis_cache.RedisCache"
     ) -> "StreamingResponse":
+
         app_name, app_desc = req.a.lower().strip(), req.a
 
         signature.verify_signature(
@@ -71,7 +72,7 @@ class SpeechEngine(object):
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(
-            f"{x_app_id}|{x_app_token}|{req.speak}|{req.voice}|{req.lang}".encode(const.CHARSET)
+            f"{req.voice}|{req.speak}".encode(const.CHARSET)
         ).hexdigest()
 
         if cached := await cache.redis_get(cache_key):
