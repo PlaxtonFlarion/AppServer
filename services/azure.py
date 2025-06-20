@@ -76,9 +76,10 @@ class SpeechEngine(object):
         ).hexdigest()
 
         if cached := await cache.redis_get(cache_key):
+            cached = json.loads(cached)
             logger.info(f"下发缓存 -> {cache_key}")
             return StreamingResponse(
-                io.BytesIO(base64.b64decode(json.loads(cached)["content"])),
+                io.BytesIO(base64.b64decode(cached["content"])),
                 headers=cached["headers"],
                 media_type=cached["media_type"]
             )
