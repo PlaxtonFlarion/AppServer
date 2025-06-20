@@ -6,11 +6,16 @@
 #
 
 import io
+import json
 import httpx
+import base64
+import hashlib
 from loguru import logger
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from services import signature
+from services import (
+    redis_cache, signature
+)
 from common import (
     const, models, utils
 )
@@ -54,7 +59,8 @@ class SpeechEngine(object):
     async def tts_audio(
             req: "models.SpeechRequest",
             x_app_id: str,
-            x_app_token: str
+            x_app_token: str,
+            cache: "redis_cache.RedisCache"
     ) -> "StreamingResponse":
         app_name, app_desc = req.a.lower().strip(), req.a
 
@@ -63,6 +69,17 @@ class SpeechEngine(object):
         )
 
         logger.info(f"{req.voice} -> {req.speak}")
+
+        cache_key = "speech:" + hashlib.md5(
+            f"{x_app_id}|{x_app_token}|{req.speak}|{req.voice}|{req.lang}".encode(const.CHARSET)
+        ).hexdigest()
+
+        if cached := cache.get(cache_key):
+            return StreamingResponse(
+                io.BytesIO(base64.b64decode(json.loads(cached)["content"])),
+                headers=cached["headers"],
+                media_type=cached["media_type"]
+            )
 
         prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
 
@@ -108,12 +125,26 @@ class SpeechEngine(object):
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
                 response.raise_for_status()
+
+                audio_bytes = response.content
+                headers = {
+                    "Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'
+                }
+                media_type = cfg["mime"]
+
+                cache.set(
+                    cache_key, json.dumps({
+                        "content": base64.b64encode(audio_bytes).decode(),
+                        "headers": headers,
+                        "media_type": media_type
+                    }), ex=86400
+                )
+
                 logger.info(f"下发音频 -> {cfg}")
                 return StreamingResponse(
-                    io.BytesIO(response.content),
-                    headers={"Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'},
-                    media_type=cfg["mime"]
+                    io.BytesIO(audio_bytes), headers=headers, media_type=media_type
                 )
+
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")
             raise HTTPException(status_code=500, detail=f"内部错误: {e}")

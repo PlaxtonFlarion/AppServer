@@ -158,7 +158,7 @@ async def speech_voice(
     logger.info(f"voice request: {req}")
 
     return await azure.SpeechEngine.tts_audio(
-        req, x_app_id, x_app_token
+        req, x_app_id, x_app_token, cache
     )
 
 
