@@ -128,6 +128,20 @@ async def business_case(
     )
 
 
+@app.get("/speech-meta")
+async def speech_meta(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+):
+    logger.info(f"voice request: {request.url}")
+
+    return {"formats": ["mp3"]}
+
+
 @app.post("/speech-voice", response_class=StreamingResponse)
 async def speech_voice(
         req: "models.SpeechRequest",
