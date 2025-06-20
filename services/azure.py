@@ -61,26 +61,26 @@ class SpeechEngine(object):
         </speak>
         """.strip()
 
-        format_map = {
+        waver_map = {
             "mp3": {
-                "format": "audio-16khz-128kbitrate-mono-mp3",
+                "waver": "audio-16khz-128kbitrate-mono-mp3",
                 "mime": "audio/mpeg",
                 "ext": "mp3"
             },
             "wav": {
-                "format": "riff-16khz-16bit-mono-pcm",
+                "waver": "riff-16khz-16bit-mono-pcm",
                 "mime": "audio/wav",
                 "ext": "wav"
             },
             "ogg": {
-                "format": "ogg-16khz-16bit-mono-opus",
+                "waver": "ogg-16khz-16bit-mono-opus",
                 "mime": "audio/ogg",
                 "ext": "ogg"
             }
         }
 
-        cfg = format_map.get(req.format.lower(), format_map["mp3"])
-        HEADERS["X-Microsoft-OutputFormat"] = cfg["format"]
+        cfg = waver_map.get(req.waver.lower(), waver_map["mp3"])
+        HEADERS["X-Microsoft-OutputFormat"] = cfg["waver"]
 
         try:
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
