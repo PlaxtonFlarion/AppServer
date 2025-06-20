@@ -6,8 +6,9 @@
 #
 
 import json
+import redis
 import typing
-import redis.asyncio as redis
+from loguru import logger
 from common import (
     utils, const
 )
@@ -37,14 +38,16 @@ class RedisCache(object):
         try:
             val = json.dumps(value)
             return bool(await self.client.set(self.make_key(key), val, ex=ex))
-        except (json.JSONDecodeError, TypeError):
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.error(e)
             return False
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
         val = await self.client.get(self.make_key(key))
         try:
-            return json.loads(val)
-        except (json.JSONDecodeError, TypeError):
+            return val if isinstance(val, dict) else json.loads(val)
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.error(e)
             return val
 
     async def redis_delete(self, key: str) -> int:
