@@ -71,12 +71,12 @@ class SpeechEngine(object):
                 "format": "riff-16khz-16bit-mono-pcm",
                 "mime": "audio/wav",
                 "ext": "wav"
-           },
-           "ogg": {
+            },
+            "ogg": {
                 "format": "ogg-16khz-16bit-mono-opus",
                 "mime": "audio/ogg",
                 "ext": "ogg"
-           }
+            }
         }
 
         cfg = format_map.get(req.format.lower(), format_map["mp3"])
