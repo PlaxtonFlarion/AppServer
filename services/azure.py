@@ -61,14 +61,35 @@ class SpeechEngine(object):
         </speak>
         """.strip()
 
+        format_map = {
+            "mp3": {
+                "format": "audio-16khz-128kbitrate-mono-mp3",
+                "mime": "audio/mpeg",
+                "ext": "mp3"
+            },
+            "wav": {
+                "format": "riff-16khz-16bit-mono-pcm",
+                "mime": "audio/wav",
+                "ext": "wav"
+           },
+           "ogg": {
+                "format": "ogg-16khz-16bit-mono-opus",
+                "mime": "audio/ogg",
+                "ext": "ogg"
+           }
+        }
+
+        cfg = format_map.get(req.format.lower(), format_map["mp3"])
+        HEADERS["X-Microsoft-OutputFormat"] = cfg["format"]
+
         try:
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
                 response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
                 response.raise_for_status()
                 return StreamingResponse(
                     io.BytesIO(response.content),
-                    headers={"Content-Disposition": 'inline; filename="speech.mp3"'},
-                    media_type="audio/mpeg",
+                    headers={"Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'},
+                    media_type=cfg["mime"]
                 )
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")
