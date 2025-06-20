@@ -10,7 +10,7 @@ import httpx
 from loguru import logger
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from services.signature import verify_signature
+from services import signature
 from common import (
     const, models, utils
 )
@@ -33,10 +33,30 @@ HEADERS = {
 class SpeechEngine(object):
 
     @staticmethod
-    async def tts_audio(req: "models.SpeechRequest", x_app_id: str, x_app_token: str) -> "StreamingResponse":
+    async def tts_meta(
+            x_app_id: str,
+            x_app_token: str,
+            a: str,
+            t: int,
+            n: str,
+    ) -> dict:
+        app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+        signature.verify_signature(
+            x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+        )
+
+        return {"formats": ["mp3"]}
+
+    @staticmethod
+    async def tts_audio(
+            req: "models.SpeechRequest",
+            x_app_id: str,
+            x_app_token: str
+    ) -> "StreamingResponse":
         app_name, app_desc = req.a.lower().strip(), req.a
 
-        verify_signature(
+        signature.verify_signature(
             x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
         )
 

@@ -139,7 +139,9 @@ async def speech_meta(
 ):
     logger.info(f"voice request: {request.url}")
 
-    return {"formats": []}
+    return await azure.SpeechEngine.tts_meta(
+        x_app_id, x_app_token, a, t, n
+    )
 
 
 @app.post("/speech-voice", response_class=StreamingResponse)

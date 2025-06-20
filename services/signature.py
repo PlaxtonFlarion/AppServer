@@ -54,9 +54,9 @@ def generate_keys() -> None:
 def generate_x_app_token(app_name: str, app_desc: str) -> str:
     x_app_token = signature_license(
         {
-            "a": (a := app_desc.strip()),
-            "t": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
-            "n": (n := uuid.uuid4().hex.upper()[:12]),
+            "app": (a := app_desc.strip()),
+            "time": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
+            "nonce": (n := uuid.uuid4().hex.upper()[:12]),
             "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
         }, f"{app_name.lower().strip()}_{const.BASE_PRIVATE_KEY}"
     )
