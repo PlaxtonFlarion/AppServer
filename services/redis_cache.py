@@ -24,7 +24,7 @@ class RedisCache(object):
 
     def __init__(self, prefix: str = "app:"):
         self.client = redis.Redis.from_url(
-            redis_cache_url,
+            url=f"rediss://default:{redis_cache_key}@{redis_cache_url}",
             decode_responses=True,
             encoding=const.CHARSET
         )
