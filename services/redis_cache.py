@@ -38,18 +38,21 @@ class RedisCache(object):
         try:
             val = json.dumps(value)
             return bool(await self.client.set(self.make_key(key), val, ex=ex))
-        except (json.JSONDecodeError, TypeError) as e:
+        except Exception as e:
             logger.error(e)
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
         val = await self.client.get(self.make_key(key))
         try:
             return json.loads(val)
-        except (json.JSONDecodeError, TypeError) as e:
+        except Exception as e:
             logger.error(e)
 
-    async def redis_delete(self, key: str) -> int:
-        return await self.client.delete(self.make_key(key))
+    async def redis_delete(self, key: str) -> typing.Optional[int]:
+        try:
+            return await self.client.delete(self.make_key(key))
+        except Exception as e:
+            logger.error(e)
 
 
 if __name__ == '__main__':
