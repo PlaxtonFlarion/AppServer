@@ -20,10 +20,7 @@ from common import (
     craft, models
 )
 
-app = FastAPI()
-cache = redis_cache.RedisCache(
-    redis_cache.redis_client, prefix="app:"
-)
+app, cache = FastAPI(), redis_cache.RedisCache()
 craft.init_logger()
 
 

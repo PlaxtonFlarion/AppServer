@@ -19,33 +19,15 @@ env = utils.current_env(
 redis_cache_url = env[const.REDIS_CACHE_URL]
 redis_cache_key = env[const.REDIS_CACHE_KEY]
 
-redis_client: "redis.Redis" = redis.Redis.from_url(
-    redis_cache_url,
-    decode_responses=True,
-    encoding=const.CHARSET
-)
 
+class RedisCache(object):
 
-class RedisCache:
-    """
-    Redis 缓存封装类。
-
-    支持自动 JSON 序列化、解码，支持键前缀、过期时间控制。
-    """
-
-    def __init__(self, client: "redis.Redis", prefix: str = ""):
-        """
-        初始化 Redis 缓存对象。
-
-        Parameters
-        ----------
-        client : redis.Redis
-            Redis 同步客户端实例
-
-        prefix : str
-            键名前缀（用于逻辑隔离，例如 "app:"）
-        """
-        self.client = client
+    def __init__(self, prefix: str = "app:"):
+        self.client = redis.Redis.from_url(
+            redis_cache_url,
+            decode_responses=True,
+            encoding=const.CHARSET
+        )
         self.prefix = prefix
 
     async def make_key(self, key: str) -> str:
