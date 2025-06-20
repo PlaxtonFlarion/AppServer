@@ -20,6 +20,7 @@ async def stencil_meta(
         t: int,
         n: str,
 ) -> dict:
+
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     signature.verify_signature(
@@ -39,6 +40,7 @@ async def stencil_viewer(
         n: str,
         page: str,
 ) -> str:
+
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     signature.verify_signature(
@@ -57,6 +59,7 @@ async def stencil_case(
         n: str,
         case: str,
 ) -> str:
+
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     signature.verify_signature(

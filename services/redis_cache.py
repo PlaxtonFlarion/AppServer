@@ -44,7 +44,7 @@ class RedisCache(object):
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
         val = await self.client.get(self.make_key(key))
         try:
-            return json.loads(val)
+            return json.loads(val) if val else None
         except Exception as e:
             logger.error(e)
 

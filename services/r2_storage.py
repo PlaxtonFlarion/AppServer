@@ -5,9 +5,11 @@
 #  |_| \_\_____| |____/ \__\___/|_|  \__,_|\__, |\___|
 #                                          |___/
 #
+import asyncio
 
 import boto3
 import typing
+from pathlib import Path
 from loguru import logger
 from botocore.client import Config
 from common import (
@@ -27,7 +29,7 @@ r2_public_url = env[const.R2_PUBLIC_URL]  # e.g. https://cdn.appserverx.com
 
 r2_client = boto3.client(
     "s3",
-    endpoint_url=f"https://{r2_bucket_usr}.r2.cloudflarestorage.com",
+    endpoint_url=r2_bucket_url,
     aws_access_key_id=r2_bucket_usr,
     aws_secret_access_key=r2_bucket_pwd,
     config=Config(signature_version="s3v4"),
@@ -35,7 +37,7 @@ r2_client = boto3.client(
 )
 
 
-def upload_audio(
+async def upload_audio(
         key: str,
         content: bytes,
         content_type: str = "audio/mpeg",
@@ -44,28 +46,28 @@ def upload_audio(
     """
     上传音频至 R2，并返回 CDN 可访问链接
     """
-    extra_args = {
-        "ContentType": content_type,
-        "ACL": "public-read"
+    extra = {
+        "ContentType": content_type, "ACL": "public-read"
     }
     if disposition_filename:
-        extra_args["ContentDisposition"] = f'inline; filename="{disposition_filename}"'
+        extra["ContentDisposition"] = f'inline; filename="{disposition_filename}"'
 
-    r2_client.put_object(Bucket=r2_bucket_url, Key=key,
-        Body=content,
-        **extra_args
+    await asyncio.to_thread(
+        r2_client.upload_audio, Bucket=const.BUCKET, Key=key, Body=content, **extra
     )
 
-    logger.info(f"上传到 R2: {key}")
-    return f"{r2_public_url}/{key}"
+    logger.info(f"上传到 R2: {(audio := f'{r2_public_url}/{key}')}")
+    return audio
 
 
-def file_exists(key: str) -> typing.Any:
+async def file_exists(key: str) -> typing.Any:
     """
     检查文件是否已存在于 R2
     """
     try:
-        return r2_client.head_object(Bucket=r2_bucket_url, Key=key)
+        return await asyncio.to_thread(
+            r2_client.head_object, Bucket=const.BUCKET, Key=key
+        )
     except r2_client.exceptions.ClientError as e:
         logger.error(e)
 

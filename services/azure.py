@@ -7,8 +7,11 @@
 
 import io
 import json
+from pathlib import Path
+
 import httpx
 import base64
+import typing
 import hashlib
 from loguru import logger
 from fastapi import HTTPException
@@ -45,6 +48,7 @@ class SpeechEngine(object):
             t: int,
             n: str,
     ) -> dict:
+
         app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
         signature.verify_signature(
@@ -61,13 +65,13 @@ class SpeechEngine(object):
             x_app_id: str,
             x_app_token: str,
             cache: "redis_cache.RedisCache"
-    ) -> "StreamingResponse":
+    ) -> typing.Any:
 
-        app_name, app_desc = req.a.lower().strip(), req.a
+        # app_name, app_desc = req.a.lower().strip(), req.a
 
-        signature.verify_signature(
-            x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-        )
+        # signature.verify_signature(
+        #     x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+        # )
 
         logger.info(f"{req.voice} -> {req.speak}")
 
@@ -79,28 +83,20 @@ class SpeechEngine(object):
             # 👉 优先读取 Redis
             if cached := await cache.redis_get(cache_key):
                 cached = json.loads(cached)
-                logger.info(f"下发缓存 -> {cache_key}")
-                return StreamingResponse(
-                    io.BytesIO(base64.b64decode(cached["content"])),
-                    headers=cached["headers"],
-                    media_type=cached["media_type"]
-                )
+                logger.info(f"下发缓存 URL -> {(cache_url := cached['url'])}")
+                return {"url": cache_url}
 
-            # 👉 构建 R2 的对象路径
+            # 👉 构建 Cloudflare R2 的对象路径
             r2_key = f"speech-cache/{cache_key}.{req.waver}"
+            r2_url = f"{r2_storage.r2_public_url}/{r2_key}"
 
-            # 👉 如果 R2 中已存在，直接返回 URL 流式
+            # 👉 如果 Cloudflare R2 中已存在，直接返回 URL
             if r2_storage.file_exists(r2_key):
                 logger.info(f"R2 已存在 -> {r2_key}")
-                url = f"{r2_storage.r2_public_url}/{r2_key}"
-                async with httpx.AsyncClient(timeout=10) as client:
-                    response = await client.request("GET", url)
-                    response.raise_for_status()
-                    return StreamingResponse(
-                        io.BytesIO(response.content),
-                        headers={"Content-Disposition": f'inline; filename="{r2_key.split("/")[-1]}"'},
-                        media_type="audio/mpeg"
-                    )
+                await cache.redis_set(
+                    cache_key, json.dumps(link := {"url": r2_url}), ex=86400
+                )
+                return link
 
             # 👉 生成 SSML
             prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
@@ -149,27 +145,19 @@ class SpeechEngine(object):
                 response.raise_for_status()
 
                 audio_bytes = response.content
-                headers = {"Content-Disposition": f'inline; filename="speech.{cfg["ext"]}"'}
-                media_type = cfg["mime"]
 
-                # 👉 上传至 R2
-                r2_storage.upload_audio(
+                # 👉 上传 Cloudflare R2
+                url = r2_storage.upload_audio(
                     key=r2_key,
                     content=audio_bytes,
                     content_type=cfg["mime"],
                     disposition_filename=f"speech.{cfg['ext']}"
                 )
 
-                # 👉 写缓存（base64）
-                logger.info(f"生成缓存 -> {cache_key}")
-                await cache.redis_set(cache_key, json.dumps({
-                    "content": base64.b64encode(audio_bytes).decode(), "headers": headers, "media_type": media_type
-                }), ex=86400)
-
-                logger.info(f"下发音频 -> {cfg}")
-                return StreamingResponse(
-                    io.BytesIO(audio_bytes), headers=headers, media_type=media_type
-                )
+                # 👉 写入 Redis 缓存
+                await cache.redis_set(cache_key, json.dumps(link := {"url": url}), ex=86400)
+                logger.info(f"上传并下发 URL -> {url}")
+                return link
 
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")

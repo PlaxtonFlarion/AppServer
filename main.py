@@ -146,7 +146,7 @@ async def speech_meta(
     )
 
 
-@app.post("/speech-voice", response_class=StreamingResponse)
+@app.post("/speech-voice")
 async def speech_voice(
         req: "models.SpeechRequest",
         x_app_id: str = Header(..., alias="X-App-ID"),
