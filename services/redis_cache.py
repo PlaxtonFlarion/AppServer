@@ -5,7 +5,9 @@
 #  |_| \_\___|\__,_|_|___/  \____\__,_|\___|_| |_|\___|
 #
 
+import json
 import redis
+import typing
 from common import (
     utils, const
 )
@@ -24,20 +26,47 @@ redis_client: "redis.Redis" = redis.Redis.from_url(
 )
 
 
-class RedisCache(object):
+class RedisCache:
+    """
+    Redis 缓存封装类。
+
+    支持自动 JSON 序列化、解码，支持键前缀、过期时间控制。
+    """
 
     def __init__(self, client: "redis.Redis", prefix: str = ""):
+        """
+        初始化 Redis 缓存对象。
+
+        Parameters
+        ----------
+        client : redis.Redis
+            Redis 同步客户端实例
+
+        prefix : str
+            键名前缀（用于逻辑隔离，例如 "app:"）
+        """
         self.client = client
         self.prefix = prefix
 
-    def set(self, key, value, ex=60):
-        return self.client.set(self.prefix + key, value, ex=ex)
+    async def make_key(self, key: str) -> str:
+        return f"{self.prefix}{key}"
 
-    def get(self, key):
-        return self.client.get(self.prefix + key)
+    async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> bool:
+        try:
+            val = json.dumps(value)
+            return bool(await self.client.set(await self.make_key(key), val, ex=ex))
+        except (json.JSONDecodeError, TypeError):
+            return False
 
-    def delete(self, key):
-        return self.client.delete(self.prefix + key)
+    async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
+        val = await self.client.get(await self.make_key(key))
+        try:
+            return json.loads(val)
+        except (json.JSONDecodeError, TypeError):
+            return val
+
+    async def redis_delete(self, key: str) -> int:
+        return await self.client.delete(await self.make_key(key))
 
 
 if __name__ == '__main__':

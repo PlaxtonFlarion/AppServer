@@ -74,7 +74,8 @@ class SpeechEngine(object):
             f"{x_app_id}|{x_app_token}|{req.speak}|{req.voice}|{req.lang}".encode(const.CHARSET)
         ).hexdigest()
 
-        if cached := cache.get(cache_key):
+        if cached := await cache.redis_get(cache_key):
+            logger.info(f"下发缓存 -> {cache_key}")
             return StreamingResponse(
                 io.BytesIO(base64.b64decode(json.loads(cached)["content"])),
                 headers=cached["headers"],
@@ -132,13 +133,11 @@ class SpeechEngine(object):
                 }
                 media_type = cfg["mime"]
 
-                cache.set(
-                    cache_key, json.dumps({
-                        "content": base64.b64encode(audio_bytes).decode(),
-                        "headers": headers,
-                        "media_type": media_type
-                    }), ex=86400
-                )
+                await cache.redis_set(cache_key, json.dumps({
+                    "content": base64.b64encode(audio_bytes).decode(),
+                    "headers": headers,
+                    "media_type": media_type
+                }), ex=86400)
 
                 logger.info(f"下发音频 -> {cfg}")
                 return StreamingResponse(
