@@ -30,9 +30,10 @@ class SpeechRequest(BaseModel):
     speak: str = Field(..., description="文本内容")
     voice: str = Field("zh-CN-XiaoxiaoNeural", description="语音名称")
     
+    waver: typing.Optional[str] = Field("mp3", description="输出格式")
     rater: typing.Optional[str] = Field("0%", description="语速，如 +20%、-10%")
     pitch: typing.Optional[str] = Field("0%", description="语调，如 +5%")
-    format: typing.Optional[str] = Field("mp3", description="输出格式，可选 mp3, wav, ogg")
+    
     volume: typing.Optional[str] = Field("default", description="音量，如 +0dB")
     manner: typing.Optional[str] = Field(None, description="情感风格，如 cheerful")
     degree: typing.Optional[str] = Field(None, description="风格强度，如 1.0, 2.0")
