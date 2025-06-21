@@ -5,15 +5,14 @@
 #  |_| \_\_____| |____/ \__\___/|_|  \__,_|\__, |\___|
 #                                          |___/
 #
-import asyncio
 
 import boto3
 import typing
-from pathlib import Path
+import asyncio
 from loguru import logger
 from botocore.client import Config
 from common import (
-    utils, const
+    const, utils
 )
 
 env = utils.current_env(
@@ -25,7 +24,7 @@ r2_bucket_key = env[const.R2_BUCKET_KEY]
 r2_bucket_usr = env[const.R2_BUCKET_USR]
 r2_bucket_pwd = env[const.R2_BUCKET_PWD]
 r2_bucket_url = env[const.R2_BUCKET_URL]
-r2_public_url = env[const.R2_PUBLIC_URL]  # e.g. https://cdn.appserverx.com
+r2_public_url = env[const.R2_PUBLIC_URL]
 
 r2_client = boto3.client(
     "s3",
@@ -40,36 +39,38 @@ r2_client = boto3.client(
 async def upload_audio(
         key: str,
         content: bytes,
-        content_type: str = "audio/mpeg",
+        content_type: str,
         disposition_filename: typing.Optional[str] = None,
 ) -> str:
     """
-    上传音频至 R2，并返回 CDN 可访问链接
+    上传音频至 R2，并返回 CDN 可访问链接。
     """
     extra = {
-        "ContentType": content_type, "ACL": "public-read"
+        "ContentType": content_type,
+        "ACL": "public-read"
     }
     if disposition_filename:
         extra["ContentDisposition"] = f'inline; filename="{disposition_filename}"'
 
     await asyncio.to_thread(
-        r2_client.upload_audio, Bucket=const.BUCKET, Key=key, Body=content, **extra
+        r2_client.put_object, Bucket=const.BUCKET, Key=key, Body=content, **extra
     )
-
-    logger.info(f"上传到 R2: {(audio := f'{r2_public_url}/{key}')}")
-    return audio
+    return f"{r2_public_url.rstrip('/')}/{key}"
 
 
-async def file_exists(key: str) -> typing.Any:
+async def file_exists(key: str) -> typing.Optional[bool]:
     """
-    检查文件是否已存在于 R2
+    检查文件是否已存在于 R2。
     """
     try:
-        return await asyncio.to_thread(
+        await asyncio.to_thread(
             r2_client.head_object, Bucket=const.BUCKET, Key=key
         )
+        return True
     except r2_client.exceptions.ClientError as e:
-        logger.error(e)
+        if e.response["Error"]["Code"] == "404":
+            return False
+        logger.error(f"R2 检查失败: {e}")
 
 
 if __name__ == '__main__':

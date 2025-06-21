@@ -9,9 +9,7 @@ from loguru import logger
 from fastapi import (
     Request, Header, Query, FastAPI
 )
-from fastapi.responses import (
-    PlainTextResponse, StreamingResponse
-)
+from fastapi.responses import PlainTextResponse
 from services import (
     azure, cron_job, keep_alive, loaders,
     redis_cache, signature, stencil
