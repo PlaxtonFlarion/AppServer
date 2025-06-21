@@ -5,17 +5,12 @@
 #  /_/   \_\/___|\__,_|_|  \___|
 #
 
-import io
 import json
-from pathlib import Path
-
 import httpx
-import base64
 import typing
 import hashlib
 from loguru import logger
 from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
 from services import (
     r2_storage, redis_cache, signature
 )
@@ -67,11 +62,11 @@ class SpeechEngine(object):
             cache: "redis_cache.RedisCache"
     ) -> typing.Any:
 
-        # app_name, app_desc = req.a.lower().strip(), req.a
+        app_name, app_desc = req.a.lower().strip(), req.a
 
-        # signature.verify_signature(
-        #     x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-        # )
+        signature.verify_signature(
+            x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+        )
 
         logger.info(f"{req.voice} -> {req.speak}")
 
@@ -80,23 +75,32 @@ class SpeechEngine(object):
         ).hexdigest()
 
         try:
-            # 👉 优先读取 Redis
+            # 👉 优先读取 Redis（只存储对象 Key）
             if cached := await cache.redis_get(cache_key):
                 cached = json.loads(cached)
-                logger.info(f"下发缓存 URL -> {(cache_url := cached['url'])}")
-                return {"url": cache_url}
+                r2_key = cached["key"]
+                filename = f"speech.{req.waver}"
 
-            # 👉 构建 Cloudflare R2 的对象路径
-            r2_key = f"speech-cache/{cache_key}.{req.waver}"
-            r2_url = f"{r2_storage.r2_public_url}/{r2_key}"
-
-            # 👉 如果 Cloudflare R2 中已存在，直接返回 URL
-            if r2_storage.file_exists(r2_key):
-                logger.info(f"R2 已存在 -> {r2_key}")
-                await cache.redis_set(
-                    cache_key, json.dumps(link := {"url": r2_url}), ex=86400
+                signed_url = await r2_storage.signed_url_for_stream_or_download(
+                    key=r2_key, expires_in=3600, disposition_filename=filename
                 )
-                return link
+                logger.info(f"下发缓存签名 URL -> {signed_url}")
+                return {"url": signed_url}
+
+            # 👉 构建 R2 Key 和文件名
+            r2_key = f"speech-cache/{cache_key}.{req.waver}"
+            filename = f"speech.{req.waver}"
+
+            # 👉 如果 Cloudflare R2 已存在，生成签名 URL
+            if await r2_storage.file_exists(r2_key):
+                await cache.redis_set(cache_key, json.dumps({"key": r2_key}), ex=86400)
+                logger.info(f"Redis cache -> {r2_key}")
+
+                signed_url = await r2_storage.signed_url_for_stream_or_download(
+                    key=r2_key, expires_in=3600, disposition_filename=filename
+                )
+                logger.info(f"下发 R2 签名 URL -> {signed_url}")
+                return {"url": signed_url}
 
             # 👉 生成 SSML
             prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
@@ -141,23 +145,32 @@ class SpeechEngine(object):
             HEADERS["X-Microsoft-OutputFormat"] = cfg["waver"]
 
             async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
-                response = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
-                response.raise_for_status()
+                resp = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
+                resp.raise_for_status()
 
-                audio_bytes = response.content
+                audio_bytes = resp.content
+                filename = f"speech.{cfg['ext']}"
+                media_type = cfg["mime"]
 
-                # 👉 上传 Cloudflare R2
-                url = r2_storage.upload_audio(
+                # 👉 上传至 Cloudflare R2
+                await r2_storage.upload_audio(
                     key=r2_key,
                     content=audio_bytes,
-                    content_type=cfg["mime"],
-                    disposition_filename=f"speech.{cfg['ext']}"
+                    content_type=media_type,
+                    disposition_filename=filename
                 )
 
-                # 👉 写入 Redis 缓存
-                await cache.redis_set(cache_key, json.dumps(link := {"url": url}), ex=86400)
-                logger.info(f"上传并下发 URL -> {url}")
-                return link
+                # 👉 写入 Redis 缓存（只存 Key）
+                await cache.redis_set(cache_key, json.dumps({"key": r2_key}), ex=86400)
+                logger.info(f"Redis cache -> {r2_key}")
+
+                # 👉 生成签名 URL（每次请求都重新生成）
+                signed_url = await r2_storage.signed_url_for_stream_or_download(
+                    key=r2_key, expires_in=3600, disposition_filename=filename
+                )
+
+                logger.info(f"上传并下发签名 URL -> {signed_url}")
+                return {"url": signed_url}
 
         except httpx.HTTPStatusError as e:
             logger.error(f"❌ {e.response.status_code} {e.response.text}")

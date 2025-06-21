@@ -40,22 +40,42 @@ async def upload_audio(
         key: str,
         content: bytes,
         content_type: str,
-        disposition_filename: typing.Optional[str] = None,
+        disposition_filename: str,
 ) -> str:
     """
-    上传音频至 R2，并返回 CDN 可访问链接。
+    上传音频至 R2，文件设为私有（默认），不再设置 ACL。
     """
     extra = {
         "ContentType": content_type,
-        "ACL": "public-read"
+        "ContentDisposition": f'inline; filename="{disposition_filename}"'
     }
-    if disposition_filename:
-        extra["ContentDisposition"] = f'inline; filename="{disposition_filename}"'
 
     await asyncio.to_thread(
         r2_client.put_object, Bucket=const.BUCKET, Key=key, Body=content, **extra
     )
-    return f"{r2_public_url.rstrip('/')}/{key}"
+    logger.info(f"R2 上传完成 -> {key}")
+    return key
+
+
+async def signed_url_for_stream_or_download(
+        key: str,
+        expires_in: int,
+        disposition_filename: str
+) -> str:
+    """
+    生成支持播放 + 下载的签名 URL，Content-Disposition 为 inline。
+    """
+    signed_url = await asyncio.to_thread(
+        r2_client.generate_presigned_url, "get_object",
+        Params={
+            "Bucket": const.BUCKET,
+            "Key": key,
+            "ResponseContentDisposition": f'inline; filename="{disposition_filename}"'
+        },
+        ExpiresIn=expires_in
+    )
+    logger.info(f"R2 签名完成 -> {key}")
+    return signed_url
 
 
 async def file_exists(key: str) -> typing.Optional[bool]:
