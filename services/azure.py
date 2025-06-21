@@ -62,11 +62,11 @@ class SpeechEngine(object):
             cache: "redis_cache.RedisCache"
     ) -> typing.Any:
 
-        app_name, app_desc = req.a.lower().strip(), req.a
-
-        signature.verify_signature(
-            x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-        )
+        # app_name, app_desc = req.a.lower().strip(), req.a
+        #
+        # signature.verify_signature(
+        #     x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+        # )
 
         logger.info(f"{req.voice} -> {req.speak}")
 
