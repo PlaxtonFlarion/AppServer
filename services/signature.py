@@ -130,7 +130,7 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
 
     # 查询所有通行证记录
     if not (codes := sup.fetch_activation_code()):
-        logger.warning(f"[!] 通行证无效")
+        logger.warning(f"[!] 通行证无效 {sup.code}")
         raise HTTPException(403, f"[!] 通行证无效")
 
     # 查询通行证是否吊销
@@ -177,7 +177,6 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
         else:
             # 查询最大激活次数
             if codes["activations"] >= codes["max_activations"]:
-                logger.warning(f"[!] 超过最大激活次数")
                 raise HTTPException(403, f"[!] 超过最大激活次数")
 
             issued_at, license_id = issued, sup.generate_license_id(issued)
@@ -203,9 +202,12 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}
         )
 
+    except HTTPException as e:
+        logger.warning(e)
+        raise e
     except Exception as e:
-        logger.error(f"[!] 授权失败: {e}")
-        raise HTTPException(400, f"[!] 授权失败，请稍后重试")
+        logger.error(e)
+        raise HTTPException(400, f"[!] 授权失败，请稍后重试 ...")
 
     else:
         logger.success(f"下发 License file {license_info}")
