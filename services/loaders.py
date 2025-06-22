@@ -128,7 +128,7 @@ async def resolve_bootstrap(
     cache_key = f"Activation Node"
 
     if cached := await cache.redis_get(cache_key):
-        logger.info(f"下发缓存全局配置 -> {cache_key}")
+        logger.info(f"下发缓存激活配置 -> {cache_key}")
         return json.loads(cached)
 
     license_info = {
