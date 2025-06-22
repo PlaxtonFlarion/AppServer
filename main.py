@@ -60,8 +60,8 @@ async def global_configuration(
 ):
     logger.info(f"configuration request: {request.url}")
 
-    return loaders.resolve_configuration(
-        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n
+    return await loaders.resolve_configuration(
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
     )
 
 
@@ -80,7 +80,7 @@ async def bootstrap(
 
     loaders.enforce_rate_limit(request)
 
-    return loaders.resolve_bootstrap(
+    return await loaders.resolve_bootstrap(
         x_app_id, x_app_token, x_app_region, x_app_version, a, t, n
     )
 

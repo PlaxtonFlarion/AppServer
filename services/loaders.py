@@ -14,7 +14,9 @@ from fastapi import (
 from common import (
     const, utils
 )
-from services import signature
+from services import (
+    redis_cache, signature
+)
 
 env = utils.current_env(const.ACTIVATION_URL)
 activation_url = env[const.ACTIVATION_URL]
@@ -64,14 +66,15 @@ def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> 
     BOOTSTRAP_RATE_LIMIT[ip].append(now)
 
 
-def resolve_configuration(
+async def resolve_configuration(
         x_app_id: str,
         x_app_token: str,
         x_app_region: str,
         x_app_version: str,
         a: str,
         t: int,
-        n: str
+        n: str,
+        cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -80,23 +83,32 @@ def resolve_configuration(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
+    config_key = f"Global Config:{app_desc}"
+
+    if cached := await cache.redis_get(config_key):
+        logger.info(f"下发缓存全局配置 -> {config_key}")
+        return json.loads(cached)[config_key]
+
     config = utils.resolve_template("data", const.CONFIGURATION)
     config_dict = json.loads(config.read_text(encoding=const.CHARSET))
 
     license_info = {
-        "configuration": config_dict.get(app_desc, config_dict["Static"]),
+        "configuration": config_dict.get(app_desc) or config_dict.get("Static", {}),
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
         "message": f"Use global configuration"
     }
 
-    return signature.signature_license(
+    config_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
+    await cache.redis_set(config_key, json.dumps(config_data), ex=license_info["ttl"])
+
+    return config_data
 
 
-def resolve_bootstrap(
+async def resolve_bootstrap(
         x_app_id: str,
         x_app_token: str,
         x_app_region: str,
