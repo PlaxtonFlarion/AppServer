@@ -24,7 +24,7 @@ activation_url = env[const.ACTIVATION_URL]
 BOOTSTRAP_RATE_LIMIT = {}
 
 
-def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
+async def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
     """
     对请求 IP 进行限流控制，防止过于频繁的访问。
 
@@ -87,7 +87,7 @@ async def resolve_configuration(
 
     if cached := await cache.redis_get(config_key):
         logger.info(f"下发缓存全局配置 -> {config_key}")
-        return json.loads(cached)[config_key]
+        return json.loads(cached)
 
     config = utils.resolve_template("data", const.CONFIGURATION)
     config_dict = json.loads(config.read_text(encoding=const.CHARSET))
@@ -100,12 +100,12 @@ async def resolve_configuration(
         "message": f"Use global configuration"
     }
 
-    config_data = signature.signature_license(
+    signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.redis_set(config_key, json.dumps(config_data), ex=license_info["ttl"])
+    await cache.redis_set(config_key, json.dumps(signed_data), ex=license_info["ttl"])
 
-    return config_data
+    return signed_data
 
 
 async def resolve_bootstrap(
@@ -132,9 +132,11 @@ async def resolve_bootstrap(
         "message": f"Use activation node"
     }
 
-    return signature.signature_license(
+    signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
+
+    return signed_data
 
 
 if __name__ == '__main__':
