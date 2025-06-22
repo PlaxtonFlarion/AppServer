@@ -85,7 +85,7 @@ def signature_license(license_info: dict, private_key: str) -> dict:
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
 
-    logger.info(f"下发签名: {license_info}")
+    logger.info(f"签名: {license_info}")
     return {
         "data": base64.b64encode(message_bytes).decode(),
         "signature": base64.b64encode(signature).decode()
@@ -94,7 +94,7 @@ def signature_license(license_info: dict, private_key: str) -> dict:
 
 def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
     logger.info(f"X-App-ID: {x_app_id}")
-    logger.info(f"X-App-Token: {x_app_token}")
+    logger.info(f"X-App-Token: {utils.hide_string(x_app_token)}")
 
     try:
         app_token = json.loads(
@@ -202,6 +202,7 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
         raise HTTPException(400, f"[!] 授权失败，请稍后重试")
 
     else:
+        logger.info(f"下发 License file {license_info}")
         return license_data
 
     finally:

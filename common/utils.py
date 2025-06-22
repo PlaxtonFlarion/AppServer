@@ -60,5 +60,14 @@ def load_public_key(key_file: str) -> "PublicKeyTypes":
         return serialization.load_pem_public_key(f.read())
 
 
+def hide_string(s: str, visible: int = 2, max_len: int = 10, mask: str = "*") -> str:
+    if len(s) <= visible:
+        return s
+
+    remaining_len = max_len - visible - len("...")
+    masked = mask * max(0, remaining_len)
+    return s[:visible] + masked + "..."
+
+
 if __name__ == '__main__':
     pass
