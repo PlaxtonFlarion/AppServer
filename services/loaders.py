@@ -83,10 +83,10 @@ async def resolve_configuration(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    config_key = f"Global Config:{app_desc}"
+    cache_key = f"Global Config:{app_desc}"
 
-    if cached := await cache.redis_get(config_key):
-        logger.info(f"下发缓存全局配置 -> {config_key}")
+    if cached := await cache.redis_get(cache_key):
+        logger.info(f"下发缓存全局配置 -> {cache_key}")
         return json.loads(cached)
 
     config = utils.resolve_template("data", const.CONFIGURATION)
@@ -103,7 +103,7 @@ async def resolve_configuration(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.redis_set(config_key, json.dumps(signed_data), ex=license_info["ttl"])
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
 
     return signed_data
 
@@ -115,7 +115,8 @@ async def resolve_bootstrap(
         x_app_version: str,
         a: str,
         t: int,
-        n: str
+        n: str,
+        cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -123,6 +124,12 @@ async def resolve_bootstrap(
     signature.verify_signature(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
+
+    cache_key = f"Activation Node"
+
+    if cached := await cache.redis_get(cache_key):
+        logger.info(f"下发缓存全局配置 -> {cache_key}")
+        return json.loads(cached)
 
     license_info = {
         "url": activation_url,
@@ -135,6 +142,7 @@ async def resolve_bootstrap(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
 
     return signed_data
 

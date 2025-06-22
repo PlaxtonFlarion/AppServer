@@ -81,7 +81,7 @@ async def bootstrap(
     await loaders.enforce_rate_limit(request)
 
     return await loaders.resolve_bootstrap(
-        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
     )
 
 
