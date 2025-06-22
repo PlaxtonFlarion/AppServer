@@ -47,6 +47,24 @@ async def keep_supabase_alive():
     return await keep_alive.single_query()
 
 
+@app.get("/global-configuration")
+async def global_configuration(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        x_app_region: str = Header(..., alias="X-App-Region"),
+        x_app_version: str = Header(..., alias="X-App-Version"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+):
+    logger.info(f"configuration request: {request.url}")
+
+    return loaders.resolve_configuration(
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n
+    )
+
+
 @app.get("/bootstrap")
 async def bootstrap(
         request: "Request",

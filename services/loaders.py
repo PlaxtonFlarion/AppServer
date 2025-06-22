@@ -5,6 +5,7 @@
 #  |_____\___/ \__,_|\__,_|\___|_|  |___/
 #
 
+import json
 import time
 from loguru import logger
 from fastapi import (
@@ -63,6 +64,38 @@ def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> 
     BOOTSTRAP_RATE_LIMIT[ip].append(now)
 
 
+def resolve_configuration(
+        x_app_id: str,
+        x_app_token: str,
+        x_app_region: str,
+        x_app_version: str,
+        a: str,
+        t: int,
+        n: str
+) -> dict:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    signature.verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
+
+    config = utils.resolve_template("data", const.CONFIGURATION)
+    config_dict = json.loads(config.read_text(encoding=const.CHARSET))
+
+    license_info = {
+        "configuration": config_dict.get(app_desc, config_dict["Static"]),
+        "ttl": 86400,
+        "region": x_app_region,
+        "version": x_app_version,
+        "message": f"Use global configuration"
+    }
+
+    return signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
+
+
 def resolve_bootstrap(
         x_app_id: str,
         x_app_token: str,
@@ -72,49 +105,7 @@ def resolve_bootstrap(
         t: int,
         n: str
 ) -> dict:
-    """
-    处理引导授权请求，校验签名并生成授权许可响应。
 
-    Parameters
-    ----------
-    x_app_id : str
-        客户端提交的应用 ID，用于身份识别和签名校验。
-
-    x_app_token : str
-        客户端签名内容，用于校验合法性。
-
-    x_app_region : str
-        客户端所属区域或节点标识。
-
-    x_app_version : str
-        客户端当前版本号。
-
-    a : str
-        应用名称（原始），用于确定私钥和公钥前缀。
-
-    t : int
-        时间戳，用于签名数据组成的一部分。
-
-    n : str
-        随机数或 nonce，参与签名构造。
-
-    Returns
-    -------
-    dict
-        返回签名后的授权许可信息，包括激活地址、版本、区域等元数据。
-
-    Notes
-    -----
-    - 应用名 `a` 会被标准化（转小写）后作为公钥/私钥前缀；
-    - 使用 `signature.verify_signature()` 验证客户端请求合法性；
-    - 构造授权信息字典后，通过私钥签名生成最终结果；
-    - 返回结构可作为服务端的响应 JSON 输出。
-
-    Raises
-    ------
-    SignatureVerificationError
-        如果签名校验失败，则中止流程并抛出异常（假设 `verify_signature` 内部处理）。
-    """
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     signature.verify_signature(
