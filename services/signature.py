@@ -130,22 +130,27 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
 
     # 查询所有通行证记录
     if not (codes := sup.fetch_activation_code()):
+        logger.warning(f"[!] 通行证无效")
         raise HTTPException(403, f"[!] 通行证无效")
 
     # 查询通行证是否吊销
     if codes["is_revoked"]:
+        logger.warning(f"[!] 通行证已吊销")
         raise HTTPException(403, f"[!] 通行证已吊销")
 
     # 判断是否过期
     if datetime.now(timezone.utc).date() > datetime.fromisoformat(codes["expire"]).date():
+        logger.warning(f"[!] 通行证已过期")
         raise HTTPException(403, f"[!] 通行证已过期")
 
     # 若已有其他进程 pending 此通行证，拒绝
     if codes["pending"]:
+        logger.warning(f"[!] 授权正在处理中")
         raise HTTPException(423, f"[!] 授权正在处理中")
 
     # 如果 nonce 相同则拒绝
     if req.n == codes["last_nonce"]:
+        logger.warning(f"[!] 重放请求被拒绝")
         raise HTTPException(409, f"[!] 重放请求被拒绝")
 
     pre_castle, cur_castle= codes["castle"], req.castle
@@ -172,6 +177,7 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
         else:
             # 查询最大激活次数
             if codes["activations"] >= codes["max_activations"]:
+                logger.warning(f"[!] 超过最大激活次数")
                 raise HTTPException(403, f"[!] 超过最大激活次数")
 
             issued_at, license_id = issued, sup.generate_license_id(issued)
@@ -198,11 +204,11 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
         )
 
     except Exception as e:
-        logger.error(e)
+        logger.error(f"[!] 授权失败: {e}")
         raise HTTPException(400, f"[!] 授权失败，请稍后重试")
 
     else:
-        logger.info(f"下发 License file {license_info}")
+        logger.success(f"下发 License file {license_info}")
         return license_data
 
     finally:

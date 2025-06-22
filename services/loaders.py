@@ -104,7 +104,9 @@ async def resolve_configuration(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
     await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
+    logger.info(f"Redis cache -> {cache_key}")
 
+    logger.success(f"下发全局配置 -> Use global configuration")
     return signed_data
 
 
@@ -128,7 +130,7 @@ async def resolve_bootstrap(
     cache_key = f"Activation Node"
 
     if cached := await cache.redis_get(cache_key):
-        logger.info(f"下发缓存激活配置 -> {cache_key}")
+        logger.success(f"下发缓存激活配置 -> {cache_key}")
         return json.loads(cached)
 
     license_info = {
@@ -143,7 +145,9 @@ async def resolve_bootstrap(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
     await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
+    logger.info(f"Redis cache -> {cache_key}")
 
+    logger.success(f"下发激活配置 -> Use activation node")
     return signed_data
 
 
