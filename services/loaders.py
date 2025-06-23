@@ -18,8 +18,10 @@ from services import (
     redis_cache, signature
 )
 
-env = utils.current_env(const.ACTIVATION_URL)
+env = utils.current_env(const.ACTIVATION_URL, const.PREDICT_URL)
+
 activation_url = env[const.ACTIVATION_URL]
+predict_url = env[const.PREDICT_URL]
 
 BOOTSTRAP_RATE_LIMIT = {}
 
@@ -148,6 +150,47 @@ async def resolve_bootstrap(
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发激活配置 -> Use activation node")
+    return signed_data
+
+
+async def resolve_predict(
+        x_app_id: str,
+        x_app_token: str,
+        x_app_region: str,
+        x_app_version: str,
+        a: str,
+        t: int,
+        n: str,
+        cache: "redis_cache.RedisCache"
+) -> dict:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    signature.verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
+
+    cache_key = f"Predict Server:{app_desc}"
+
+    if cached := await cache.redis_get(cache_key):
+        logger.success(f"下发缓存推理服务 -> {cache_key}")
+        return json.loads(cached)
+
+    license_info = {
+        "predict_url": predict_url,
+        "ttl": 86400,
+        "region": x_app_region,
+        "version": x_app_version,
+        "message": f"Online predict service"
+    }
+
+    signed_data = signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
+    logger.info(f"Redis cache -> {cache_key}")
+
+    logger.success(f"下发推理服务 -> Use activation node")
     return signed_data
 
 

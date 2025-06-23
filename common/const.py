@@ -41,6 +41,7 @@ R2_BUCKET_URL      = r"R2_BUCKET_URL"
 R2_PUBLIC_URL      = r"R2_PUBLIC_URL"
 
 ACTIVATION_URL     = r"ACTIVATION_URL"
+PREDICT_URL        = r"PREDICT_URL"
 
 SHOW_LEVEL         = r"INFO"
 PRINT_FORMAT       = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
