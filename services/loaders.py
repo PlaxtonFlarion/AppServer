@@ -20,7 +20,7 @@ from services import (
     redis_cache, signature
 )
 
-env = utils.current_env(const.ACTIVATION_URL, const.PREDICT_URL)
+env = utils.current_env(const.ACTIVATION_URL, const.SERVICE_URL, const.PREDICT_URL)
 
 activation_url = env[const.ACTIVATION_URL]
 service_url = env[const.SERVICE_URL]
