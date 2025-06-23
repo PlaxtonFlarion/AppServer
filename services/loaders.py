@@ -179,12 +179,8 @@ async def resolve_predict(
         logger.success(f"下发缓存推理服务 -> {cache_key}")
         return json.loads(cached)
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.request("GET", service_url)
-
     license_info = {
         "predict_url": predict_url,
-        "online_service": resp.json(),
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
