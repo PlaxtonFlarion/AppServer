@@ -7,6 +7,8 @@
 
 import json
 import time
+
+import httpx
 from loguru import logger
 from fastapi import (
     Request, HTTPException
@@ -21,6 +23,7 @@ from services import (
 env = utils.current_env(const.ACTIVATION_URL, const.PREDICT_URL)
 
 activation_url = env[const.ACTIVATION_URL]
+service_url = env[const.SERVICE_URL]
 predict_url = env[const.PREDICT_URL]
 
 BOOTSTRAP_RATE_LIMIT = {}
@@ -176,8 +179,12 @@ async def resolve_predict(
         logger.success(f"下发缓存推理服务 -> {cache_key}")
         return json.loads(cached)
 
+    async with httpx.AsyncClient() as client:
+        resp = await client.request("GET", service_url)
+
     license_info = {
         "predict_url": predict_url,
+        "online_service": resp.json(),
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
@@ -190,7 +197,7 @@ async def resolve_predict(
     await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
     logger.info(f"Redis cache -> {cache_key}")
 
-    logger.success(f"下发推理服务 -> Use activation node")
+    logger.success(f"下发推理服务 -> Online predict service")
     return signed_data
 
 
