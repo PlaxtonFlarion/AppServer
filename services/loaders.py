@@ -20,12 +20,6 @@ from services import (
     redis_cache, signature
 )
 
-env = utils.current_env(const.ACTIVATION_URL, const.SERVICE_URL, const.PREDICT_URL)
-
-activation_url = env[const.ACTIVATION_URL]
-service_url = env[const.SERVICE_URL]
-predict_url = env[const.PREDICT_URL]
-
 BOOTSTRAP_RATE_LIMIT = {}
 
 
@@ -139,7 +133,7 @@ async def resolve_bootstrap(
         return json.loads(cached)
 
     license_info = {
-        "url": activation_url,
+        "url": f"https://api.appserverx.com/sign",
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
@@ -180,7 +174,7 @@ async def resolve_predict(
         return json.loads(cached)
 
     license_info = {
-        "predict_url": predict_url,
+        "predict_url": f"https://plaxtonflarion--inference-inferenceservice-fastapi-app.modal.run/predict",
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
