@@ -95,9 +95,13 @@ async def resolve_configuration(
     config = utils.resolve_template("data", const.CONFIGURATION)
     config_dict = json.loads(config.read_text(encoding=const.CHARSET))
 
+    expire_at = int(time.time()) + 86400
+    token = signature.sign_token(app_desc, expire_at, shared_secret)
+
     license_info = {
         "configuration": config_dict.get(app_desc) or config_dict.get("Static", {}),
-        "online": {},
+        "expire_at": expire_at,
+        "token": token,
         "url": f"",
         "ttl": 86400,
         "region": x_app_region,
@@ -138,9 +142,13 @@ async def resolve_bootstrap(
         logger.success(f"下发缓存激活配置 -> {cache_key}")
         return json.loads(cached)
 
+    expire_at = int(time.time()) + 86400
+    token = signature.sign_token(app_desc, expire_at, shared_secret)
+
     license_info = {
         "configuration": {},
-        "online": {},
+        "expire_at": expire_at,
+        "token": token,
         "url": f"https://api.appserverx.com/sign",
         "ttl": 86400,
         "region": x_app_region,
@@ -181,20 +189,13 @@ async def resolve_predict(
         logger.success(f"下发缓存推理服务 -> {cache_key}")
         return json.loads(cached)
 
-    expire_at = int(time.time()) + 180  # 3分钟有效期
+    expire_at = int(time.time()) + 86400
     token = signature.sign_token(app_desc, expire_at, shared_secret)
-
-    online = {
-        "token": token,
-        "expire_at": expire_at,
-        "file_key": "",
-        "upload_url": "",
-        "commit_url": ""
-    }
 
     license_info = {
         "configuration": {},
-        "online": online,
+        "expire_at": expire_at,
+        "token": token,
         "url": f"https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
         "ttl": 86400,
         "region": x_app_region,
