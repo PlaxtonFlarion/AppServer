@@ -7,6 +7,8 @@
 
 import json
 import time
+
+import httpx
 from loguru import logger
 from fastapi import (
     Request, HTTPException
@@ -95,7 +97,7 @@ async def resolve_configuration(
     config = utils.resolve_template("data", const.CONFIGURATION)
     config_dict = json.loads(config.read_text(encoding=const.CHARSET))
 
-    expire_at = int(time.time()) + 86400
+    expire_at = int(time.time()) + (ttl := 86400)
     token = signature.sign_token(app_desc, expire_at, shared_secret)
 
     license_info = {
@@ -103,7 +105,7 @@ async def resolve_configuration(
         "expire_at": expire_at,
         "token": token,
         "url": f"",
-        "ttl": 86400,
+        "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
         "message": f"Use global configuration"
@@ -112,7 +114,7 @@ async def resolve_configuration(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发全局配置 -> Use global configuration")
@@ -142,7 +144,7 @@ async def resolve_bootstrap(
         logger.success(f"下发缓存激活配置 -> {cache_key}")
         return json.loads(cached)
 
-    expire_at = int(time.time()) + 86400
+    expire_at = int(time.time()) + (ttl := 86400)
     token = signature.sign_token(app_desc, expire_at, shared_secret)
 
     license_info = {
@@ -150,7 +152,7 @@ async def resolve_bootstrap(
         "expire_at": expire_at,
         "token": token,
         "url": f"https://api.appserverx.com/sign",
-        "ttl": 86400,
+        "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
         "message": f"Use activation node"
@@ -159,7 +161,7 @@ async def resolve_bootstrap(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发激活配置 -> Use activation node")
@@ -189,7 +191,7 @@ async def resolve_predict(
         logger.success(f"下发缓存推理服务 -> {cache_key}")
         return json.loads(cached)
 
-    expire_at = int(time.time()) + 86400
+    expire_at = int(time.time()) + (ttl := 86400)
     token = signature.sign_token(app_desc, expire_at, shared_secret)
 
     license_info = {
@@ -197,7 +199,7 @@ async def resolve_predict(
         "expire_at": expire_at,
         "token": token,
         "url": f"https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
-        "ttl": 86400,
+        "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
         "message": f"Online predict service"
@@ -206,7 +208,7 @@ async def resolve_predict(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.redis_set(cache_key, json.dumps(signed_data), ex=license_info["ttl"])
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发推理服务 -> Online predict service")

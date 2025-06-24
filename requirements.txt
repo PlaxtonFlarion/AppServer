@@ -3,6 +3,7 @@
 # ================================
 fastapi              ==0.115.12     # 异步 Web 框架，基于 Starlette 构建
 uvicorn              ==0.34.2       # ASGI 服务运行器
+starlette            ==0.46.2       # 高性能 Web 框架核心
 redis                ==6.2.0        # Redis 客户端
 python-multipart     ==0.0.20       # 处理文件上传
 
