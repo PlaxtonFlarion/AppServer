@@ -174,7 +174,7 @@ async def resolve_predict(
         return json.loads(cached)
 
     license_info = {
-        "predict_url": f"https://plaxtonflarion--inference-inferenceservice-fastapi-app.modal.run/predict",
+        "predict_url": f"https://plaxtonflarion--inference-fastapi-app.modal.run/predict",
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
