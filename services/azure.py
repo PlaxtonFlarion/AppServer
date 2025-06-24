@@ -153,7 +153,7 @@ class SpeechEngine(object):
                 media_type = cfg["mime"]
 
                 # 👉 上传至 Cloudflare R2
-                await r2_storage.upload_audio(
+                await r2_storage.upload_file(
                     key=r2_key,
                     content=audio_bytes,
                     content_type=media_type,

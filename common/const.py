@@ -40,9 +40,7 @@ R2_BUCKET_PWD      = r"R2_BUCKET_PWD"
 R2_BUCKET_URL      = r"R2_BUCKET_URL"
 R2_PUBLIC_URL      = r"R2_PUBLIC_URL"
 
-ACTIVATION_URL     = r"ACTIVATION_URL"
-SERVICE_URL        = r"SERVICE_URL"
-PREDICT_URL        = r"PREDICT_URL"
+SHARED_SECRET      = r"SHARED_SECRET"
 
 SHOW_LEVEL         = r"INFO"
 PRINT_FORMAT       = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"

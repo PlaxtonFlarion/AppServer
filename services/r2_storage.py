@@ -36,14 +36,14 @@ r2_client = boto3.client(
 )
 
 
-async def upload_audio(
+async def upload_file(
         key: str,
         content: bytes,
         content_type: str,
         disposition_filename: str,
 ) -> str:
     """
-    上传音频至 R2，文件设为私有（默认），不再设置 ACL。
+    上传任意文件至 R2。默认设置为私有对象，可通过签名访问。
     """
     extra = {
         "ContentType": content_type,

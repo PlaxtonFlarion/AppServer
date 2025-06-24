@@ -7,8 +7,6 @@
 
 import json
 import time
-
-import httpx
 from loguru import logger
 from fastapi import (
     Request, HTTPException
@@ -21,6 +19,12 @@ from services import (
 )
 
 BOOTSTRAP_RATE_LIMIT = {}
+
+env = utils.current_env(
+    const.SHARED_SECRET
+)
+
+shared_secret = env[const.SHARED_SECRET]
 
 
 async def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
@@ -93,6 +97,8 @@ async def resolve_configuration(
 
     license_info = {
         "configuration": config_dict.get(app_desc) or config_dict.get("Static", {}),
+        "online": {},
+        "url": f"",
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,
@@ -133,6 +139,8 @@ async def resolve_bootstrap(
         return json.loads(cached)
 
     license_info = {
+        "configuration": {},
+        "online": {},
         "url": f"https://api.appserverx.com/sign",
         "ttl": 86400,
         "region": x_app_region,
@@ -173,8 +181,21 @@ async def resolve_predict(
         logger.success(f"下发缓存推理服务 -> {cache_key}")
         return json.loads(cached)
 
+    expire_at = int(time.time()) + 180  # 3分钟有效期
+    token = signature.sign_token(app_desc, expire_at, shared_secret)
+
+    online = {
+        "token": token,
+        "expire_at": expire_at,
+        "file_key": "",
+        "upload_url": "",
+        "commit_url": ""
+    }
+
     license_info = {
-        "predict_url": f"https://plaxtonflarion--inference-fastapi-app.modal.run/predict",
+        "configuration": {},
+        "online": online,
+        "url": f"https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
         "ttl": 86400,
         "region": x_app_region,
         "version": x_app_version,

@@ -8,8 +8,10 @@
 
 import uuid
 import time
+import hmac
 import json
 import base64
+import secrets
 import hashlib
 from pathlib import Path
 from loguru import logger
@@ -67,6 +69,11 @@ def generate_x_app_token(app_name: str, app_desc: str) -> str:
     return x_app_token_str
 
 
+def generate_shared_secret(length: int = 32) -> str:
+    secret_bytes = secrets.token_bytes(length)
+    return base64.b64encode(secret_bytes).decode()
+
+
 def decrypt_data(data: str, private_key: str) -> str:
     private_key = utils.load_private_key(private_key)
 
@@ -74,6 +81,13 @@ def decrypt_data(data: str, private_key: str) -> str:
         base64.b64decode(data), padding.PKCS1v15()
     )
     return json.loads(decrypted)
+
+
+def sign_token(app_id: str, expire_at: int, shared_secret: str) -> str:
+    payload = f"{app_id}:{expire_at}"
+    sig = hmac.new(shared_secret.encode(), payload.encode(), hashlib.sha256).digest()
+    token = f"{payload}.{base64.b64encode(sig).decode()}"
+    return token
 
 
 def signature_license(license_info: dict, private_key: str) -> dict:
