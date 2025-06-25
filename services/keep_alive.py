@@ -9,6 +9,7 @@
 import time
 import typing
 import asyncio
+from loguru import logger
 from services import supabase
 from common import const
 
@@ -32,6 +33,17 @@ async def cpu_heavy_work() -> dict:
 async def single_query() -> typing.Any:
     sup = supabase.Supabase("", "", const.LICENSE_CODES)
     return await asyncio.to_thread(sup.keep_alive)
+
+
+async def predict_warmup() -> None:
+    url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.request("GET", url)
+            resp.raise_for_status()
+            logger.info(f"Ping Modal 成功: {resp.json()}")
+    except Exception as e:
+        logger.warning(f"Ping Modal 失败: {e}")
 
 
 if __name__ == '__main__':
