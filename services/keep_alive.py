@@ -11,7 +11,7 @@ import typing
 import asyncio
 from loguru import logger
 from services import supabase
-from common import const
+from common import const, utils
 
 env = utils.current_env(
     const.SHARED_SECRET
