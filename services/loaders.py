@@ -192,6 +192,7 @@ async def resolve_predict(
         "configuration": {},
         "available": True,
         "expire_at": expire_at,
+        "timeout": 60,
         "content_type": "multipart/form-data",
         "auth_header": "X-Token",
         "token": token,
