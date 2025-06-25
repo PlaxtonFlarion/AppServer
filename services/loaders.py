@@ -7,8 +7,6 @@
 
 import json
 import time
-
-import httpx
 from loguru import logger
 from fastapi import (
     Request, HTTPException
@@ -192,8 +190,12 @@ async def resolve_predict(
 
     license_info = {
         "configuration": {},
+        "available": True,
         "expire_at": expire_at,
+        "content_type": "multipart/form-data",
+        "auth_header": "X-Token",
         "token": token,
+        "method": "POST",
         "url": f"https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
         "ttl": ttl,
         "region": x_app_region,
