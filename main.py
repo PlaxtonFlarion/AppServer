@@ -72,6 +72,14 @@ async def keep_supabase_alive():
     return await keep_alive.single_query()
 
 
+@app.get("/keep-modal-alive")
+async def keep_modal_alive():
+    """
+    定时触发，用于保持 Modal 容器存活状态，防止超时回收。
+    """
+    return await keep_alive.predict_warmup()
+
+
 @app.get("/global-configuration")
 async def global_configuration(
         request: "Request",
