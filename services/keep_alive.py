@@ -13,6 +13,12 @@ from loguru import logger
 from services import supabase
 from common import const
 
+env = utils.current_env(
+    const.SHARED_SECRET
+)
+
+shared_secret = env[const.SHARED_SECRET]
+
 
 async def cpu_heavy_work() -> dict:
     primes = []
