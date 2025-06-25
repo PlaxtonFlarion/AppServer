@@ -37,13 +37,19 @@ async def single_query() -> typing.Any:
 
 async def predict_warmup() -> None:
     url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
+    expire_at = int(time.time()) + (ttl := 86400)
+    token = signature.sign_token(app_desc, expire_at, shared_secret)
+    headers = {"X-Token": token}
+    
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(headser=headers, timeout=60) as client:
             resp = await client.request("GET", url)
             resp.raise_for_status()
             logger.info(f"Ping Modal 成功: {resp.json()}")
+            return resp.json()
     except Exception as e:
         logger.warning(f"Ping Modal 失败: {e}")
+        return {"status": "error", "detail": str(e)}
 
 
 if __name__ == '__main__':
