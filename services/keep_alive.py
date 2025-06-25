@@ -7,6 +7,7 @@
 #
 
 import time
+import httpx
 import typing
 import asyncio
 from loguru import logger
