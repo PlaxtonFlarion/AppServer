@@ -6,6 +6,7 @@
 #              |_|
 #
 
+import time
 import httpx
 import typing
 import string
@@ -107,19 +108,38 @@ class Supabase(object):
         for _ in range(count):
             upload_code(secure_code())
 
-    def keep_alive(self) -> None:
+    def keep_alive(self) -> dict:
         url = f"{supabase_url}/rest/v1/{self.table}"
         params = {"select": "id", "limit": 1}
         try:
-            response = httpx.get(
+            resp = httpx.get(
                 url, headers=HEADERS, params=params, timeout=self.timeout
             )
-            response.raise_for_status()
-            return logger.info(f"🟢 Supabase 保活成功")
+            resp.raise_for_status()
+            logger.info("🟢 Supabase online")
+            return {
+                "status": "OK",
+                "message": "Supabase online",
+                "timestamp": int(time.time()),
+                "http_status": resp.status_code
+            }
+
         except httpx.HTTPStatusError as e:
-            return logger.warning(f"🟡 Supabase 保活异常: {e.response.status_code} {e.response.text}")
+            logger.warning(f"🟡 Supabase offline: {e.response.status_code}")
+            return {
+                "status": "ERROR",
+                "message": f"Supabase offline: {e.response.text}",
+                "timestamp": int(time.time()),
+                "http_status": e.response.status_code
+            }
+
         except Exception as e:
-            return logger.error(f"🔴 Supabase 保活失败: {e}")
+            logger.error(f"🔴 Supabase connection error: {e}")
+            return {
+                "status": "ERROR",
+                "message": f"Supabase connection error: {str(e)}",
+                "timestamp": int(time.time())
+            }
 
 
 if __name__ == "__main__":

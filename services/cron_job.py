@@ -38,7 +38,7 @@ async def send(
         logger.error(f"❌ {e.response.status_code} {e.response.text}")
 
 
-async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutine | typing.Any:
+async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> dict:
     response = await send(client, "get", f"{cron_job_url}/jobs")
 
     for job in [job for job in response.json()["jobs"] if job["folderId"] == const.FOLDER_ID]:
@@ -64,7 +64,7 @@ async def update_keep_alive_jobs(client: "httpx.AsyncClient") -> typing.Coroutin
     return {"status": "cron jobs update"}
 
 
-async def update_cron_jobs() -> typing.Coroutine | typing.Any:
+async def update_cron_jobs() -> dict:
     async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
         return await update_keep_alive_jobs(client)
 

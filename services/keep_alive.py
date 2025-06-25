@@ -8,7 +8,6 @@
 
 import time
 import httpx
-import typing
 import asyncio
 from loguru import logger
 from services import supabase
@@ -31,23 +30,42 @@ async def cpu_heavy_work() -> dict:
     }
 
 
-async def single_query() -> typing.Any:
+async def single_query() -> dict:
     sup = supabase.Supabase("", "", const.LICENSE_CODES)
     return await asyncio.to_thread(sup.keep_alive)
 
 
-async def predict_warmup() -> None:
+async def predict_warmup() -> dict:
     url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
-    
+
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.request("GET", url)
             resp.raise_for_status()
-            logger.info(f"Ping Modal 成功: {resp.json()}")
-            return resp.json()
+            logger.info("🟢 Modal online")
+            return {
+                "status": "OK",
+                "message": "Modal online",
+                "timestamp": int(time.time()),
+                "http_status": resp.status_code
+            }
+
+    except httpx.HTTPStatusError as e:
+        logger.warning(f"🟡 Modal offline: {e.response.status_code}")
+        return {
+            "status": "ERROR",
+            "message": f"Modal offline: {e.response.text}",
+            "timestamp": int(time.time()),
+            "http_status": e.response.status_code
+        }
+
     except Exception as e:
-        logger.warning(f"Ping Modal 失败: {e}")
-        return {"status": "error", "detail": str(e)}
+        logger.error(f"🔴 Modal connection error: {e}")
+        return {
+            "status": "ERROR",
+            "message": f"Modal connection error: {str(e)}",
+            "timestamp": int(time.time())
+        }
 
 
 if __name__ == '__main__':
