@@ -11,13 +11,7 @@ import typing
 import asyncio
 from loguru import logger
 from services import supabase
-from common import const, utils
-
-env = utils.current_env(
-    const.SHARED_SECRET
-)
-
-shared_secret = env[const.SHARED_SECRET]
+from common import const
 
 
 async def cpu_heavy_work() -> dict:
@@ -43,12 +37,9 @@ async def single_query() -> typing.Any:
 
 async def predict_warmup() -> None:
     url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
-    expire_at = int(time.time()) + (ttl := 86400)
-    token = signature.sign_token(app_desc, expire_at, shared_secret)
-    headers = {"X-Token": token}
     
     try:
-        async with httpx.AsyncClient(headser=headers, timeout=60) as client:
+        async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.request("GET", url)
             resp.raise_for_status()
             logger.info(f"Ping Modal 成功: {resp.json()}")
