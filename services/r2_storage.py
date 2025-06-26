@@ -6,11 +6,14 @@
 #                                          |___/
 #
 
+import os
 import boto3
 import typing
 import asyncio
+import zipfile
 from loguru import logger
 from botocore.client import Config
+from boto3.s3.transfer import TransferConfig
 from common import (
     const, utils
 )
@@ -91,6 +94,58 @@ async def file_exists(key: str) -> typing.Optional[bool]:
         if e.response["Error"]["Code"] == "404":
             return False
         logger.error(f"R2 检查失败: {e}")
+
+
+async def upload_model_folder_to_r2(
+        folder_path: str,
+        model_name: str,
+) -> tuple[str, dict]:
+    """
+    压缩模型目录并上传到 R2 的 model-store/ 文件夹下。
+    """
+    zip_filename = f"{model_name}.zip"
+    zip_path = os.path.join("/tmp", zip_filename)
+
+    try:
+        # 压缩模型文件夹
+        logger.info(f"📦 正在压缩模型目录 {folder_path} 到 {zip_path}")
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(folder_path):
+                for file in files:
+                    abs_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(abs_path, folder_path)
+                    zipf.write(abs_path, arcname=os.path.join(model_name, rel_path))
+        logger.success(f"✅ 模型已压缩为 {zip_path}")
+
+        # 分块上传配置
+        config = TransferConfig(
+            multipart_threshold=50 * 1024 * 1024,
+            multipart_chunksize=50 * 1024 * 1024
+        )
+
+        r2_key = f"model-store/{zip_filename}"
+        logger.info(f"🚀 开始上传到 R2: {const.BUCKET}/{r2_key}")
+        await asyncio.to_thread(
+            r2_client.upload_file,
+            Filename=zip_path,
+            Bucket=const.BUCKET,
+            Key=r2_key,
+            ExtraArgs={
+                "ContentType": "application/zip",
+                "ContentDisposition": f'attachment; filename="{zip_filename}"'
+            },
+            Config=config
+        )
+        logger.success(f"✅ 模型已上传至 R2: {r2_key}")
+
+        # 返回下载 URL Metadata
+        download = f"{r2_public_url}/{const.BUCKET}/{r2_key}"
+        metadata = utils.generate_model_metadata(zip_path, model_name, download)
+        logger.success(metadata)
+        return download, metadata
+
+    finally:
+        await asyncio.to_thread(os.remove, zip_path)
 
 
 if __name__ == '__main__':

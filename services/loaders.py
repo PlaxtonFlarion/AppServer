@@ -99,11 +99,11 @@ async def resolve_configuration(
 
     license_info = {
         "configuration": config_dict.get(app_desc) or config_dict.get("Static", {}),
-        "url": f"",
+        "url": "",
         "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
-        "message": f"Use global configuration"
+        "message": "Use global configuration"
     }
 
     signed_data = signature.signature_license(
@@ -143,11 +143,11 @@ async def resolve_bootstrap(
 
     license_info = {
         "configuration": {},
-        "url": f"https://api.appserverx.com/sign",
+        "url": "https://api.appserverx.com/sign",
         "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
-        "message": f"Use activation node"
+        "message": "Use activation node"
     }
 
     signed_data = signature.signature_license(
@@ -197,11 +197,11 @@ async def resolve_predict(
         "auth_header": "X-Token",
         "token": token,
         "method": "POST",
-        "url": f"https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
+        "url": "https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
         "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
-        "message": f"Predict service online"
+        "message": "Predict service online"
     }
 
     signed_data = signature.signature_license(
@@ -211,6 +211,64 @@ async def resolve_predict(
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发推理服务 -> Predict service online")
+    return signed_data
+
+
+async def resolve_model_download(
+        x_app_id: str,
+        x_app_token: str,
+        x_app_region: str,
+        x_app_version: str,
+        a: str,
+        t: int,
+        n: str,
+        cache: "redis_cache.RedisCache"
+) -> dict:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    signature.verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
+
+    cache_key = f"ModelMeta:All"
+
+    if cached := await cache.redis_get(cache_key):
+        logger.success(f"下发缓存模型元信息 -> {cache_key}")
+        return json.loads(cached)
+
+    ttl = 86400
+
+    license_info = {
+        "models": {
+            "Keras_Gray_W256_H256": {
+                "version": "1.0.0",
+                "url": "https://cdn-appserverx.com/appserver-bucket/model-store/Keras_Gray_W256_H256.zip",
+                "size": 361578087,
+                "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
+                "updated_at": "2025-06-27T03:24:24"
+            },
+            "Keras_Hued_W256_H256": {
+                "version": "1.0.0",
+                "url": "https://cdn-appserverx.com/appserver-bucket/model-store/Keras_Gray_W256_H256.zip",
+                "size": 372520325,
+                "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
+                "updated_at": "2025-06-27T03:29:22"
+            }
+        },
+        "ttl": ttl,
+        "region": x_app_region,
+        "version": x_app_version,
+        "message": "Available models for client to choose"
+    }
+
+    signed_data = signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
+    await cache.redis_set(cache_key, json.dumps(signed_data), ex=ttl)
+    logger.info(f"Redis cache -> {cache_key}")
+
+    logger.success(f"下发模型元信息 -> Available models for client to choose")
     return signed_data
 
 

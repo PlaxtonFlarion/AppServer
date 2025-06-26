@@ -6,6 +6,8 @@
 #
 
 import os
+import time
+import hashlib
 from faker import Faker
 from pathlib import Path
 from cryptography.hazmat.primitives import serialization
@@ -171,6 +173,49 @@ def hide_string(s: str, visible: int = 2, max_len: int = 21, mask: str = "*") ->
     remaining_len = max_len - visible - len(padding := " ...")
     masked = mask * max(0, remaining_len)
     return s[:visible] + masked + padding
+
+
+def generate_model_metadata(file_path: str, model_name: str, url: str) -> dict:
+    """
+    生成上传模型文件的元数据信息，包括 hash、大小、时间戳等
+
+    Parameters
+    ----------
+    file_path : str
+        模型 `.zip` 文件的本地路径
+
+    model_name : str
+        模型名称（如 Keras_Gray_W256_H256）
+
+    url : str
+        模型在 R2 上的访问地址
+
+    Returns
+    -------
+    dict
+        模型元数据结构
+    """
+    # 计算 SHA256 哈希
+    hash_sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            hash_sha256.update(chunk)
+    file_hash = hash_sha256.hexdigest()
+
+    # 获取文件大小（单位：字节）
+    file_size = os.path.getsize(file_path)
+
+    # 更新时间戳（ISO 格式）
+    updated_at = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+
+    return {
+        "name": model_name,
+        "version": "1.0.0",
+        "url": url,
+        "size": file_size,
+        "hash": file_hash,
+        "updated_at": updated_at
+    }
 
 
 if __name__ == '__main__':
