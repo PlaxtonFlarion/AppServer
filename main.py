@@ -121,7 +121,7 @@ async def bootstrap(
     """
     logger.info(f"bootstrap request: {request.url}")
 
-    await loaders.enforce_rate_limit(request)
+    await cache.enforce_rate_limit(request)
 
     return await loaders.resolve_bootstrap(
         x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache

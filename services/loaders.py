@@ -201,7 +201,7 @@ async def resolve_predict(
         "ttl": ttl,
         "region": x_app_region,
         "version": x_app_version,
-        "message": f"Online predict service"
+        "message": f"Predict service online"
     }
 
     signed_data = signature.signature_license(
@@ -210,7 +210,7 @@ async def resolve_predict(
     await cache.redis_set(cache_key, json.dumps(signed_data), ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
-    logger.success(f"下发推理服务 -> Online predict service")
+    logger.success(f"下发推理服务 -> Predict service online")
     return signed_data
 
 

@@ -6,11 +6,15 @@
 #
 
 import json
+import time
 import typing
 import redis.asyncio as aioredis
+from fastapi import (
+    Request, HTTPException
+)
 from loguru import logger
 from common import (
-    utils, const
+    const, utils
 )
 
 env = utils.current_env(
@@ -53,6 +57,18 @@ class RedisCache(object):
             return await self.client.delete(self.make_key(key))
         except Exception as e:
             logger.error(e)
+
+    async def enforce_rate_limit(self, request: "Request", limit: int = 5, window: int = 60) -> None:
+        ip = request.client.host
+        timestamp = int(time.time())
+        key = self.make_key(f"rate_limit:{ip}:{timestamp // window}")
+
+        count = await self.client.incr(key)
+        if count == 1:
+            await self.client.expire(key, window)
+
+        if count > limit:
+            raise HTTPException(status_code=429, detail="Too many requests")
 
 
 if __name__ == '__main__':
