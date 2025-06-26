@@ -51,7 +51,7 @@ async def upload_file(
     }
 
     await asyncio.to_thread(
-        r2_client.put_object, Bucket=const.BUCKET, Key=key, Body=content, **extra
+        r2_client.put_object, Bucket=const.AUDIO_CACHE, Key=key, Body=content, **extra
     )
     logger.info(f"R2 上传完成 -> {key}")
     return key
@@ -68,7 +68,7 @@ async def signed_url_for_stream_or_download(
     signed_url = await asyncio.to_thread(
         r2_client.generate_presigned_url, "get_object",
         Params={
-            "Bucket": const.BUCKET,
+            "Bucket": const.AUDIO_CACHE,
             "Key": key,
             "ResponseContentDisposition": f'inline; filename="{disposition_filename}"'
         },
@@ -84,7 +84,7 @@ async def file_exists(key: str) -> typing.Optional[bool]:
     """
     try:
         await asyncio.to_thread(
-            r2_client.head_object, Bucket=const.BUCKET, Key=key
+            r2_client.head_object, Bucket=const.AUDIO_CACHE, Key=key
         )
         return True
     except r2_client.exceptions.ClientError as e:
