@@ -50,9 +50,15 @@ class SpeechEngine(object):
             x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
         )
 
-        return {
+        license_info = {
             "formats": ["mp3"]
         }
+
+        signed_data = signature.signature_license(
+            license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+        )
+
+        return signed_data
 
     @staticmethod
     async def tts_audio(
