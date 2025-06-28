@@ -231,7 +231,7 @@ async def resolve_model_download(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    cache_key = f"ModelMeta:{app_desc}"
+    cache_key = f"Models:{app_desc}"
 
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
