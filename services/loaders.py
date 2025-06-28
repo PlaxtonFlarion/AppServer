@@ -243,22 +243,14 @@ async def resolve_model_download(
         "models": {
             "Keras_Gray_W256_H256": {
                 "version": "1.0.0",
-                "url": await r2_storage.signed_url_for_stream_or_download(
-                    key="https://cdn-appserverx.com/model-store/Keras_Gray_W256_H256.zip",
-                    expires_in=3600,
-                    disposition_filename="Keras_Gray_W256_H256.zip"
-                ),
+                "url": "https://cdn-appserverx.com/model-store/Keras_Gray_W256_H256.zip",
                 "size": 361578087,
                 "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
                 "updated_at": "2025-06-27T03:24:24"
             },
             "Keras_Hued_W256_H256": {
                 "version": "1.0.0",
-                "url": await r2_storage.signed_url_for_stream_or_download(
-                    key="https://cdn-appserverx.com/model-store/Keras_Hued_W256_H256.zip",
-                    expires_in=3600,
-                    disposition_filename="Keras_Hued_W256_H256.zip"
-                ),
+                "url": "https://cdn-appserverx.com/model-store/Keras_Hued_W256_H256.zip",
                 "size": 372520325,
                 "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
                 "updated_at": "2025-06-27T03:29:22"
