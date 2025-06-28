@@ -15,7 +15,7 @@ from common import (
     const, utils
 )
 from services import (
-    redis_cache, signature
+    r2_storage, redis_cache, signature
 )
 
 BOOTSTRAP_RATE_LIMIT = {}
@@ -231,7 +231,7 @@ async def resolve_model_download(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    cache_key = f"ModelMeta:All"
+    cache_key = f"ModelMeta:{app_desc}"
 
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
@@ -243,14 +243,22 @@ async def resolve_model_download(
         "models": {
             "Keras_Gray_W256_H256": {
                 "version": "1.0.0",
-                "url": "https://cdn-appserverx.com/appserver-bucket/model-store/Keras_Gray_W256_H256.zip",
+                "url": r2_storage.signed_url_for_stream_or_download(
+                    key="https://cdn-appserverx.com/model-store/Keras_Gray_W256_H256.zip",
+                    expires_in=3600,
+                    disposition_filename="Keras_Gray_W256_H256.zip"
+                ),
                 "size": 361578087,
                 "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
                 "updated_at": "2025-06-27T03:24:24"
             },
             "Keras_Hued_W256_H256": {
                 "version": "1.0.0",
-                "url": "https://cdn-appserverx.com/appserver-bucket/model-store/Keras_Gray_W256_H256.zip",
+                "url": r2_storage.signed_url_for_stream_or_download(
+                    key="https://cdn-appserverx.com/model-store/Keras_Hued_W256_H256.zip",
+                    expires_in=3600,
+                    disposition_filename="Keras_Hued_W256_H256.zip"
+                ),
                 "size": 372520325,
                 "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
                 "updated_at": "2025-06-27T03:29:22"

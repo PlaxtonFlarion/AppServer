@@ -128,6 +128,47 @@ async def bootstrap(
     )
 
 
+@app.get("/proxy-predict")
+async def proxy_predict(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        x_app_region: str = Header(..., alias="X-App-Region"),
+        x_app_version: str = Header(..., alias="X-App-Version"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+):
+    """
+    代理推理请求接口。
+
+    将客户端请求转发至 Modal/GPU 模型服务，支持 Token 校验。
+    """
+    logger.info(f"predict request: {request.url}")
+
+    return await loaders.resolve_predict(
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
+    )
+
+
+@app.get("/model-meta")
+async def proxy_predict(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        x_app_region: str = Header(..., alias="X-App-Region"),
+        x_app_version: str = Header(..., alias="X-App-Version"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+):
+    logger.info(f"model request: {request.url}")
+
+    return await loaders.resolve_model_download(
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
+    )
+
+
 @app.post(f"/sign")
 async def sign(
         req: "models.LicenseRequest",
@@ -245,29 +286,6 @@ async def speech_voice(
 
     return await azure.SpeechEngine.tts_audio(
         req, x_app_id, x_app_token, cache
-    )
-
-
-@app.get("/proxy-predict")
-async def proxy_predict(
-        request: "Request",
-        x_app_id: str = Header(..., alias="X-App-ID"),
-        x_app_token: str = Header(..., alias="X-App-Token"),
-        x_app_region: str = Header(..., alias="X-App-Region"),
-        x_app_version: str = Header(..., alias="X-App-Version"),
-        a: str = Query(..., alias="a"),
-        t: int = Query(..., alias="t"),
-        n: str = Query(..., alias="n"),
-):
-    """
-    代理推理请求接口。
-
-    将客户端请求转发至 Modal/GPU 模型服务，支持 Token 校验。
-    """
-    logger.info(f"predict request: {request.url}")
-
-    return await loaders.resolve_predict(
-        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
     )
 
 

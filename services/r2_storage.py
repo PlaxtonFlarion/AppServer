@@ -138,11 +138,10 @@ async def upload_model_folder_to_r2(
         )
         logger.success(f"✅ 模型已上传至 R2: {r2_key}")
 
-        # 返回下载 URL Metadata
-        download = f"{r2_public_url}/{const.BUCKET}/{r2_key}"
-        metadata = utils.generate_model_metadata(zip_path, model_name, download)
+        url = f"{r2_public_url}/{r2_key}"
+        metadata = utils.generate_model_metadata(zip_path, model_name, url)
         logger.success(metadata)
-        return download, metadata
+        return url, metadata
 
     finally:
         await asyncio.to_thread(os.remove, zip_path)
