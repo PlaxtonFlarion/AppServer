@@ -146,13 +146,13 @@ async def proxy_predict(
     """
     logger.info(f"predict request: {request.url}")
 
-    return await loaders.resolve_predict(
+    return await loaders.resolve_proxy_predict(
         x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
     )
 
 
 @app.get("/model-meta")
-async def proxy_predict(
+async def model_information(
         request: "Request",
         x_app_id: str = Header(..., alias="X-App-ID"),
         x_app_token: str = Header(..., alias="X-App-Token"),

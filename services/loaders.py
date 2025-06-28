@@ -160,7 +160,7 @@ async def resolve_bootstrap(
     return signed_data
 
 
-async def resolve_predict(
+async def resolve_proxy_predict(
         x_app_id: str,
         x_app_token: str,
         x_app_region: str,
