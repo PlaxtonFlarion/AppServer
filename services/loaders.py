@@ -243,7 +243,7 @@ async def resolve_model_download(
         "models": {
             "Keras_Gray_W256_H256": {
                 "version": "1.0.0",
-                "url": r2_storage.signed_url_for_stream_or_download(
+                "url": await r2_storage.signed_url_for_stream_or_download(
                     key="https://cdn-appserverx.com/model-store/Keras_Gray_W256_H256.zip",
                     expires_in=3600,
                     disposition_filename="Keras_Gray_W256_H256.zip"
@@ -254,7 +254,7 @@ async def resolve_model_download(
             },
             "Keras_Hued_W256_H256": {
                 "version": "1.0.0",
-                "url": r2_storage.signed_url_for_stream_or_download(
+                "url": await r2_storage.signed_url_for_stream_or_download(
                     key="https://cdn-appserverx.com/model-store/Keras_Hued_W256_H256.zip",
                     expires_in=3600,
                     disposition_filename="Keras_Hued_W256_H256.zip"
