@@ -7,6 +7,7 @@
 
 import os
 import time
+import typing
 import hashlib
 from faker import Faker
 from pathlib import Path
@@ -175,46 +176,44 @@ def hide_string(s: str, visible: int = 2, max_len: int = 21, mask: str = "*") ->
     return s[:visible] + masked + padding
 
 
-def generate_model_metadata(file_path: str, model_name: str, url: str) -> dict:
+def generate_metadata(
+        file_path: typing.Union[str, "Path"],
+        file_name: str,
+        version: str = "1.0.0"
+) -> dict:
     """
-    生成上传模型文件的元数据信息，包括 hash、大小、时间戳等
+    构建文件元信息，用于模型发布、文件校验或下载控制等场景。
 
     Parameters
     ----------
-    file_path : str
-        模型 `.zip` 文件的本地路径
+    file_path : str or Path
+        本地文件路径（将计算其大小和 SHA256 哈希）。
 
-    model_name : str
-        模型名称（如 Keras_Gray_W256_H256）
+    file_name : str
+        文件/模型名称（不带扩展名，用于标识）。
 
-    url : str
-        模型在 R2 上的访问地址
+    version : str, optional
+        文件/模型版本，默认 "1.0.0"。
 
     Returns
     -------
     dict
-        模型元数据结构
+        包含名称、版本、大小、哈希、下载地址和更新时间的结构化信息。
     """
+    file_path = Path(file_path)
+
     # 计算 SHA256 哈希
-    hash_sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            hash_sha256.update(chunk)
-    file_hash = hash_sha256.hexdigest()
-
-    # 获取文件大小（单位：字节）
-    file_size = os.path.getsize(file_path)
-
-    # 更新时间戳（ISO 格式）
-    updated_at = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+    sha256 = hashlib.sha256()
+    with file_path.open("rb") as f:
+        for block in iter(lambda: f.read(8192), b""):
+            sha256.update(block)
 
     return {
-        "name": model_name,
-        "version": "1.0.0",
-        "url": url,
-        "size": file_size,
-        "hash": file_hash,
-        "updated_at": updated_at
+        "filename": file_name,
+        "version": version,
+        "size": file_path.stat().st_size,
+        "hash": sha256.hexdigest(),
+        "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
     }
 
 

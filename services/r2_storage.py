@@ -11,6 +11,7 @@ import boto3
 import typing
 import asyncio
 import zipfile
+from pathlib import Path
 from loguru import logger
 from botocore.client import Config
 from boto3.s3.transfer import TransferConfig
@@ -96,39 +97,69 @@ async def file_exists(key: str) -> typing.Optional[bool]:
         logger.error(f"R2 检查失败: {e}")
 
 
-async def upload_model_folder_to_r2(
+async def compress_and_upload_folder(
         folder_path: str,
-        model_name: str,
-) -> tuple[str, dict]:
+        r2_prefix: str,
+        display_name: str,
+        *,
+        bucket: str = const.BUCKET
+) -> dict:
     """
-    压缩模型目录并上传到 R2 的 model-store/ 文件夹下。
+    压缩指定文件夹并上传至 R2 存储。
+
+    Parameters
+    ----------
+    folder_path : str
+        本地文件夹的路径。
+
+    r2_prefix : str
+        上传到 R2 的目标路径前缀（如 "model-store"）。
+
+    display_name : str
+        用作压缩包文件名和归档相对路径的命名。
+
+    bucket : str, optional
+        R2 的存储桶名称，默认使用全局 const.BUCKET。
+
+    Returns
+    -------
+    dict
+        文件元数据信息。
     """
-    zip_filename = f"{model_name}.zip"
-    zip_path = os.path.join("/tmp", zip_filename)
+    folder_path = Path(folder_path)
+    if not folder_path.exists() or not folder_path.is_dir():
+        raise FileNotFoundError(f"❌ 目录不存在: {folder_path}")
+
+    file_count = sum(len(files) for _, _, files in os.walk(folder_path))
+    if file_count == 0:
+        raise ValueError(f"❌ 目录为空，无法压缩上传: {folder_path}")
+
+    zip_filename = f"{display_name}.zip"
+    zip_path = Path("/tmp") / zip_filename
 
     try:
-        # 压缩模型文件夹
-        logger.info(f"📦 正在压缩模型目录 {folder_path} 到 {zip_path}")
+        # 压缩目录
+        logger.info(f"📦 压缩目录 {folder_path} 到 {zip_path}")
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, _, files in os.walk(folder_path):
                 for file in files:
                     abs_path = os.path.join(root, file)
                     rel_path = os.path.relpath(abs_path, folder_path)
-                    zipf.write(abs_path, arcname=os.path.join(model_name, rel_path))
-        logger.success(f"✅ 模型已压缩为 {zip_path}")
+                    zipf.write(abs_path, arcname=os.path.join(display_name, rel_path))
+        logger.success(f"✅ 目录已压缩为 {zip_path}")
 
-        # 分块上传配置
+        # 上传配置
         config = TransferConfig(
             multipart_threshold=50 * 1024 * 1024,
             multipart_chunksize=50 * 1024 * 1024
         )
+        r2_key = f"{r2_prefix.rstrip('/')}/{zip_filename}"
 
-        r2_key = f"model-store/{zip_filename}"
-        logger.info(f"🚀 开始上传到 R2: {const.BUCKET}/{r2_key}")
+        logger.info(f"🚀 上传到 R2: {bucket}/{r2_key}")
         await asyncio.to_thread(
             r2_client.upload_file,
-            Filename=zip_path,
-            Bucket=const.BUCKET,
+            Filename=str(zip_path),
+            Bucket=bucket,
             Key=r2_key,
             ExtraArgs={
                 "ContentType": "application/zip",
@@ -136,15 +167,23 @@ async def upload_model_folder_to_r2(
             },
             Config=config
         )
-        logger.success(f"✅ 模型已上传至 R2: {r2_key}")
+        logger.success(f"✅ 上传成功: {r2_key}")
 
-        url = f"{r2_public_url}/{r2_key}"
-        metadata = utils.generate_model_metadata(zip_path, model_name, url)
+        # 3. 构建元信息
+        metadata = utils.generate_metadata(zip_path, display_name)
         logger.success(metadata)
-        return url, metadata
+
+        return metadata
 
     finally:
-        await asyncio.to_thread(os.remove, zip_path)
+        # 清理临时压缩包
+        if zip_path.exists():
+            await asyncio.to_thread(os.remove, zip_path)
+            logger.info(f"🧹 本地压缩文件已清理: {zip_path}")
+
+
+async def main() -> None:
+    pass
 
 
 if __name__ == '__main__':
