@@ -146,7 +146,7 @@ async def resolve_proxy_predict(
 
     license_info = {
         "configuration": {},
-        "available": True,
+        "available": False,
         "expire_at": expire_at,
         "timeout": 60.0,
         "content_type": "multipart/form-data",
