@@ -87,7 +87,7 @@ class SpeechEngine(object):
                 r2_key = cached["key"]
                 filename = f"speech.{req.waver}"
 
-                signed_url = await r2_storage.signed_url_for_stream_or_download(
+                signed_url = await r2_storage.signed_url_for_stream(
                     key=r2_key, expires_in=3600, disposition_filename=filename
                 )
                 logger.info(f"下发缓存签名 URL -> {signed_url}")
@@ -102,7 +102,7 @@ class SpeechEngine(object):
                 await cache.redis_set(cache_key, json.dumps({"key": r2_key}), ex=86400)
                 logger.info(f"Redis cache -> {r2_key}")
 
-                signed_url = await r2_storage.signed_url_for_stream_or_download(
+                signed_url = await r2_storage.signed_url_for_stream(
                     key=r2_key, expires_in=3600, disposition_filename=filename
                 )
                 logger.info(f"下发 R2 签名 URL -> {signed_url}")
@@ -171,7 +171,7 @@ class SpeechEngine(object):
                 logger.info(f"Redis cache -> {r2_key}")
 
                 # 👉 生成签名 URL（每次请求都重新生成）
-                signed_url = await r2_storage.signed_url_for_stream_or_download(
+                signed_url = await r2_storage.signed_url_for_stream(
                     key=r2_key, expires_in=3600, disposition_filename=filename
                 )
 

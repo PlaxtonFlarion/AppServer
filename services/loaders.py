@@ -8,9 +8,6 @@
 import json
 import time
 from loguru import logger
-from fastapi import (
-    Request, HTTPException
-)
 from common import (
     const, utils
 )
@@ -18,55 +15,11 @@ from services import (
     r2_storage, redis_cache, signature
 )
 
-BOOTSTRAP_RATE_LIMIT = {}
-
 env = utils.current_env(
     const.SHARED_SECRET
 )
 
 shared_secret = env[const.SHARED_SECRET]
-
-
-async def enforce_rate_limit(request: "Request", limit: int = 5, window: int = 60) -> None:
-    """
-    对请求 IP 进行限流控制，防止过于频繁的访问。
-
-    Parameters
-    ----------
-    request : Request
-        当前的 HTTP 请求对象，需包含客户端 IP 地址字段。
-
-    limit : int, optional
-        在时间窗口内允许的最大请求次数，默认值为 5。
-
-    window : int, optional
-        滑动时间窗口的长度（单位：秒），默认值为 60 秒。
-
-    Raises
-    ------
-    HTTPException
-        若请求频率超过设定限制，返回 429 状态码（Too Many Requests）。
-
-    Notes
-    -----
-    - 使用全局字典 `BOOTSTRAP_RATE_LIMIT` 存储每个 IP 的请求时间戳；
-    - 在每次请求时，过滤掉时间窗口外的记录；
-    - 如果保留的时间戳数量达到上限，立即拒绝请求；
-    - 本函数适合用于登录、激活、验证码等敏感接口的请求节流。
-    """
-    ip, now = request.client.host, time.time()
-
-    logger.info(f"ip address: {ip}")
-
-    BOOTSTRAP_RATE_LIMIT.setdefault(ip, [])
-    BOOTSTRAP_RATE_LIMIT[ip] = [
-        t for t in BOOTSTRAP_RATE_LIMIT[ip] if now - t < window
-    ]
-
-    if len(BOOTSTRAP_RATE_LIMIT[ip]) >= limit:
-        raise HTTPException(429, f"Too many requests")
-
-    BOOTSTRAP_RATE_LIMIT[ip].append(now)
 
 
 async def resolve_configuration(
@@ -82,6 +35,7 @@ async def resolve_configuration(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+    # 校验客户端签名
     signature.verify_signature(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
@@ -129,6 +83,7 @@ async def resolve_bootstrap(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+    # 校验客户端签名
     signature.verify_signature(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
@@ -173,6 +128,7 @@ async def resolve_proxy_predict(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+    # 校验客户端签名
     signature.verify_signature(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
@@ -227,52 +183,58 @@ async def resolve_model_download(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+    # 校验客户端签名
     signature.verify_signature(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
     cache_key = f"Models:{app_desc}"
+    ttl = 86400
+
+    # 模型信息结构（不含签名 URL）
+    faint_model = "Keras_Gray_W256_H256"
+    color_model = "Keras_Hued_W256_H256"
 
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
-        return json.loads(cached)
-
-    ttl = 86400
-
-    faint_model = "Keras_Gray_W256_H256"
-    color_model = "Keras_Hued_W256_H256"
-    compression = ".zip"
-
-    license_info = {
-        "models": {
-            faint_model: {
-                "filename": f"{faint_model}{compression}",
-                "version": "1.0.0",
-                "url": f"https://cdn.appserverx.com/model-store/{faint_model}{compression}",
-                "size": 361578087,
-                "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
-                "updated_at": "2025-06-27T03:24:24"
+        license_info = json.loads(cached)
+    else:
+        license_info = {
+            "models": {
+                faint_model: {
+                    "filename": f"{faint_model}.zip",
+                    "version": "1.0.0",
+                    "size": 361578087,
+                    "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
+                    "updated_at": "2025-06-27T03:24:24"
+                },
+                color_model: {
+                    "filename": f"{color_model}.zip",
+                    "version": "1.0.0",
+                    "size": 372520325,
+                    "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
+                    "updated_at": "2025-06-27T03:29:22"
+                }
             },
-            color_model: {
-                "filename": f"{color_model}{compression}",
-                "version": "1.0.0",
-                "url": f"https://cdn.appserverx.com/model-store/{color_model}{compression}",
-                "size": 372520325,
-                "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
-                "updated_at": "2025-06-27T03:29:22"
-            }
-        },
-        "ttl": ttl,
-        "region": x_app_region,
-        "version": x_app_version,
-        "message": "Available models for client to choose"
-    }
+            "ttl": ttl,
+            "region": x_app_region,
+            "version": x_app_version,
+            "message": "Available models for client to choose"
+        }
+        await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
+        logger.info(f"Redis cache -> {cache_key}")
+
+    # 每次都重新签名 URL
+    for model in license_info["models"].values():
+        model["url"] = await r2_storage.signed_url_for_stream(
+            key=f"model-store/{model['filename']}",
+            expires_in=3600,
+            disposition_filename=model["filename"]
+        )
 
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.redis_set(cache_key, json.dumps(signed_data), ex=ttl)
-    logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发模型元信息 -> Available models for client to choose")
     return signed_data

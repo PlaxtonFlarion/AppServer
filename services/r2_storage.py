@@ -60,7 +60,7 @@ async def upload_file(
     return key
 
 
-async def signed_url_for_stream_or_download(
+async def signed_url_for_stream(
         key: str,
         expires_in: int,
         disposition_filename: str
