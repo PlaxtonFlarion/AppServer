@@ -248,7 +248,7 @@ async def resolve_toolkit_download(
         a: str,
         t: int,
         n: str,
-        system: str,
+        platform: str,
         cache: "redis_cache.RedisCache"
 ) -> dict:
 
@@ -259,7 +259,7 @@ async def resolve_toolkit_download(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    group = "MacOS" if system == "darwin" else "Windows"
+    group = "MacOS" if platform == "darwin" else "Windows"
     cache_key = f"Toolkit:{app_desc}:{group}"
     ttl = 86400
 
