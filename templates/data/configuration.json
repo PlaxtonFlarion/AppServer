@@ -1,41 +1,20 @@
 {
-    "Static": {
-        "theme": {
-            "font": "Courier New",
-            "font_size": 13,
-            "color_primary": "#FF5722"
-        }
-    },
-
     "Framix": {
-        "theme": {
-            "font": "Courier New",
-            "font_size": 13,
-            "color_primary": "#FF5722"
-        },
+        "theme": {},
         "features": {
-            "enable_gpu_mode": true,
-            "enable_tracing": true
+            "enable_gpu_mode": true
         },
         "performance": {
-            "max_concurrent_tasks": 4,
-            "timeout_threshold": 5000
+            "max_concurrent_tasks": 5
         }
     },
-
     "Memrix": {
-        "theme": {
-            "font": "Courier New",
-            "font_size": 13,
-            "color_primary": "#FF5722"
-        },
+        "theme": {},
         "features": {
-            "enable_gpu_mode": true,
-            "enable_tracing": true
+            "enable_gpu_mode": true
         },
         "performance": {
-            "max_concurrent_tasks": 4,
-            "timeout_threshold": 5000
+            "max_concurrent_tasks": 5
         }
     }
 }

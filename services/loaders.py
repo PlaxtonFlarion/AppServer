@@ -52,7 +52,7 @@ async def resolve_configuration(
     ttl = 86400
 
     license_info = {
-        "configuration": config_dict.get(app_desc) or config_dict.get("Static", {}),
+        "configuration": config_dict.get(app_desc, {}),
         "url": "",
         "ttl": ttl,
         "region": x_app_region,
