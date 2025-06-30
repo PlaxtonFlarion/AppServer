@@ -13,25 +13,6 @@ from common import (
 from services import signature
 
 
-async def stencil_meta(
-        x_app_id: str,
-        x_app_token: str,
-        a: str,
-        t: int,
-        n: str,
-) -> dict:
-
-    app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
-
-    version_file = utils.resolve_template("html", const.TEMPLATE_VERSION)
-    version_dict = json.loads(version_file.read_text(encoding=const.CHARSET))
-    return version_dict.get(app_desc, {})
-
-
 async def stencil_viewer(
         x_app_id: str,
         x_app_token: str,

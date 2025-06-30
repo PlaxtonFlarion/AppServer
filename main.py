@@ -151,6 +151,29 @@ async def proxy_predict(
     )
 
 
+@app.get("/template-meta")
+async def template_information(
+        request: "Request",
+        x_app_id: str = Header(..., alias="X-App-ID"),
+        x_app_token: str = Header(..., alias="X-App-Token"),
+        x_app_region: str = Header(..., alias="X-App-Region"),
+        x_app_version: str = Header(..., alias="X-App-Version"),
+        a: str = Query(..., alias="a"),
+        t: int = Query(..., alias="t"),
+        n: str = Query(..., alias="n"),
+):
+    """
+    模板元信息接口。
+
+    返回所有模板的版本号、名称与下载地址。
+    """
+    logger.info(f"template request: {request.url}")
+
+    return await loaders.resolve_stencil(
+        x_app_id, x_app_token, x_app_region, x_app_version, a, t, n, cache
+    )
+
+
 @app.get("/toolkit-meta")
 async def toolkit_information(
         request: "Request",
@@ -202,27 +225,6 @@ async def sign(
     logger.info(f"signature request: {req}")
 
     return signature.manage_signature(req, x_app_id, x_app_token)
-
-
-@app.get("/template-meta")
-async def template_meta(
-        request: "Request",
-        x_app_id: str = Header(..., alias="X-App-ID"),
-        x_app_token: str = Header(..., alias="X-App-Token"),
-        a: str = Query(..., alias="a"),
-        t: int = Query(..., alias="t"),
-        n: str = Query(..., alias="n"),
-):
-    """
-    模板元信息接口。
-
-    返回所有模板的版本号、名称与下载地址。
-    """
-    logger.info(f"templates request: {request.url}")
-
-    return await stencil.stencil_meta(
-        x_app_id, x_app_token, a, t, n
-    )
 
 
 @app.get("/template-viewer", response_class=PlainTextResponse)

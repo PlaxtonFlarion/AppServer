@@ -170,7 +170,7 @@ async def resolve_proxy_predict(
     return signed_data
 
 
-async def resolve_model_download(
+async def resolve_stencil(
         x_app_id: str,
         x_app_token: str,
         x_app_region: str,
@@ -183,60 +183,67 @@ async def resolve_model_download(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    # 校验客户端签名
     signature.verify_signature(
         x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
     )
 
-    cache_key = f"Models:{app_desc}"
+    cache_key = f"Template:{app_desc}"
     ttl = 86400
 
-    # 模型信息结构（不含签名 URL）
-    faint_model = "Keras_Gray_W256_H256"
-    color_model = "Keras_Hued_W256_H256"
-
     if cached := await cache.redis_get(cache_key):
-        logger.success(f"下发缓存模型元信息 -> {cache_key}")
+        logger.success(f"下发缓存模版元信息 -> {cache_key}")
         license_info = json.loads(cached)
     else:
-        license_info = {
-            "models": {
-                faint_model: {
-                    "filename": f"{faint_model}.zip",
-                    "version": "1.0.0",
-                    "size": 361578087,
-                    "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
-                    "updated_at": "2025-06-27T03:24:24"
+        stencil_info = {
+            "Framix": {
+                "template_atom_total": {
+                    "filename": "template_atom_total.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 },
-                color_model: {
-                    "filename": f"{color_model}.zip",
-                    "version": "1.0.0",
-                    "size": 372520325,
-                    "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
-                    "updated_at": "2025-06-27T03:29:22"
+                "template_line_total": {
+                    "filename": "template_line_total.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
+                },
+                "template_main_share": {
+                    "filename": "template_main_share.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
+                },
+                "template_main_total": {
+                    "filename": "template_main_total.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
+                },
+                "template_view_share": {
+                    "filename": "template_view_share.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
+                },
+                "template_view_total": {
+                    "filename": "template_view_total.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 }
             },
+            "Memrix": {
+                "memory": {
+                    "filename": "memory.html",
+                    "url": "https://appserver-u7hd.onrender.com/template-viewer"
+                }
+            }
+        }
+
+        license_info = {
+            "template": stencil_info.get(app_desc, {}),
             "ttl": ttl,
             "region": x_app_region,
             "version": x_app_version,
-            "message": "Available models for client to choose"
+            "message": "Available templates for client to choose"
         }
         await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
-
-    # 每次都重新签名 URL
-    for model in license_info["models"].values():
-        model["url"] = await r2_storage.signed_url_for_stream(
-            key=f"model-store/{model['filename']}",
-            expires_in=3600,
-            disposition_filename=model["filename"]
-        )
 
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
 
-    logger.success(f"下发模型元信息 -> Available models for client to choose")
+    logger.success(f"下发模版元信息 -> Available templates for client to choose")
     return signed_data
 
 
@@ -342,6 +349,76 @@ async def resolve_toolkit_download(
     )
 
     logger.success(f"下发工具元信息 -> Available models for client to choose")
+    return signed_data
+
+
+async def resolve_model_download(
+        x_app_id: str,
+        x_app_token: str,
+        x_app_region: str,
+        x_app_version: str,
+        a: str,
+        t: int,
+        n: str,
+        cache: "redis_cache.RedisCache"
+) -> dict:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    # 校验客户端签名
+    signature.verify_signature(
+        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
+    )
+
+    cache_key = f"Models:{app_desc}"
+    ttl = 86400
+
+    # 模型信息结构（不含签名 URL）
+    faint_model = "Keras_Gray_W256_H256"
+    color_model = "Keras_Hued_W256_H256"
+
+    if cached := await cache.redis_get(cache_key):
+        logger.success(f"下发缓存模型元信息 -> {cache_key}")
+        license_info = json.loads(cached)
+    else:
+        license_info = {
+            "models": {
+                faint_model: {
+                    "filename": f"{faint_model}.zip",
+                    "version": "1.0.0",
+                    "size": 361578087,
+                    "hash": "ad8fbadcc50eed6c175370e409732faf6bb230fec75374df07fe356e583ff6a8",
+                    "updated_at": "2025-06-27T03:24:24"
+                },
+                color_model: {
+                    "filename": f"{color_model}.zip",
+                    "version": "1.0.0",
+                    "size": 372520325,
+                    "hash": "78dd1c9167f1072ba5c7b0f8fd411545573529e2cbffe51cdd667f230871f249",
+                    "updated_at": "2025-06-27T03:29:22"
+                }
+            },
+            "ttl": ttl,
+            "region": x_app_region,
+            "version": x_app_version,
+            "message": "Available models for client to choose"
+        }
+        await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
+        logger.info(f"Redis cache -> {cache_key}")
+
+    # 每次都重新签名 URL
+    for model in license_info["models"].values():
+        model["url"] = await r2_storage.signed_url_for_stream(
+            key=f"model-store/{model['filename']}",
+            expires_in=3600,
+            disposition_filename=model["filename"]
+        )
+
+    signed_data = signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
+
+    logger.success(f"下发模型元信息 -> Available models for client to choose")
     return signed_data
 
 
