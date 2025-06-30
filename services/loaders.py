@@ -275,14 +275,14 @@ async def resolve_toolkit_download(
                         "version": "7.0.2",
                         "size": 118373052,
                         "hash": "cdf8a3496c164e1b1af48acb48e4cd234971124104309b3d38d971ae07eea5ea",
-                        "updated_at": ""
+                        "updated_at": "2025-06-30T21:57:56"
                     },
                     "platform-tools": {
                         "filename": "platform-tools.zip",
                         "version": "35.0.2",
                         "size": 6700723,
                         "hash": "efd7d6f33ca7c27b93eb41c3988c88a2e9f8110704976097995ac75b460d2b83",
-                        "updated_at": ""
+                        "updated_at": "2025-06-30T21:57:58"
                     }
                 },
                 "MacOS": {
@@ -291,14 +291,14 @@ async def resolve_toolkit_download(
                         "version": "7.0.2",
                         "size": 52182661,
                         "hash": "f775f868cf864302714ae28cb0794b7be10aaa477d079fe82dfb56ad8449bc92",
-                        "updated_at": ""
+                        "updated_at": "2025-06-30T21:56:48"
                     },
                     "platform-tools": {
                         "filename": "platform-tools.zip",
                         "version": "35.0.2",
                         "size": 13335059,
                         "hash": "ee590efd0dada7b7ce64f51424e5e70425c94d26f386d5b3f75b163f06cbdbc1",
-                        "updated_at": ""
+                        "updated_at": "2025-06-30T21:56:54"
                     }
                 },
             },
@@ -307,9 +307,9 @@ async def resolve_toolkit_download(
                     "npp_portable_mini": {
                         "filename": "npp_portable_mini.zip",
                         "version": "8.8",
-                        "size": 0,
-                        "hash": "",
-                        "updated_at": ""
+                        "size": 4920700,
+                        "hash": "f2180a461490f42b34453b95a6130be6b85feb4350661d032f36ca390188fc3e",
+                        "updated_at": "2025-06-30T21:58:00"
                     }
                 },
                 "MacOS": {},
@@ -321,7 +321,7 @@ async def resolve_toolkit_download(
             "ttl": ttl,
             "region": x_app_region,
             "version": x_app_version,
-            "message": "Available models for client to choose"
+            "message": "Available toolkits for client to choose"
         }
         await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
