@@ -196,33 +196,33 @@ async def resolve_stencil(
     else:
         stencil_info = {
             "Framix": {
-                "template_atom_total": {
+                "template_atom_total.html": {
                     "filename": "template_atom_total.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 },
-                "template_line_total": {
+                "template_line_total.html": {
                     "filename": "template_line_total.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 },
-                "template_main_share": {
+                "template_main_share.html": {
                     "filename": "template_main_share.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 },
-                "template_main_total": {
+                "template_main_total.html": {
                     "filename": "template_main_total.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 },
-                "template_view_share": {
+                "template_view_share.html": {
                     "filename": "template_view_share.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 },
-                "template_view_total": {
+                "template_view_total.html": {
                     "filename": "template_view_total.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 }
             },
             "Memrix": {
-                "memory": {
+                "memory.html": {
                     "filename": "memory.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 }
