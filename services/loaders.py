@@ -309,17 +309,26 @@ async def resolve_toolkit_download(
                     }
                 },
             },
+
             "Memrix": {
                 "Windows": {
-                    "npp_portable_mini": {
-                        "filename": "npp_portable_mini.zip",
-                        "version": "8.8",
-                        "size": 4920700,
-                        "hash": "f2180a461490f42b34453b95a6130be6b85feb4350661d032f36ca390188fc3e",
-                        "updated_at": "2025-06-30T21:58:00"
+                    "platform-tools": {
+                        "filename": "platform-tools.zip",
+                        "version": "35.0.2",
+                        "size": 6700723,
+                        "hash": "efd7d6f33ca7c27b93eb41c3988c88a2e9f8110704976097995ac75b460d2b83",
+                        "updated_at": "2025-07-03T23:36:38"
                     }
                 },
-                "MacOS": {},
+                "MacOS": {
+                    "platform-tools": {
+                        "filename": "platform-tools.zip",
+                        "version": "35.0.2",
+                        "size": 13335059,
+                        "hash": "ee590efd0dada7b7ce64f51424e5e70425c94d26f386d5b3f75b163f06cbdbc1",
+                        "updated_at": "2025-07-03T23:36:43"
+                    }
+                },
             },
         }
 
