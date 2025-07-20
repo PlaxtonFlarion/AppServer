@@ -51,7 +51,10 @@ class SpeechEngine(object):
         )
 
         license_info = {
-            "formats": ["mp3"]
+            "mode": {
+                "enabled": False,
+                "formats": ["mp3"]
+            }
         }
 
         signed_data = signature.signature_license(
