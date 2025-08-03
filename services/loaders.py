@@ -222,8 +222,8 @@ async def resolve_stencil(
                 }
             },
             "Memrix": {
-                "memory.html": {
-                    "filename": "memory.html",
+                "unity_template.html": {
+                    "filename": "unity_template.html",
                     "url": "https://appserver-u7hd.onrender.com/template-viewer"
                 }
             }
@@ -307,7 +307,7 @@ async def resolve_toolkit_download(
                         "hash": "ee590efd0dada7b7ce64f51424e5e70425c94d26f386d5b3f75b163f06cbdbc1",
                         "updated_at": "2025-06-30T21:56:54"
                     }
-                },
+                }
             },
 
             "Memrix": {
@@ -317,7 +317,14 @@ async def resolve_toolkit_download(
                         "version": "35.0.2",
                         "size": 6700723,
                         "hash": "efd7d6f33ca7c27b93eb41c3988c88a2e9f8110704976097995ac75b460d2b83",
-                        "updated_at": "2025-07-03T23:36:38"
+                        "updated_at": "2025-08-03T15:31:14"
+                    },
+                    "perfetto-kit": {
+                        "filename": "perfetto-kit.zip",
+                        "version": "51.2",
+                        "size": 58050500,
+                        "hash": "d9427fe1a2adb76b4745b90d19fa86151df6849bcec9ef4286b38ec78f39cd38",
+                        "updated_at": "2025-08-03T15:31:43"
                     }
                 },
                 "MacOS": {
@@ -326,10 +333,17 @@ async def resolve_toolkit_download(
                         "version": "35.0.2",
                         "size": 13335059,
                         "hash": "ee590efd0dada7b7ce64f51424e5e70425c94d26f386d5b3f75b163f06cbdbc1",
-                        "updated_at": "2025-07-03T23:36:43"
+                        "updated_at": "2025-08-03T15:31:48"
+                    },
+                    "perfetto-kit": {
+                        "filename": "perfetto-kit.zip",
+                        "version": "51.2",
+                        "size": 8309465,
+                        "hash": "1f1cf884549ea86b8faf546fff39b5fd26703a1651e7f20012f173251d062b7d",
+                        "updated_at": "2025-08-03T15:31:51"
                     }
-                },
-            },
+                }
+            }
         }
 
         license_info = {
