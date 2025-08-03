@@ -169,7 +169,7 @@ async def compress_and_upload_folder(
         )
         logger.success(f"✅ 上传成功: {r2_key}")
 
-        # 3. 构建元信息
+        # 构建元信息
         metadata = utils.generate_metadata(zip_path, display_name)
         logger.success(metadata)
 

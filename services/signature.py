@@ -50,7 +50,7 @@ def generate_keys() -> None:
     )
     (key_folder / const.APP_PUBLIC_KEY).write_bytes(public_pem)
 
-    return print(f"✓ 密钥已生成 -> {key_folder}")
+    return logger.success(f"✓ 密钥已生成 -> {key_folder}")
 
 
 def generate_x_app_token(app_name: str, app_desc: str) -> str:
