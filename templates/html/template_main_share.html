@@ -346,6 +346,9 @@ This file is licensed under the Framix :: 画帧秀 License. See the LICENSE.md 
             flex-direction: column;
             gap: 18px;
         }
+        .option-copy-div {
+            display: flex;
+        }
         /* 通用按钮与链接样式 */
         .all-copy, .all-reselect, .quick-reselect, .ex-info, .linked {
             margin: 6px;
@@ -362,19 +365,24 @@ This file is licensed under the Framix :: 画帧秀 License. See the LICENSE.md 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease, background-position 0.4s;
         }
-        /* 主功能按钮：绿蓝渐变 */
-        .all-copy, .all-reselect, .quick-reselect {
-            background-image: linear-gradient(135deg, #00c9ff, #92fe9d);
+        /* ===== 配色 + 各自的悬浮高光色 ===== */
+        .all-copy {
+            background: linear-gradient(135deg, rgba(255,154,0,.75), rgba(255,94,77,.75));
+            --glow: rgba(255,94,77,.40);          /* 橙红 */
         }
-        /* 次要信息按钮 & 链接：蓝紫渐变 */
+        .all-reselect, .quick-reselect {
+            background-image: linear-gradient(135deg, #00c9ff, #92fe9d);
+            --glow: rgba(0,201,255,.40);          /* 青蓝 */
+        }
         .ex-info, .linked {
             background-image: linear-gradient(135deg, #667eea, #764ba2);
+            --glow: rgba(118,75,162,.40);         /* 蓝紫 */
         }
-        /* 悬停高光动画 */
+        /* ===== 通用悬停动画，用各自的 --glow ===== */
         .all-copy:hover, .all-reselect:hover, .quick-reselect:hover, .ex-info:hover, .linked:hover {
             transform: scale(1.05);
             background-position: right center;
-            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.4);
+            box-shadow: 0 6px 20px var(--glow);
             color: #ffffff;
         }
         /* 点击反馈 */
@@ -821,7 +829,10 @@ This file is licensed under the Framix :: 画帧秀 License. See the LICENSE.md 
             <!--选项-->
             <div class="options">
                 <div class="option-one">
-                    <button class="all-copy">全部复制</button>
+                    <div class="option-copy-div">
+                        <button class="all-copy" data-mode="horizontal">^C</button>
+                        <button class="all-copy" data-mode="vertical">^C</button>
+                    </div>
                     <button class="all-reselect">全部重选</button>
                     <button class="quick-reselect">快速重选</button>
                 </div>
@@ -1504,25 +1515,31 @@ This file is licensed under the Framix :: 画帧秀 License. See the LICENSE.md 
             });
         });
 
-        // 全部复制按钮
-        var copyButtons = Array.from(document.querySelectorAll('.all-copy'));
-        copyButtons.forEach(copy => {
-            copy.addEventListener('click', function(e) {
-                let timeDivs = Array.from(document.querySelectorAll('.time-difference'));
-                let textToCopy = '';
-                timeDivs.forEach(res => {
-                    if (res.classList.contains('effect-on')) {
-                        let rawContent = res.textContent;
-                        // 去除空格、换行和其他空白字符
-                        rawContent = rawContent.replace(/\s+/g, '');
-                        let numberContent = parseFloat(rawContent);
-                        if (!isNaN(numberContent)) {
-                            rawContent = numberContent.toFixed(5);
-                        }
-                        textToCopy += rawContent + '\t';
-                    }
-                });
-                copyAction(textToCopy);
+        // 统一复制逻辑
+        document.querySelectorAll('.all-copy').forEach(copyBtn => {
+            copyBtn.addEventListener('click', function () {
+                const mode = copyBtn.dataset.mode;
+                const timeDivs = Array.from(document.querySelectorAll('.time-difference.effect-on'));
+
+                // 横向：一行拼接
+                if (mode === 'horizontal') {
+                    let line = timeDivs.map(res => {
+                        let raw = res.textContent.trim().replace(/\s+/g, '');
+                        let num = parseFloat(raw);
+                        return isNaN(num) ? raw : num.toFixed(5);
+                    }).join('\t');
+                    copyAction(line);
+                }
+
+                // 竖向：一列拼接
+                else if (mode === 'vertical') {
+                    let lines = timeDivs.map(res => {
+                        let raw = res.textContent.trim().replace(/\s+/g, '');
+                        let num = parseFloat(raw);
+                        return isNaN(num) ? raw : num.toFixed(5);
+                    }).join('\n');
+                    copyAction(lines);
+                }
             });
         });
 
