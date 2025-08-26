@@ -52,7 +52,7 @@ class SpeechEngine(object):
 
         license_info = {
             "mode": {
-                "enabled": True,
+                "enabled": False,
                 "formats": ["mp3"]
             }
         }
