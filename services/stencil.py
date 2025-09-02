@@ -24,9 +24,7 @@ async def stencil_viewer(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     html_template = utils.resolve_template("html", page)
     return html_template.read_text(encoding=const.CHARSET)
@@ -43,9 +41,7 @@ async def stencil_case(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     try:
         business_file = utils.resolve_template("case", case)

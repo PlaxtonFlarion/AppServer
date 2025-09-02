@@ -30,6 +30,12 @@ from common import (
     const, models, utils
 )
 
+env = utils.current_env(
+    const.SHARED_SECRET
+)
+
+shared_secret = env[const.SHARED_SECRET]
+
 
 def generate_keys() -> None:
     (key_folder := Path(__file__).resolve().parents[1] / const.KEYS_DIR).mkdir(exist_ok=True)
@@ -83,7 +89,7 @@ def decrypt_data(data: str, private_key: str) -> str:
     return json.loads(decrypted)
 
 
-def sign_token(app_id: str, expire_at: int, shared_secret: str) -> str:
+def sign_token(app_id: str, expire_at: int) -> str:
     payload = f"{app_id}:{expire_at}"
     sig = hmac.new(shared_secret.encode(), payload.encode(), hashlib.sha256).digest()
     token = f"{payload}.{base64.b64encode(sig).decode()}"
@@ -104,6 +110,49 @@ def signature_license(license_info: dict, private_key: str) -> dict:
         "data": base64.b64encode(message_bytes).decode(),
         "signature": base64.b64encode(signature).decode()
     }
+
+
+def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
+    logger.info(f"X-App-ID: {x_app_id}")
+    logger.info(f"X-App-Token: {utils.hide_string(x_app_token)}")
+
+    b64_dec = lambda s: base64.b64decode(s + "=" * (-len(s) % 4), validate=True)
+
+    try:
+        head_b64, payload_b64, sig_b64 = x_app_token.split(".")
+    except ValueError:
+        raise HTTPException(403, "invalid token format")
+
+    try:
+        header = json.loads(b64_dec(head_b64))
+        payload = json.loads(b64_dec(payload_b64))
+    except Exception:
+        raise HTTPException(403, "invalid token encoding")
+
+    if header.get("alg") != "HS256":
+        raise HTTPException(403, "unsupported alg")
+
+    # 重算签名
+    signing_input = f"{head_b64}.{payload_b64}".encode()
+    expect_sig = hmac.new(shared_secret.encode(), signing_input, hashlib.sha256).digest()
+    got_sig = b64_dec(sig_b64)
+    if not hmac.compare_digest(expect_sig, got_sig):
+        raise HTTPException(403, "invalid signature")
+
+    # 时效校验
+    now = int(time.time())
+    exp = int(payload.get("exp", 0))
+    iat = int(payload.get("iat", 0))
+
+    leeway = 30
+
+    if now > exp + leeway:
+        raise HTTPException(403, "token expired")
+    if iat - now > leeway:
+        raise HTTPException(403, "iat in the future")
+
+    logger.info(f"验证通过: {payload}")
+    return payload
 
 
 def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:

@@ -15,12 +15,6 @@ from services import (
     r2_storage, redis_cache, signature
 )
 
-env = utils.current_env(
-    const.SHARED_SECRET
-)
-
-shared_secret = env[const.SHARED_SECRET]
-
 
 async def resolve_configuration(
         x_app_id: str,
@@ -35,10 +29,7 @@ async def resolve_configuration(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    # 校验客户端签名
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Global Config:{app_desc}"
 
@@ -83,10 +74,7 @@ async def resolve_bootstrap(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    # 校验客户端签名
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Activation Node:{app_desc}"
 
@@ -128,10 +116,7 @@ async def resolve_proxy_predict(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    # 校验客户端签名
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Predict Server:{app_desc}"
 
@@ -142,7 +127,7 @@ async def resolve_proxy_predict(
     ttl = 86400
 
     expire_at = int(time.time()) + ttl
-    token = signature.sign_token(app_desc, expire_at, shared_secret)
+    token = signature.sign_token(app_desc, expire_at)
 
     license_info = {
         "configuration": {},
@@ -183,9 +168,7 @@ async def resolve_stencil(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Template:{app_desc}"
     ttl = 86400
@@ -261,10 +244,7 @@ async def resolve_toolkit_download(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    # 校验客户端签名
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     group = "MacOS" if platform == "darwin" else "Windows"
     cache_key = f"Toolkit:{app_desc}:{group}"
@@ -388,10 +368,7 @@ async def resolve_model_download(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    # 校验客户端签名
-    signature.verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Models:{app_desc}"
     ttl = 86400
