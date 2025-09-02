@@ -155,37 +155,10 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     return payload
 
 
-def verify_signature(x_app_id: str, x_app_token: str, public_key: str) -> dict:
-    logger.info(f"X-App-ID: {x_app_id}")
-    logger.info(f"X-App-Token: {utils.hide_string(x_app_token)}")
-
-    try:
-        app_token = json.loads(
-            base64.b64decode(x_app_token).decode(const.CHARSET)
-        )
-        data = base64.b64decode(app_token["data"])
-        signature = base64.b64decode(app_token["signature"])
-
-        public_key = utils.load_public_key(public_key)
-
-        public_key.verify(
-            signature, data, padding.PKCS1v15(), hashes.SHA256()
-        )
-
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(403, f"[!] 签名无效")
-
-    logger.info(f"验证签名: {(auth_info := json.loads(data))}")
-    return auth_info
-
-
 def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
     app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
 
-    verify_signature(
-        x_app_id, x_app_token, public_key=f"{app_name}_{const.BASE_PUBLIC_KEY}"
-    )
+    verify_jwt(x_app_id, x_app_token)
 
     sup = supabase.Supabase(
         app_desc, activation_code, const.LICENSE_CODES
