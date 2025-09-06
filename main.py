@@ -11,7 +11,7 @@ from fastapi import (
 )
 from fastapi.responses import PlainTextResponse
 from services import (
-    azure, cron_job, keep_alive, loaders,
+    azure, keep_alive, loaders,
     redis_cache, signature, stencil
 )
 from common import (
