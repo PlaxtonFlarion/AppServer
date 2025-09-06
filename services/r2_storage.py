@@ -41,10 +41,10 @@ r2_client = boto3.client(
 
 
 async def upload_file(
-        key: str,
-        content: bytes,
-        content_type: str,
-        disposition_filename: str,
+    key: str,
+    content: bytes,
+    content_type: str,
+    disposition_filename: str
 ) -> str:
     """
     上传任意文件至 R2。默认设置为私有对象，可通过签名访问。
@@ -62,9 +62,9 @@ async def upload_file(
 
 
 async def signed_url_for_stream(
-        key: str,
-        expires_in: int,
-        disposition_filename: str
+    key: str,
+    expires_in: int,
+    disposition_filename: str
 ) -> str:
     """
     生成支持播放 + 下载的签名 URL，Content-Disposition 为 inline。
@@ -98,11 +98,11 @@ async def file_exists(key: str) -> typing.Optional[bool]:
 
 
 async def compress_and_upload_folder(
-        folder_path: str,
-        r2_prefix: str,
-        display_name: str,
-        *,
-        bucket: str = const.BUCKET
+    folder_path: str,
+    r2_prefix: str,
+    display_name: str,
+    *,
+    bucket: str = const.BUCKET
 ) -> dict:
     """
     压缩指定文件夹并上传至 R2 存储。

@@ -37,11 +37,11 @@ class SpeechEngine(object):
 
     @staticmethod
     async def tts_meta(
-            x_app_id: str,
-            x_app_token: str,
-            a: str,
-            t: int,
-            n: str,
+        x_app_id: str,
+        x_app_token: str,
+        a: str,
+        t: int,
+        n: str
     ) -> dict:
 
         app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -63,10 +63,10 @@ class SpeechEngine(object):
 
     @staticmethod
     async def tts_audio(
-            req: "models.SpeechRequest",
-            x_app_id: str,
-            x_app_token: str,
-            cache: "redis_cache.RedisCache"
+        req: "models.SpeechRequest",
+        x_app_id: str,
+        x_app_token: str,
+        cache: "redis_cache.RedisCache"
     ) -> typing.Any:
 
         signature.verify_jwt(x_app_id, x_app_token)

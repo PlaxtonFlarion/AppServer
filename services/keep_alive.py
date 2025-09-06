@@ -23,6 +23,7 @@ async def cpu_heavy_work() -> dict:
         else:
             primes.append(num)
 
+    logger.info("🟢 Render online")
     await asyncio.sleep(1)
 
     return {

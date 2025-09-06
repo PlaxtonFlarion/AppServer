@@ -17,14 +17,14 @@ from services import (
 
 
 async def resolve_configuration(
-        x_app_id: str,
-        x_app_token: str,
-        x_app_region: str,
-        x_app_version: str,
-        a: str,
-        t: int,
-        n: str,
-        cache: "redis_cache.RedisCache"
+    x_app_id: str,
+    x_app_token: str,
+    x_app_region: str,
+    x_app_version: str,
+    a: str,
+    t: int,
+    n: str,
+    cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -62,14 +62,14 @@ async def resolve_configuration(
 
 
 async def resolve_bootstrap(
-        x_app_id: str,
-        x_app_token: str,
-        x_app_region: str,
-        x_app_version: str,
-        a: str,
-        t: int,
-        n: str,
-        cache: "redis_cache.RedisCache"
+    x_app_id: str,
+    x_app_token: str,
+    x_app_region: str,
+    x_app_version: str,
+    a: str,
+    t: int,
+    n: str,
+    cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -104,14 +104,14 @@ async def resolve_bootstrap(
 
 
 async def resolve_proxy_predict(
-        x_app_id: str,
-        x_app_token: str,
-        x_app_region: str,
-        x_app_version: str,
-        a: str,
-        t: int,
-        n: str,
-        cache: "redis_cache.RedisCache"
+    x_app_id: str,
+    x_app_token: str,
+    x_app_region: str,
+    x_app_version: str,
+    a: str,
+    t: int,
+    n: str,
+    cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -156,14 +156,14 @@ async def resolve_proxy_predict(
 
 
 async def resolve_stencil(
-        x_app_id: str,
-        x_app_token: str,
-        x_app_region: str,
-        x_app_version: str,
-        a: str,
-        t: int,
-        n: str,
-        cache: "redis_cache.RedisCache"
+    x_app_id: str,
+    x_app_token: str,
+    x_app_region: str,
+    x_app_version: str,
+    a: str,
+    t: int,
+    n: str,
+    cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -231,15 +231,15 @@ async def resolve_stencil(
 
 
 async def resolve_toolkit_download(
-        x_app_id: str,
-        x_app_token: str,
-        x_app_region: str,
-        x_app_version: str,
-        a: str,
-        t: int,
-        n: str,
-        platform: str,
-        cache: "redis_cache.RedisCache"
+    x_app_id: str,
+    x_app_token: str,
+    x_app_region: str,
+    x_app_version: str,
+    a: str,
+    t: int,
+    n: str,
+    platform: str,
+    cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -356,14 +356,14 @@ async def resolve_toolkit_download(
 
 
 async def resolve_model_download(
-        x_app_id: str,
-        x_app_token: str,
-        x_app_region: str,
-        x_app_version: str,
-        a: str,
-        t: int,
-        n: str,
-        cache: "redis_cache.RedisCache"
+    x_app_id: str,
+    x_app_token: str,
+    x_app_region: str,
+    x_app_version: str,
+    a: str,
+    t: int,
+    n: str,
+    cache: "redis_cache.RedisCache"
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n

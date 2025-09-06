@@ -14,12 +14,12 @@ from services import signature
 
 
 async def stencil_viewer(
-        x_app_id: str,
-        x_app_token: str,
-        a: str,
-        t: int,
-        n: str,
-        page: str,
+    x_app_id: str,
+    x_app_token: str,
+    a: str,
+    t: int,
+    n: str,
+    page: str
 ) -> str:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
@@ -31,12 +31,12 @@ async def stencil_viewer(
 
 
 async def stencil_case(
-        x_app_id: str,
-        x_app_token: str,
-        a: str,
-        t: int,
-        n: str,
-        case: str,
+    x_app_id: str,
+    x_app_token: str,
+    a: str,
+    t: int,
+    n: str,
+    case: str
 ) -> str:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
