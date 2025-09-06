@@ -23,10 +23,6 @@ SUPABASE_URL       = r"SUPABASE_URL"
 SUPABASE_KEY       = r"SUPABASE_KEY"
 LICENSE_CODES      = r"license_codes"
 
-CRON_JOB_URL       = r"CRON_JOB_URL"
-CRON_JOB_KEY       = r"CRON_JOB_KEY"
-FOLDER_ID          = 47245
-
 AZURE_TTS_URL      = r"AZURE_TTS_URL"
 AZURE_TTS_KEY      = r"AZURE_TTS_KEY"
 

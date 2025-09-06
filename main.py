@@ -42,16 +42,6 @@ async def status():
     return {"ok": True}
 
 
-@app.get("/cron-job-update")
-async def cron_job_update():
-    """
-    触发定时任务刷新。
-
-    通常用于 Render 定期拉取任务配置或执行后台调度。
-    """
-    return await cron_job.update_cron_jobs()
-
-
 @app.get("/keep-render-alive")
 async def keep_render_alive():
     """
