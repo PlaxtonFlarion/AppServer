@@ -16,18 +16,20 @@ from common import const
 
 async def cpu_heavy_work() -> dict:
     primes = []
-    for num in range(10000, 10200):
-        for i in range(2, num):
-            if num % i == 0:
-                break
+
+    for number in range(10000, 10200):
+        for i in range(2, number):
+            if number % i == 0: break
         else:
-            primes.append(num)
+            primes.append(number)
 
     logger.info("🟢 Render online")
     await asyncio.sleep(1)
 
     return {
-        "status": "pong", "cpu_cycles": len(primes), "timestamp": time.time()
+        "status": "pong",
+        "cpu_cycles": len(primes),
+        "timestamp": time.time()
     }
 
 
