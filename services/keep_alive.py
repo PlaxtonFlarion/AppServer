@@ -17,14 +17,14 @@ from common import const
 async def cpu_heavy_work() -> dict:
     primes = []
 
-    for number in range(10000, 10200):
+    for number in range(10000, 10500):
         for i in range(2, number):
             if number % i == 0: break
         else:
             primes.append(number)
 
     logger.info("🟢 Render online")
-    await asyncio.sleep(1)
+    await asyncio.sleep(2)
 
     return {
         "status": "pong",
