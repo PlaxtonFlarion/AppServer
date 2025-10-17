@@ -145,7 +145,12 @@ def load_public_key(key_file: str) -> "PublicKeyTypes":
         return serialization.load_pem_public_key(f.read())
 
 
-def hide_string(s: str, visible: int = 2, max_len: int = 21, mask: str = "*") -> str:
+def hide_string(
+    s: str,
+    visible: int = 2,
+    max_len: int = 21,
+    mask: str = "*"
+) -> str:
     """
     对字符串进行脱敏处理，仅显示前几个字符，其他使用掩码遮盖。
 
@@ -177,9 +182,9 @@ def hide_string(s: str, visible: int = 2, max_len: int = 21, mask: str = "*") ->
 
 
 def generate_metadata(
-        file_path: typing.Union[str, "Path"],
-        file_name: str,
-        version: str = "1.0.0"
+    file_path: typing.Union[str, "Path"],
+    file_name: str,
+    version: str = "1.0.0"
 ) -> dict:
     """
     构建文件元信息，用于模型发布、文件校验或下载控制等场景。
