@@ -41,7 +41,7 @@ def generate_keys() -> None:
     (key_folder := Path(__file__).resolve().parents[1] / const.KEYS_DIR).mkdir(exist_ok=True)
 
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    public_key = private_key.public_key()
+    public_key  = private_key.public_key()
 
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -61,12 +61,13 @@ def generate_keys() -> None:
 
 def generate_x_app_token(app_name: str, app_desc: str) -> str:
     x_app_token = signature_license(
-        {
-            "app": (a := app_desc.strip()),
-            "time": (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
-            "nonce": (n := uuid.uuid4().hex.upper()[:12]),
-            "license_id": hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
-        }, f"{app_name.lower().strip()}_{const.BASE_PRIVATE_KEY}"
+        license_info={
+            "app"        : (a := app_desc.strip()),
+            "time"       : (t := hashlib.sha1(str(time.monotonic_ns()).encode()).hexdigest()[:12].upper()),
+            "nonce"      : (n := uuid.uuid4().hex.upper()[:12]),
+            "license_id" : hashlib.sha256((a + t + n).encode()).hexdigest()[:16].upper()
+        },
+        private_key=f"{app_name.lower().strip()}_{const.BASE_PRIVATE_KEY}"
     )
 
     x_app_token_str = base64.b64encode(json.dumps(x_app_token).encode()).decode()
@@ -77,35 +78,36 @@ def generate_x_app_token(app_name: str, app_desc: str) -> str:
 
 def generate_shared_secret(length: int = 32) -> str:
     secret_bytes = secrets.token_bytes(length)
+
     return base64.b64encode(secret_bytes).decode()
 
 
 def decrypt_data(data: str, private_key: str) -> str:
     private_key = utils.load_private_key(private_key)
-
-    decrypted = private_key.decrypt(
+    decrypted   = private_key.decrypt(
         base64.b64decode(data), padding.PKCS1v15()
     )
+
     return json.loads(decrypted)
 
 
 def sign_token(app_id: str, expire_at: int) -> str:
     payload = f"{app_id}:{expire_at}"
-    sig = hmac.new(shared_secret.encode(), payload.encode(), hashlib.sha256).digest()
-    token = f"{payload}.{base64.b64encode(sig).decode()}"
+    sig     = hmac.new(shared_secret.encode(), payload.encode(), hashlib.sha256).digest()
+    token   = f"{payload}.{base64.b64encode(sig).decode()}"
+
     return token
 
 
 def signature_license(license_info: dict, private_key: str) -> dict:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
-
-    private_key = utils.load_private_key(private_key)
-
-    signature = private_key.sign(
+    private_key   = utils.load_private_key(private_key)
+    signature     = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
 
     logger.info(f"签名: {license_info}")
+
     return {
         "data": base64.b64encode(message_bytes).decode(),
         "signature": base64.b64encode(signature).decode()
@@ -124,7 +126,7 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
         raise HTTPException(403, "invalid token format")
 
     try:
-        header = json.loads(b64_dec(head_b64))
+        header  = json.loads(b64_dec(head_b64))
         payload = json.loads(b64_dec(payload_b64))
     except Exception:
         raise HTTPException(403, "invalid token encoding")
@@ -134,8 +136,9 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
 
     # 重算签名
     signing_input = f"{head_b64}.{payload_b64}".encode()
-    expect_sig = hmac.new(shared_secret.encode(), signing_input, hashlib.sha256).digest()
-    got_sig = b64_dec(sig_b64)
+    expect_sig    = hmac.new(shared_secret.encode(), signing_input, hashlib.sha256).digest()
+    got_sig       = b64_dec(sig_b64)
+
     if not hmac.compare_digest(expect_sig, got_sig):
         raise HTTPException(403, "invalid signature")
 
@@ -152,6 +155,7 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
         raise HTTPException(403, "iat in the future")
 
     logger.info(f"验证通过: {payload}")
+
     return payload
 
 
@@ -221,14 +225,14 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
             })
 
         license_info = {
-            "app": app_desc,
-            "code": activation_code,
-            "castle": cur_castle,
-            "expire": codes["expire"],
-            "issued": issued,
-            "issued_at": issued_at,
-            "license_id": license_id,
-            "interval": codes["interval"]
+            "app"        : app_desc,
+            "code"       : activation_code,
+            "castle"     : cur_castle,
+            "expire"     : codes["expire"],
+            "issued"     : issued,
+            "issued_at"  : issued_at,
+            "license_id" : license_id,
+            "interval"   : codes["interval"]
         }
         license_data = signature_license(
             license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
@@ -241,12 +245,14 @@ def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: s
     except HTTPException as e:
         logger.warning(e)
         raise e
+
     except Exception as e:
         logger.error(e)
         raise HTTPException(400, f"[!] 授权失败，请稍后重试 ...")
 
     else:
         logger.success(f"下发 License file {license_info}")
+
         return license_data
 
     finally:

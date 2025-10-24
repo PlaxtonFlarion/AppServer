@@ -52,6 +52,7 @@ async def keep_render_alive(
     通过执行轻度 CPU 运算保持 Render 服务活跃。
     """
     logger.info(f"keep request: {request.url}")
+
     return await keep_alive.cpu_heavy_work()
 
 
@@ -65,6 +66,7 @@ async def keep_supabase_alive(
     通过轻量 SQL 查询避免 Supabase 因长期无访问进入休眠状态。
     """
     logger.info(f"keep request: {request.url}")
+
     return await keep_alive.single_query()
 
 
@@ -76,6 +78,7 @@ async def keep_modal_alive(
     定时触发，用于保持 Modal 容器存活状态，防止超时回收。
     """
     logger.info(f"keep request: {request.url}")
+
     return await keep_alive.predict_warmup()
 
 

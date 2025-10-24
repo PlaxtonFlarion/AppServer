@@ -5,42 +5,51 @@
 #   \____\___/|_| |_|___/\__|
 #
 
-CHARSET            = r"UTF-8"
-READ_KEY_MODE      = r"rb"
+# ---- Notes: 格式 ----
+CHARSET       = r"UTF-8"
+READ_KEY_MODE = r"rb"
 
-KEYS_DIR           = r"keys"
-BASE_PRIVATE_KEY   = r"private_key.pem"
-BASE_PUBLIC_KEY    = r"public_key.pem"
-APP_PRIVATE_KEY    = f"app_{BASE_PRIVATE_KEY}"
-APP_PUBLIC_KEY     = f"app_{BASE_PUBLIC_KEY}"
+# ---- Notes: 密钥 ----
+KEYS_DIR         = r"keys"
+BASE_PRIVATE_KEY = r"private_key.pem"
+BASE_PUBLIC_KEY  = r"public_key.pem"
+APP_PRIVATE_KEY  = f"app_{BASE_PRIVATE_KEY}"
+APP_PUBLIC_KEY   = f"app_{BASE_PUBLIC_KEY}"
 
-TEMPLATES          = r"templates"
-TEMPLATE_VERSION   = r"version_template.json"
+# ---- Notes: 模版 ----
+TEMPLATES = r"templates"
 
-CONFIGURATION      = r"configuration.json"
+# ---- Notes: 配置 ----
+CONFIGURATION = r"configuration.json"
 
-SUPABASE_URL       = r"SUPABASE_URL"
-SUPABASE_KEY       = r"SUPABASE_KEY"
-LICENSE_CODES      = r"license_codes"
+# ---- Notes: Supabase ----
+SUPABASE_URL  = r"SUPABASE_URL"
+SUPABASE_KEY  = r"SUPABASE_KEY"
+LICENSE_CODES = r"license_codes"
 
-AZURE_TTS_URL      = r"AZURE_TTS_URL"
-AZURE_TTS_KEY      = r"AZURE_TTS_KEY"
+# ---- Notes: Azure ----
+AZURE_TTS_URL = r"AZURE_TTS_URL"
+AZURE_TTS_KEY = r"AZURE_TTS_KEY"
 
-REDIS_CACHE_URL    = r"REDIS_CACHE_URL"
-REDIS_CACHE_KEY    = r"REDIS_CACHE_KEY"
+# ---- Notes: Redis ----
+REDIS_CACHE_URL = r"REDIS_CACHE_URL"
+REDIS_CACHE_KEY = r"REDIS_CACHE_KEY"
 
-BUCKET             = r"appserver-bucket"
-R2_BUCKET_KEY      = r"R2_BUCKET_KEY"
-R2_BUCKET_USR      = r"R2_BUCKET_USR"
-R2_BUCKET_PWD      = r"R2_BUCKET_PWD"
-R2_BUCKET_URL      = r"R2_BUCKET_URL"
-R2_PUBLIC_URL      = r"R2_PUBLIC_URL"
+# ---- Notes: Cloudflare ----
+BUCKET        = r"appserver-bucket"
+R2_BUCKET_KEY = r"R2_BUCKET_KEY"
+R2_BUCKET_USR = r"R2_BUCKET_USR"
+R2_BUCKET_PWD = r"R2_BUCKET_PWD"
+R2_BUCKET_URL = r"R2_BUCKET_URL"
+R2_PUBLIC_URL = r"R2_PUBLIC_URL"
 
-SHARED_SECRET      = r"SHARED_SECRET"
+# ---- Notes: 共享密钥 ----
+SHARED_SECRET = r"SHARED_SECRET"
 
-SHOW_LEVEL         = r"INFO"
-PRINT_FORMAT       = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
-WRITE_FORMAT       = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
+# ---- Notes: 日志 ----
+SHOW_LEVEL   = r"INFO"
+PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
+WRITE_FORMAT = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 
 
 if __name__ == '__main__':

@@ -17,19 +17,19 @@ from common import const
 async def cpu_heavy_work() -> dict:
     primes = []
 
-    for number in range(10000, 10500):
-        for i in range(2, number):
-            if number % i == 0: break
+    for i in range(10000, 10500):
+        for j in range(2, i):
+            if i % j == 0: break
         else:
-            primes.append(number)
+            primes.append(i)
 
     logger.info("🟢 Render online")
-    await asyncio.sleep(2)
+    await asyncio.sleep(3)
 
     return {
-        "status": "pong",
-        "cpu_cycles": len(primes),
-        "timestamp": time.time()
+        "status"     : "pong",
+        "cpu_cycles" : len(primes),
+        "timestamp"  : time.time()
     }
 
 
@@ -47,27 +47,27 @@ async def predict_warmup() -> dict:
             resp.raise_for_status()
             logger.info("🟢 Modal online")
             return {
-                "status": "OK",
-                "message": "Modal online",
-                "timestamp": int(time.time()),
-                "http_status": resp.status_code
+                "status"      : "OK",
+                "message"     : "Modal online",
+                "timestamp"   : int(time.time()),
+                "http_status" : resp.status_code
             }
 
     except httpx.HTTPStatusError as e:
         logger.warning(f"🟡 Modal offline: {e.response.status_code}")
         return {
-            "status": "ERROR",
-            "message": f"Modal offline: {e.response.text}",
-            "timestamp": int(time.time()),
-            "http_status": e.response.status_code
+            "status"      : "ERROR",
+            "message"     : f"Modal offline: {e.response.text}",
+            "timestamp"   : int(time.time()),
+            "http_status" : e.response.status_code
         }
 
     except Exception as e:
         logger.error(f"🔴 Modal connection error: {e}")
         return {
-            "status": "ERROR",
-            "message": f"Modal connection error: {str(e)}",
-            "timestamp": int(time.time())
+            "status"    : "ERROR",
+            "message"   : f"Modal connection error: {str(e)}",
+            "timestamp" : int(time.time())
         }
 
 

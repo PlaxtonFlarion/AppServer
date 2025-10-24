@@ -50,14 +50,15 @@ async def upload_file(
     上传任意文件至 R2。默认设置为私有对象，可通过签名访问。
     """
     extra = {
-        "ContentType": content_type,
-        "ContentDisposition": f'inline; filename="{disposition_filename}"'
+        "ContentType"        : content_type,
+        "ContentDisposition" : f'inline; filename="{disposition_filename}"'
     }
 
     await asyncio.to_thread(
         r2_client.put_object, Bucket=const.BUCKET, Key=key, Body=content, **extra
     )
     logger.info(f"R2 上传完成 -> {key}")
+
     return key
 
 
@@ -79,6 +80,7 @@ async def signed_url_for_stream(
         ExpiresIn=expires_in
     )
     logger.info(f"R2 签名完成 -> {key}")
+
     return signed_url
 
 
@@ -134,8 +136,8 @@ async def compress_and_upload_folder(
     if file_count == 0:
         raise ValueError(f"❌ 目录为空，无法压缩上传: {folder_path}")
 
-    zip_filename = f"{display_name}.zip"
-    zip_path = Path("/tmp") / zip_filename
+    zip_name = f"{display_name}.zip"
+    zip_path = Path("/tmp") / zip_name
 
     try:
         # 压缩目录
@@ -153,7 +155,7 @@ async def compress_and_upload_folder(
             multipart_threshold=50 * 1024 * 1024,
             multipart_chunksize=50 * 1024 * 1024
         )
-        r2_key = f"{r2_prefix.rstrip('/')}/{zip_filename}"
+        r2_key = f"{r2_prefix.rstrip('/')}/{zip_name}"
 
         logger.info(f"🚀 上传到 R2: {bucket}/{r2_key}")
         await asyncio.to_thread(
@@ -163,7 +165,7 @@ async def compress_and_upload_folder(
             Key=r2_key,
             ExtraArgs={
                 "ContentType": "application/zip",
-                "ContentDisposition": f'attachment; filename="{zip_filename}"'
+                "ContentDisposition": f'attachment; filename="{zip_name}"'
             },
             Config=config
         )

@@ -59,9 +59,9 @@ class RedisCache(object):
             logger.error(e)
 
     async def enforce_rate_limit(self, request: "Request", limit: int = 5, window: int = 60) -> None:
-        ip = request.client.host
+        ip        = request.client.host
         timestamp = int(time.time())
-        key = self.make_key(f"rate_limit:{ip}:{timestamp // window}")
+        key       = self.make_key(f"rate_limit:{ip}:{timestamp // window}")
 
         count = await self.client.incr(key)
         if count == 1:

@@ -26,10 +26,10 @@ azure_tts_url = env[const.AZURE_TTS_URL]
 azure_tts_key = env[const.AZURE_TTS_KEY]
 
 HEADERS = {
-    "User-Agent": "AzureTTSClient",
-    "Content-Type": "application/ssml+xml",
-    "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
-    "Ocp-Apim-Subscription-Key": azure_tts_key
+    "User-Agent"                : "AzureTTSClient",
+    "Content-Type"              : "application/ssml+xml",
+    "X-Microsoft-OutputFormat"  : "audio-16khz-128kbitrate-mono-mp3",
+    "Ocp-Apim-Subscription-Key" : azure_tts_key
 }
 
 
@@ -49,10 +49,7 @@ class SpeechEngine(object):
         signature.verify_jwt(x_app_id, x_app_token)
 
         license_info = {
-            "mode": {
-                "enabled": False,
-                "formats": ["mp3"]
-            }
+            "mode": {"enabled": False, "formats": ["mp3"]}
         }
 
         signed_data = signature.signature_license(
@@ -80,8 +77,8 @@ class SpeechEngine(object):
         try:
             # 👉 优先读取 Redis（只存储对象 Key）
             if cached := await cache.redis_get(cache_key):
-                cached = json.loads(cached)
-                r2_key = cached["key"]
+                cached   = json.loads(cached)
+                r2_key   = cached["key"]
                 filename = f"speech.{req.waver}"
 
                 signed_url = await r2_storage.signed_url_for_stream(
@@ -118,29 +115,29 @@ class SpeechEngine(object):
                 body = prosody
 
             ssml = f"""
-            <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
-                   xmlns:mstts='http://www.w3.org/2001/mstts'
-                   xml:lang='zh-CN'>
-                <voice name='{req.voice}'>{body}</voice>
-            </speak>
+                <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis'
+                       xmlns:mstts='http://www.w3.org/2001/mstts'
+                       xml:lang='zh-CN'>
+                    <voice name='{req.voice}'>{body}</voice>
+                </speak>
             """.strip()
 
             # 👉 音频格式配置
             waver_map = {
                 "mp3": {
-                    "waver": "audio-16khz-128kbitrate-mono-mp3",
-                    "mime": "audio/mpeg",
-                    "ext": "mp3"
+                    "waver" : "audio-16khz-128kbitrate-mono-mp3",
+                    "mime"  : "audio/mpeg",
+                    "ext"   : "mp3"
                 },
                 "wav": {
-                    "waver": "riff-16khz-16bit-mono-pcm",
-                    "mime": "audio/wav",
-                    "ext": "wav"
+                    "waver" : "riff-16khz-16bit-mono-pcm",
+                    "mime"  : "audio/wav",
+                    "ext"   : "wav"
                 },
                 "ogg": {
-                    "waver": "ogg-16khz-16bit-mono-opus",
-                    "mime": "audio/ogg",
-                    "ext": "ogg"
+                    "waver" : "ogg-16khz-16bit-mono-opus",
+                    "mime"  : "audio/ogg",
+                    "ext"   : "ogg"
                 }
             }
 
@@ -152,8 +149,8 @@ class SpeechEngine(object):
                 resp.raise_for_status()
 
                 audio_bytes = resp.content
-                filename = f"speech.{cfg['ext']}"
-                media_type = cfg["mime"]
+                filename    = f"speech.{cfg['ext']}"
+                media_type  = cfg["mime"]
 
                 # 👉 上传至 Cloudflare R2
                 await r2_storage.upload_file(

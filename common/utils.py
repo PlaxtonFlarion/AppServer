@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.types import (
 )
 from common import const
 
-fake = Faker()
+fake: "Faker" = Faker()
 
 
 def load_env_file(env_path: "Path") -> None:
@@ -57,9 +57,7 @@ def current_env(*args, **__) -> dict[str, str]:
     """
     if (env_path := Path(__file__).resolve().parents[1] / ".env").exists():
         load_env_file(env_path)
-        return {
-            arg: os.getenv(arg) for arg in args
-        }
+        return {arg: os.getenv(arg) for arg in args}
 
     return {
         arg: Path(f"/etc/secrets/{arg}").read_text().strip() for arg in args
@@ -177,7 +175,8 @@ def hide_string(
         return s
 
     remaining_len = max_len - visible - len(padding := " ...")
-    masked = mask * max(0, remaining_len)
+    masked        = mask * max(0, remaining_len)
+
     return s[:visible] + masked + padding
 
 
@@ -214,11 +213,11 @@ def generate_metadata(
             sha256.update(block)
 
     return {
-        "filename": file_name,
-        "version": version,
-        "size": file_path.stat().st_size,
-        "hash": sha256.hexdigest(),
-        "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+        "filename"   : file_name,
+        "version"    : version,
+        "size"       : file_path.stat().st_size,
+        "hash"       : sha256.hexdigest(),
+        "updated_at" : time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
     }
 
 
