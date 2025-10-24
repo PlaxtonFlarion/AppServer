@@ -373,6 +373,7 @@ async def resolve_model_download(
     signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Models:{app_desc}"
+
     ttl = 86400
 
     # 模型信息结构（不含签名 URL）
