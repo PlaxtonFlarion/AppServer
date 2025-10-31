@@ -62,9 +62,7 @@ async def cpu_heavy_work() -> dict:
     target_time = random.uniform(0.1, 1.0)
 
     for _ in range(6):
-        func  = random.choice(funcs)
-        begin = time.perf_counter()
-        func()
+        begin = time.perf_counter(); random.choice(funcs)
 
         if (cost := time.perf_counter() - begin) == 0: cost = 0.001
 
