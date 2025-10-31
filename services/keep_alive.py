@@ -23,7 +23,6 @@ async def cpu_heavy_work() -> dict:
     """
 
     def calc_primes() -> int:
-        """计算一定区间内的质数数量"""
         primes = []
         for i in range(10000, random.randint(20000, 30000)):
             for j in range(2, int(i ** 0.5) + 1):
@@ -33,7 +32,6 @@ async def cpu_heavy_work() -> dict:
         return sum(p * p for p in primes) & 0xFFFFFFFF
 
     def string_hash_ops() -> int:
-        """字符串拼接 + 哈希反复计算"""
         base_string = "CPUKeepAlive"
         hash_result = 0
         for i in range(random.randint(30000, 60000)):
@@ -43,7 +41,6 @@ async def cpu_heavy_work() -> dict:
         return hash_result & 0xFFFFFFFF
 
     def sort_random_numbers() -> float:
-        """生成随机数并排序取部分求和"""
         arr = [random.random() for _ in range(random.randint(100000, 300000))]
         arr.sort()
         return sum(math.log1p(v * 1000) for v in arr[:min(1000, len(arr))])
@@ -112,5 +109,4 @@ async def predict_warmup() -> dict:
 
 
 if __name__ == '__main__':
-    asyncio.run(cpu_heavy_work())
     pass
