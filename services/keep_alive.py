@@ -19,66 +19,54 @@ from common import const
 
 async def cpu_heavy_work() -> dict:
     """
-    智能自适应CPU密集任务
-        - 动态调整计算规模
-        - 确保运行时间 ≈ target_time（秒）
+    随机执行一个 CPU 密集型操作
     """
 
     def calc_primes() -> int:
         """计算一定区间内的质数数量"""
-        close = (start := 10000) + scale
-        prime = []
-
-        for i in range(start, close):
+        primes = []
+        for i in range(10000, random.randint(20000, 30000)):
             for j in range(2, int(i ** 0.5) + 1):
                 if i % j == 0: break
             else:
-                prime.append(i)
-        return sum(p * p for p in prime) & 0xFFFFFFFF
+                primes.append(i)
+        return sum(p * p for p in primes) & 0xFFFFFFFF
 
     def string_hash_ops() -> int:
         """字符串拼接 + 哈希反复计算"""
-        common = "CPUKeepAlive_Adaptive"
-        result = 0
-
-        for i in range(scale):
-            s = (common + str(i)).encode()
+        base_string = "CPUKeepAlive"
+        hash_result = 0
+        for i in range(random.randint(30000, 60000)):
+            s = (base_string + str(i)).encode()
             h = int(hashlib.md5(s).hexdigest(), 16)
-            result ^= h
-        return result & 0xFFFFFFFF
+            hash_result ^= h
+        return hash_result & 0xFFFFFFFF
 
     def sort_random_numbers() -> float:
         """生成随机数并排序取部分求和"""
-        arr = [random.random() for _ in range(scale)]
+        arr = [random.random() for _ in range(random.randint(100000, 300000))]
         arr.sort()
         return sum(math.log1p(v * 1000) for v in arr[:min(1000, len(arr))])
 
-    funcs = [
-        calc_primes, string_hash_ops, sort_random_numbers
-    ]
-    scale = 10000
-    final = 0.0
+    task_map = {
+        "calc" : calc_primes,
+        "hash" : string_hash_ops,
+        "sort" : sort_random_numbers
+    }
+    task = random.choice(list(task_map.keys()))
+    func = task_map[task]
 
-    target_time = random.uniform(0.1, 1.0)
+    start    = time.time()
+    result   = func()
+    duration = time.time() - start
 
-    for _ in range(6):
-        begin = time.perf_counter(); random.choice(funcs)
-
-        if (cost := time.perf_counter() - begin) == 0: cost = 0.001
-
-        scale = int(scale * (target_time / cost))
-        final = cost
-
-        if abs(cost - target_time) < 0.1: break
-
-    random.choice(funcs)(); duration = final
-
-    logger.info(f"🟢 Render online | target={target_time:.2f}s | actual={duration:.2f}s")
-
+    logger.info(f"🟢 Render online | target={task} | actual={duration:.2f}s")
     await asyncio.sleep(random.uniform(0.1, 1.0))
 
     return {
         "status"    : "pong",
+        "task"      : task,
+        "result"    : result,
         "duration"  : round(duration, 3),
         "timestamp" : time.time()
     }
@@ -124,4 +112,5 @@ async def predict_warmup() -> dict:
 
 
 if __name__ == '__main__':
+    asyncio.run(cpu_heavy_work())
     pass
