@@ -59,7 +59,7 @@ async def cpu_heavy_work() -> dict:
     scale = 10000
     final = 0.0
 
-    target_time = random.uniform(0.5, 1.5)
+    target_time = random.uniform(0.1, 1.0)
 
     for _ in range(6):
         func  = random.choice(funcs)
@@ -77,7 +77,7 @@ async def cpu_heavy_work() -> dict:
 
     logger.info(f"🟢 Render online | target={target_time:.2f}s | actual={duration:.2f}s")
 
-    await asyncio.sleep(random.uniform(1.0, 3.0))
+    await asyncio.sleep(random.uniform(0.1, 1.0))
 
     return {
         "status"    : "pong",
