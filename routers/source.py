@@ -1,6 +1,6 @@
 from loguru import logger
 from fastapi import (
-    APIRouter, Request, Header, Query
+    APIRouter, Request, Query
 )
 from fastapi.responses import PlainTextResponse
 from services import loaders, stencil
