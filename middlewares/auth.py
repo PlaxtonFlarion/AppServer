@@ -21,8 +21,10 @@ async def jwt_auth_middleware(
         "/keep-modal-alive"
     }: return await call_next(request)
 
-    x_app_id    = request.headers.get("X-App-ID")
-    x_app_token = request.headers.get("X-App-Token")
+    x_app_id      = request.headers.get("X-App-ID")
+    x_app_token   = request.headers.get("X-App-Token")
+    x_app_region  = request.headers.get("X-App-Region")
+    x_app_version = request.headers.get("X-App-Version")
 
     if not x_app_id or not x_app_token:
         return JSONResponse(
@@ -47,9 +49,11 @@ async def jwt_auth_middleware(
         )
 
     # 鉴权成功 → 注入 request.state
-    request.state.jwt_payload = payload
-    request.state.x_app_id    = x_app_id
-    request.state.x_app_token = x_app_token
+    request.state.jwt_payload   = payload
+    request.state.x_app_id      = x_app_id
+    request.state.x_app_token   = x_app_token
+    request.state.x_app_region  = x_app_region
+    request.state.x_app_version = x_app_version
 
     # 继续处理请求
     return await call_next(request)

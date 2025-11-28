@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Request, Header, Query
-from fastapi.responses import PlainTextResponse
 from loguru import logger
+from fastapi import (
+    APIRouter, Request, Header, Query
+)
+from fastapi.responses import PlainTextResponse
 from services import loaders, stencil
 
-router = APIRouter(tags=["Download"])
+router = APIRouter(tags=["Source"])
 
 
 @router.get(path="/template-meta")
 async def template_information(
     request: "Request",
-    x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version"),
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -23,15 +23,13 @@ async def template_information(
     logger.info(f"template request: {request.url}")
 
     return await loaders.resolve_stencil(
-        x_app_region, x_app_version, a, t, n, request.app.state.cache
+        request.state.x_app_region, request.state.x_app_version, a, t, n, request.app.state.cache
     )
 
 
 @router.get(path="/toolkit-meta")
 async def toolkit_information(
     request: "Request",
-    x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version"),
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n"),
@@ -40,15 +38,13 @@ async def toolkit_information(
     logger.info(f"toolkit request: {request.url}")
 
     return await loaders.resolve_toolkit_download(
-        x_app_region, x_app_version, a, t, n, platform, request.app.state.cache
+        request.state.x_app_region, request.state.x_app_version, a, t, n, platform, request.app.state.cache
     )
 
 
 @router.get(path="/model-meta")
 async def model_information(
     request: "Request",
-    x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version"),
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -56,7 +52,7 @@ async def model_information(
     logger.info(f"model request: {request.url}")
 
     return await loaders.resolve_model_download(
-        x_app_region, x_app_version, a, t, n, request.app.state.cache
+        request.state.x_app_region, request.state.x_app_version, a, t, n, request.app.state.cache
     )
 
 

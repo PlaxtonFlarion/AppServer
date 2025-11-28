@@ -1,17 +1,15 @@
 from loguru import logger
 from fastapi import (
-    APIRouter, Request, Header, Query
+    APIRouter, Request, Query
 )
 from services import loaders
 
-router = APIRouter(tags=["Config"])
+router = APIRouter(tags=["Loader"])
 
 
 @router.get(path="/global-configuration")
 async def global_configuration(
     request: "Request",
-    x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version"),
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -24,15 +22,13 @@ async def global_configuration(
     logger.info(f"configuration request: {request.url}")
 
     return await loaders.resolve_configuration(
-        x_app_region, x_app_version, a, t, n, request.app.state.cache
+        request.state.x_app_region, request.state.x_app_version, a, t, n, request.app.state.cache
     )
 
 
 @router.get(path="/bootstrap")
 async def bootstrap(
     request: "Request",
-    x_app_region: str = Header(..., alias="X-App-Region"),
-    x_app_version: str = Header(..., alias="X-App-Version"),
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -47,7 +43,7 @@ async def bootstrap(
     await request.app.state.cache.enforce_rate_limit(request)
 
     return await loaders.resolve_bootstrap(
-        x_app_region, x_app_version, a, t, n, request.app.state.cache
+        request.state.x_app_region, request.state.x_app_version, a, t, n, request.app.state.cache
     )
 
 
