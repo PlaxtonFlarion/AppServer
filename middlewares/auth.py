@@ -13,7 +13,13 @@ async def jwt_auth_middleware(
     鉴权中间件
     """
 
-    if request.url.path in {"/", "/status"}: return await call_next(request)
+    if request.url.path in {
+        "/",
+        "/status",
+        "/keep-render-alive",
+        "/keep-supabase-alive",
+        "/keep-modal-alive"
+    }: return await call_next(request)
 
     x_app_id    = request.headers.get("X-App-ID")
     x_app_token = request.headers.get("X-App-Token")
