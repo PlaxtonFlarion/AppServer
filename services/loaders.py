@@ -17,8 +17,6 @@ from services import (
 
 
 async def resolve_configuration(
-    x_app_id: str,
-    x_app_token: str,
     x_app_region: str,
     x_app_version: str,
     a: str,
@@ -28,8 +26,6 @@ async def resolve_configuration(
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Global Config:{app_desc}"
 
@@ -62,8 +58,6 @@ async def resolve_configuration(
 
 
 async def resolve_bootstrap(
-    x_app_id: str,
-    x_app_token: str,
     x_app_region: str,
     x_app_version: str,
     a: str,
@@ -73,8 +67,6 @@ async def resolve_bootstrap(
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Activation Node:{app_desc}"
 
@@ -104,8 +96,6 @@ async def resolve_bootstrap(
 
 
 async def resolve_proxy_predict(
-    x_app_id: str,
-    x_app_token: str,
     x_app_region: str,
     x_app_version: str,
     a: str,
@@ -115,8 +105,6 @@ async def resolve_proxy_predict(
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Predict Server:{app_desc}"
 
@@ -131,7 +119,7 @@ async def resolve_proxy_predict(
 
     license_info = {
         "configuration" : {},
-        "available"     : False,
+        "available"     : True,
         "expire_at"     : expire_at,
         "timeout"       : 60.0,
         "content_type"  : "multipart/form-data",
@@ -156,8 +144,6 @@ async def resolve_proxy_predict(
 
 
 async def resolve_stencil(
-    x_app_id: str,
-    x_app_token: str,
     x_app_region: str,
     x_app_version: str,
     a: str,
@@ -167,8 +153,6 @@ async def resolve_stencil(
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Template:{app_desc}"
 
@@ -232,8 +216,6 @@ async def resolve_stencil(
 
 
 async def resolve_toolkit_download(
-    x_app_id: str,
-    x_app_token: str,
     x_app_region: str,
     x_app_version: str,
     a: str,
@@ -244,8 +226,6 @@ async def resolve_toolkit_download(
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     group     = "MacOS" if platform == "darwin" else "Windows"
     cache_key = f"Toolkit:{app_desc}:{group}"
@@ -358,8 +338,6 @@ async def resolve_toolkit_download(
 
 
 async def resolve_model_download(
-    x_app_id: str,
-    x_app_token: str,
     x_app_region: str,
     x_app_version: str,
     a: str,
@@ -369,8 +347,6 @@ async def resolve_model_download(
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     cache_key = f"Models:{app_desc}"
 

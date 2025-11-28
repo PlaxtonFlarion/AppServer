@@ -109,8 +109,8 @@ def signature_license(license_info: dict, private_key: str) -> dict:
     logger.info(f"签名: {license_info}")
 
     return {
-        "data": base64.b64encode(message_bytes).decode(),
-        "signature": base64.b64encode(signature).decode()
+        "data"      : base64.b64encode(message_bytes).decode(),
+        "signature" : base64.b64encode(signature).decode()
     }
 
 
@@ -159,10 +159,8 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     return payload
 
 
-def manage_signature(req: "models.LicenseRequest", x_app_id: str, x_app_token: str) -> dict:
+def manage_signature(req: "models.LicenseRequest") -> dict:
     app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
-
-    verify_jwt(x_app_id, x_app_token)
 
     sup = supabase.Supabase(
         app_desc, activation_code, const.LICENSE_CODES

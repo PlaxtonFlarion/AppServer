@@ -10,12 +10,9 @@ from fastapi import HTTPException
 from common import (
     const, utils
 )
-from services import signature
 
 
 async def stencil_viewer(
-    x_app_id: str,
-    x_app_token: str,
     a: str,
     t: int,
     n: str,
@@ -24,16 +21,12 @@ async def stencil_viewer(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    signature.verify_jwt(x_app_id, x_app_token)
-
     html_template = utils.resolve_template("html", page)
 
     return html_template.read_text(encoding=const.CHARSET)
 
 
 async def stencil_case(
-    x_app_id: str,
-    x_app_token: str,
     a: str,
     t: int,
     n: str,
@@ -41,8 +34,6 @@ async def stencil_case(
 ) -> str:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
-    signature.verify_jwt(x_app_id, x_app_token)
 
     try:
         business_file = utils.resolve_template("case", case)
