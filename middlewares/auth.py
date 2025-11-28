@@ -18,7 +18,8 @@ async def jwt_auth_middleware(
         "/status",
         "/keep-render-alive",
         "/keep-supabase-alive",
-        "/keep-modal-alive"
+        "/keep-modal-alive",
+        "/sign"
     }: return await call_next(request)
 
     x_app_id      = request.headers.get("X-App-ID")
