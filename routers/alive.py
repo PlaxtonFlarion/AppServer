@@ -17,7 +17,7 @@ alive_router = APIRouter(tags=["Alive"])
 
 @alive_router.api_route(path="/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def index():
-    """Tailwind CSS 美化首页"""
+    """首页"""
 
     html = f"""
     <!DOCTYPE html>
@@ -77,9 +77,9 @@ async def index():
     return HTMLResponse(content=html)
 
 
-@alive_router.get(path="/status")
+@alive_router.get(path="/status", response_class=HTMLResponse)
 async def status():
-    """使用 Tailwind 美化的状态展示页面"""
+    """状态展示页面"""
 
     ts = int(time.time())
     dt = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -138,10 +138,10 @@ async def status():
     return HTMLResponse(html)
 
 
-@alive_router.get("/status.json")
+@alive_router.get(path="/status.json")
 async def status_json():
     """
-    原生 JSON 状态接口（用于程序调用）
+    原生 JSON 状态接口。
     """
     return {"ok": True, "timestamp": int(time.time())}
 
