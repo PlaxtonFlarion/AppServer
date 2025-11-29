@@ -123,10 +123,6 @@ async def status():
                     返回首页
                 </a>
 
-                <a href="/status.json" class="inline-block mt-2 text-gray-400 text-xs underline hover:text-gray-300">
-                    查看 JSON 版本
-                </a>
-
             </div>
 
         </div>
@@ -136,14 +132,6 @@ async def status():
     """
 
     return HTMLResponse(html)
-
-
-@alive_router.get(path="/status.json")
-async def status_json():
-    """
-    原生 JSON 状态接口。
-    """
-    return {"ok": True, "timestamp": int(time.time())}
 
 
 @alive_router.get(path="/keep-render-alive")
