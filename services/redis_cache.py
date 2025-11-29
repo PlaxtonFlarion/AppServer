@@ -12,7 +12,6 @@ import redis.asyncio as aioredis
 from fastapi import (
     Request, HTTPException
 )
-from loguru import logger
 from common import (
     const, utils
 )
@@ -39,24 +38,15 @@ class RedisCache(object):
         return f"{self.prefix}{key}"
 
     async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
-        try:
-            val = json.dumps(value)
-            return bool(await self.client.set(self.make_key(key), val, ex=ex))
-        except Exception as e:
-            logger.error(e)
+        val = json.dumps(value)
+        return bool(await self.client.set(self.make_key(key), val, ex=ex))
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
         val = await self.client.get(self.make_key(key))
-        try:
-            return json.loads(val) if val else None
-        except Exception as e:
-            logger.error(e)
+        return json.loads(val) if val else None
 
     async def redis_delete(self, key: str) -> typing.Optional[int]:
-        try:
-            return await self.client.delete(self.make_key(key))
-        except Exception as e:
-            logger.error(e)
+        return await self.client.delete(self.make_key(key))
 
     async def enforce_rate_limit(self, request: "Request", limit: int = 5, window: int = 60) -> None:
         ip        = request.client.host

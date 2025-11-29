@@ -49,24 +49,19 @@ class Supabase(object):
         response = httpx.get(
             url, headers=HEADERS, params=self.params, timeout=self.timeout
         )
+        response.raise_for_status()
 
-        try:
-            return data[0] if (data := response.json()) else None
-
-        except Exception as e:
-            return logger.error(f"❌ 查询失败: {e}")
+        return data[0] if (data := response.json()) else None
 
     def update_activation_status(self, json: dict, *_, **__) -> typing.Optional[bool]:
         url = f"{supabase_url}/rest/v1/{self.table}"
 
-        try:
-            response = httpx.patch(
-                url, headers=HEADERS, params=self.params, json=json, timeout=self.timeout
-            )
-            return response.status_code == 204
+        response = httpx.patch(
+            url, headers=HEADERS, params=self.params, json=json, timeout=self.timeout
+        )
+        response.raise_for_status()
 
-        except Exception as e:
-            return logger.info(f"❌ 回写失败: {e}")
+        return response.status_code == 204
 
     def mark_code_pending(self) -> bool:
         url     = f"{supabase_url}/rest/v1/{self.table}"
@@ -76,6 +71,7 @@ class Supabase(object):
         response = httpx.patch(
             url, headers=headers, params=self.params, json=json, timeout=self.timeout
         )
+        response.raise_for_status()
 
         return response.status_code == 204
 
@@ -87,6 +83,7 @@ class Supabase(object):
         response = httpx.patch(
             url, headers=headers, params=self.params, json=json, timeout=self.timeout
         )
+        response.raise_for_status()
 
         return response.status_code == 204
 

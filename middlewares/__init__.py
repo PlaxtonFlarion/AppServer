@@ -8,23 +8,28 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .trace       import trace_middleware
+from .performance import performance_middleware
+from .logging     import logging_middleware
 from .auth        import jwt_auth_middleware
 from .exception   import exception_middleware
-from .logging     import log_requests
-from .performance import performance_middleware
-from .trace       import trace_middleware
 
 
 def register_middlewares(app: "FastAPI") -> None:
+    # inbound 1（最外层）
+    app.middleware("http")(trace_middleware        )
+    # inbound 2
+    app.middleware("http")(performance_middleware  )
+    # inbound 3
+    app.middleware("http")(logging_middleware      )
+    # inbound 4
+    app.middleware("http")(jwt_auth_middleware     )
+    # inbound 5（最内层）
+    app.middleware("http")(exception_middleware    )
+
     app.add_middleware(
         CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
     )
-
-    app.middleware("http")(jwt_auth_middleware     )
-    app.middleware("http")(exception_middleware    )
-    app.middleware("http")(log_requests            )
-    app.middleware("http")(performance_middleware  )
-    app.middleware("http")(trace_middleware        )
 
 
 if __name__ == '__main__':

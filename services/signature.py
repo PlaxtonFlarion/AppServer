@@ -160,68 +160,63 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
 
 
 def manage_signature(req: "models.LicenseRequest") -> dict:
-    app_name, app_desc, activation_code = req.a.lower().strip(), req.a, req.code.strip()
+    app_name        = req.a.lower().strip()
+    app_desc        = req.a
+    activation_code = req.code.strip()
 
     sup = supabase.Supabase(
         app_desc, activation_code, const.LICENSE_CODES
     )
 
-    # 查询所有通行证记录
+    # Notes: ==== 1) 通行证预检 ====
     if not (codes := sup.fetch_activation_code()):
-        logger.warning(f"[!] 通行证无效 {sup.code}")
         raise HTTPException(403, f"[!] 通行证无效")
 
-    # 查询通行证是否吊销
     if codes["is_revoked"]:
-        logger.warning(f"[!] 通行证已吊销")
         raise HTTPException(403, f"[!] 通行证已吊销")
 
-    # 判断是否过期
     if datetime.now(timezone.utc).date() > datetime.fromisoformat(codes["expire"]).date():
-        logger.warning(f"[!] 通行证已过期")
         raise HTTPException(403, f"[!] 通行证已过期")
 
-    # 若已有其他进程 pending 此通行证，拒绝
     if codes["pending"]:
-        logger.warning(f"[!] 授权正在处理中")
         raise HTTPException(423, f"[!] 授权正在处理中")
 
-    # 如果 nonce 相同则拒绝
     if req.n == codes["last_nonce"]:
-        logger.warning(f"[!] 重放请求被拒绝")
         raise HTTPException(409, f"[!] 重放请求被拒绝")
 
-    pre_castle, cur_castle= codes["castle"], req.castle
+    # Notes: ==== 2) 业务逻辑层 ====
+    pre_castle     = codes["castle"]
+    cur_castle     = req.castle
+    pre_license_id = codes["license_id"]
+
+    # pending 正在处理授权请求
+    sup.mark_code_pending()
 
     try:
-        sup.mark_code_pending()  # pending 正在处理授权请求
-
-        # 本次授权请求签发时间
-        payload = {
-            "issued": (issued := datetime.now(timezone.utc).isoformat())
-        }
-
-        pre_license_id = codes["license_id"]
+        issued  = datetime.now(timezone.utc).isoformat()
+        payload = {"issued": issued}
 
         logger.info(f"pre_castle: {pre_castle}")
         logger.info(f"cur_castle: {cur_castle}")
         logger.info(f"pre_license_id: {pre_license_id}")
         logger.info(f"cur_license_id: {req.license_id}")
 
-        # 用户重复激活，同设备联网检查通行证状态
+        # 同设备重复激活
         if codes["is_used"] and cur_castle == pre_castle and req.license_id == pre_license_id:
             issued_at, license_id = codes["issued_at"], pre_license_id
-
         else:
-            # 查询最大激活次数
+            # 达到最大激活次数
             if codes["activations"] >= codes["max_activations"]:
                 raise HTTPException(403, f"[!] 超过最大激活次数")
 
-            issued_at, license_id = issued, sup.generate_license_id(issued)
+            issued_at  = issued
+            license_id = sup.generate_license_id(issued)
+
             payload.update({
                 "castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1
             })
 
+        # 生成 License File
         license_info = {
             "app"        : app_desc,
             "code"       : activation_code,
@@ -236,25 +231,17 @@ def manage_signature(req: "models.LicenseRequest") -> dict:
             license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
         )
 
+        # 更新状态
         sup.update_activation_status(
             payload | {"issued_at": issued_at, "last_nonce": req.n, "license_id": license_id}
         )
 
-    except HTTPException as e:
-        logger.warning(e)
-        raise e
-
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(400, f"[!] 授权失败，请稍后重试 ...")
-
-    else:
         logger.success(f"下发 License file {license_info}")
-
         return license_data
 
     finally:
-        sup.wash_code_pending()  # 清除 pending 状态
+        # 不管成功失败都要清除 pending 状态
+        sup.wash_code_pending()
 
 
 if __name__ == '__main__':

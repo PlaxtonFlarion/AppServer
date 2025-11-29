@@ -11,7 +11,7 @@ from loguru import logger
 from fastapi import Request
 
 
-async def log_requests(request: "Request", call_next: "typing.Callable") -> "typing.Any":
+async def logging_middleware(request: "Request", call_next: "typing.Callable") -> "typing.Any":
     """请求日志中间件"""
 
     logger.info(f"-> {request.method} {request.url}")
