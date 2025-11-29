@@ -42,7 +42,31 @@ async def index():
                 50% {{ filter: drop-shadow(0 0 12px #a78bfa); }}
                 100% {{ filter: drop-shadow(0 0 2px #60a5fa); }}
             }}
+
+            /* 3D 卡片核心样式 */
+            .tilt-card {{
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                cursor: pointer;
+                position: relative;
+            }}
+            .tilt-card::after {{
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: 12px;
+                background: radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(255,255,255,0.08), transparent 60%);
+                transition: opacity 0.2s ease;
+                opacity: 0;
+            }}
+            .tilt-card:hover::after {{
+                opacity: 1;
+            }}
+            .tilt-card:active {{
+                transform: scale(0.97) rotateX(0deg) rotateY(0deg) !important;
+            }}
         </style>
+
     </head>
 
     <body class="bg-gray-950 min-h-screen flex items-center justify-center text-gray-200">
@@ -61,14 +85,63 @@ async def index():
                 {time.strftime('%Y-%m-%d %H:%M:%S')}
             </div>
 
+            <!-- 查看状态 -->
             <a href="/status" class="mt-6 w-full inline-block text-center py-2.5 rounded-lg bg-green-600 hover:bg-green-500 transition font-semibold">
                 查看状态 JSON
             </a>
 
+            <!-- 3D 视差卡片 -->
+            <div class="mt-8 grid grid-cols-2 gap-4 select-none">
+
+                <!-- Framix 3D 卡片 -->
+                <a href="https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/Framix/README.md"
+                   target="_blank"
+                   class="tilt-card p-4 rounded-xl border border-blue-600/40
+                          bg-blue-600/10 hover:bg-blue-600/20 transition
+                          text-center font-semibold text-blue-300">
+                    Framix
+                </a>
+
+                <!-- Memrix 3D 卡片 -->
+                <a href="https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/Memrix/README.md"
+                   target="_blank"
+                   class="tilt-card p-4 rounded-xl border border-purple-600/40
+                          bg-purple-600/10 hover:bg-purple-600/20 transition
+                          text-center font-semibold text-purple-300">
+                    Memrix
+                </a>
+
+            </div>
+
             <footer class="mt-6 text-center text-xs text-gray-500">
-                Powered by AppServer · TailwindCSS
+                Powered by AppServerX · TailwindCSS
             </footer>
         </div>
+
+        <!-- 3D 交互脚本 -->
+        <script>
+            document.querySelectorAll('.tilt-card').forEach(card => {{
+                card.addEventListener('mousemove', e => {{
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const midX = rect.width / 2;
+                    const midY = rect.height / 2;
+
+                    const rotateX = (y - midY) / 12;
+                    const rotateY = (midX - x) / 12;
+
+                    card.style.transform = `rotateX(${{rotateX}}deg) rotateY(${{rotateY}}deg)`;
+
+                    card.style.setProperty('--x', `${{(x / rect.width) * 100}}%`);
+                    card.style.setProperty('--y', `${{(y / rect.height) * 100}}%`);
+                }});
+
+                card.addEventListener('mouseleave', () => {{
+                    card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+                }});
+            }});
+        </script>
 
     </body>
     </html>
