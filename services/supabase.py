@@ -6,7 +6,6 @@
 #              |_|
 #
 
-import time
 import httpx
 import typing
 import string
@@ -117,41 +116,6 @@ class Supabase(object):
                 logger.info(f"✅ 成功插入: {code}")
 
         for _ in range(count): upload_code(secure_code())
-
-    def keep_alive(self) -> dict:
-        url    = f"{supabase_url}/rest/v1/{self.table}"
-        params = {"select": "id", "limit": 1}
-
-        try:
-            resp = httpx.get(
-                url, headers=HEADERS, params=params, timeout=self.timeout
-            )
-            resp.raise_for_status()
-            logger.info("🟢 Supabase online")
-
-            return {
-                "status"      : "OK",
-                "message"     : "Supabase online",
-                "timestamp"   : int(time.time()),
-                "http_status" : resp.status_code
-            }
-
-        except httpx.HTTPStatusError as e:
-            logger.warning(f"🟡 Supabase offline: {e.response.status_code}")
-            return {
-                "status"      : "ERROR",
-                "message"     : f"Supabase offline: {e.response.text}",
-                "timestamp"   : int(time.time()),
-                "http_status" : e.response.status_code
-            }
-
-        except Exception as e:
-            logger.error(f"🔴 Supabase connection error: {e}")
-            return {
-                "status"    : "ERROR",
-                "message"   : f"Supabase connection error: {str(e)}",
-                "timestamp" : int(time.time())
-            }
 
 
 if __name__ == "__main__":

@@ -72,7 +72,39 @@ async def cpu_heavy_work() -> dict:
 async def single_query() -> dict:
     sup = supabase.Supabase("", "", const.LICENSE_CODES)
 
-    return await asyncio.to_thread(sup.keep_alive)
+    url    = f"{supabase.supabase_url}/rest/v1/{sup.table}"
+    params = {"select": "id", "limit": 1}
+
+    try:
+        resp = httpx.get(
+            url, headers=supabase.HEADERS, params=params, timeout=sup.timeout
+        )
+        resp.raise_for_status()
+
+        logger.info("🟢 Supabase online")
+        return {
+            "status": "OK",
+            "message": "Supabase online",
+            "timestamp": int(time.time()),
+            "http_status": resp.status_code
+        }
+
+    except httpx.HTTPStatusError as e:
+        logger.warning(f"🟡 Supabase offline: {e.response.status_code}")
+        return {
+            "status": "ERROR",
+            "message": f"Supabase offline: {e.response.text}",
+            "timestamp": int(time.time()),
+            "http_status": e.response.status_code
+        }
+
+    except Exception as e:
+        logger.error(f"🔴 Supabase connection error: {e}")
+        return {
+            "status": "ERROR",
+            "message": f"Supabase connection error: {str(e)}",
+            "timestamp": int(time.time())
+        }
 
 
 async def predict_warmup() -> dict:
@@ -82,6 +114,7 @@ async def predict_warmup() -> dict:
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.request("GET", url)
             resp.raise_for_status()
+
             logger.info("🟢 Modal online")
             return {
                 "status"      : "OK",
