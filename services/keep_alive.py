@@ -12,6 +12,8 @@ import httpx
 import random
 import asyncio
 import hashlib
+
+from fastapi import HTTPException
 from loguru import logger
 from services import signature, supabase
 from common import const
@@ -92,20 +94,18 @@ async def single_query() -> dict:
 
     except httpx.HTTPStatusError as e:
         logger.warning(f"🟡 Supabase offline: {e.response.status_code}")
-        return {
-            "status"      : "ERROR",
-            "message"     : f"Supabase offline: {e.response.text}",
-            "timestamp"   : int(time.time()),
-            "http_status" : e.response.status_code
-        }
+        raise HTTPException(
+            status_code=503,
+            detail=f"Supabase offline ({e.response.status_code}): {e.response.text}"
+        )
 
-    except Exception as e:
+    except httpx.ConnectError as e:
         logger.error(f"🔴 Supabase connection error: {e}")
-        return {
-            "status"    : "ERROR",
-            "message"   : f"Supabase connection error: {str(e)}",
-            "timestamp" : int(time.time())
-        }
+        raise HTTPException(
+            status_code=502,
+            detail=f"Supabase unreachable: {str(e)}"
+        )
+
 
 
 async def predict_warmup(a: str, t: int, n: str) -> dict:
@@ -134,20 +134,17 @@ async def predict_warmup(a: str, t: int, n: str) -> dict:
 
     except httpx.HTTPStatusError as e:
         logger.warning(f"🟡 Modal offline: {e.response.status_code}")
-        return {
-            "status"      : "ERROR",
-            "message"     : f"Modal offline: {e.response.text}",
-            "timestamp"   : int(time.time()),
-            "http_status" : e.response.status_code
-        }
+        raise HTTPException(
+            status_code=503,
+            detail=f"Modal offline ({e.response.status_code}): {e.response.text}"
+        )
 
-    except Exception as e:
+    except httpx.ConnectError as e:
         logger.error(f"🔴 Modal connection error: {e}")
-        return {
-            "status"    : "ERROR",
-            "message"   : f"Modal connection error: {str(e)}",
-            "timestamp" : int(time.time())
-        }
+        raise HTTPException(
+            status_code=502,
+            detail=f"Modal unreachable: {str(e)}"
+        )
 
 
 if __name__ == '__main__':
