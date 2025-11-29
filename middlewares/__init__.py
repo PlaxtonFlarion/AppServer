@@ -6,7 +6,6 @@
 #
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from .trace       import trace_middleware
 from .performance import performance_middleware
@@ -26,10 +25,6 @@ def register_middlewares(app: "FastAPI") -> None:
     app.middleware("http")(jwt_auth_middleware     )
     # inbound 5（最内层）
     app.middleware("http")(exception_middleware    )
-
-    app.add_middleware(
-        CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
-    )
 
 
 if __name__ == '__main__':
