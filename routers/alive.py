@@ -5,7 +5,9 @@
 # /_/   \_\_|_| \_/ \___| |_| \_\___/ \__,_|\__\___|_|
 #
 
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter, Query
+)
 from services import keep_alive
 
 alive_router = APIRouter(tags=["Alive"])
@@ -56,12 +58,16 @@ async def keep_supabase_alive():
 
 
 @alive_router.get(path="/keep-modal-alive")
-async def keep_modal_alive():
+async def keep_modal_alive(
+    a: str = Query(..., alias="a"),
+    t: int = Query(..., alias="t"),
+    n: str = Query(..., alias="n")
+):
     """
     定时触发，用于保持 Modal 容器存活状态，防止超时回收。
     """
 
-    return await keep_alive.predict_warmup()
+    return await keep_alive.predict_warmup(a, t, n)
 
 
 if __name__ == '__main__':

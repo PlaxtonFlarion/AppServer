@@ -13,7 +13,7 @@ import random
 import asyncio
 import hashlib
 from loguru import logger
-from services import supabase
+from services import signature, supabase
 from common import const
 
 
@@ -108,13 +108,19 @@ async def single_query() -> dict:
         }
 
 
-async def predict_warmup() -> dict:
+async def predict_warmup(a: str, t: int, n: str) -> dict:
     """Modal 预热"""
 
     url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
 
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    expire_at = int(time.time()) + 86400
+    token     = signature.sign_token(app_desc, expire_at)
+    headers   = {"X-Token": token}
+
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(headers=headers, timeout=60) as client:
             resp = await client.request("GET", url)
             resp.raise_for_status()
 
