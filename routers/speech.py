@@ -1,3 +1,11 @@
+#  ____                       _       ____             _
+# / ___| _ __   ___  ___  ___| |__   |  _ \ ___  _   _| |_ ___ _ __
+# \___ \| '_ \ / _ \/ _ \/ __| '_ \  | |_) / _ \| | | | __/ _ \ '__|
+#  ___) | |_) |  __/  __/ (__| | | | |  _ < (_) | |_| | ||  __/ |
+# |____/| .__/ \___|\___|\___|_| |_| |_| \_\___/ \__,_|\__\___|_|
+#       |_|
+#
+
 from loguru import logger
 from common import models
 from fastapi import (
@@ -5,12 +13,11 @@ from fastapi import (
 )
 from services import azure
 
-router = APIRouter(tags=["Speech"])
+speech_router = APIRouter(tags=["Speech"])
 
 
-@router.get(path="/speech-meta")
+@speech_router.get(path="/speech-meta")
 async def speech_meta(
-    request: "Request",
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -20,14 +27,11 @@ async def speech_meta(
 
     返回可用的语音格式、语调模型与语言设置。
     """
-    logger.info(f"voice request: {request.url}")
 
-    return await azure.SpeechEngine.tts_meta(
-        a, t, n
-    )
+    return await azure.SpeechEngine.tts_meta(a, t, n)
 
 
-@router.post(path="/speech-voice")
+@speech_router.post(path="/speech-voice")
 async def speech_voice(
     req: "models.SpeechRequest",
     request: "Request",
@@ -39,9 +43,9 @@ async def speech_voice(
     """
     logger.info(f"voice request: {req}")
 
-    return await azure.SpeechEngine.tts_audio(
-        req, request.app.state.cache
-    )
+    cache = request.app.state.cache
+
+    return await azure.SpeechEngine.tts_audio(req, cache)
 
 
 if __name__ == '__main__':

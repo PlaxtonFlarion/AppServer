@@ -122,17 +122,17 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
 
     try:
         head_b64, payload_b64, sig_b64 = x_app_token.split(".")
-    except ValueError:
-        raise HTTPException(403, "invalid token format")
+    except Exception:
+        raise ValueError("invalid token format")
 
     try:
         header  = json.loads(b64_dec(head_b64))
         payload = json.loads(b64_dec(payload_b64))
     except Exception:
-        raise HTTPException(403, "invalid token encoding")
+        raise ValueError("invalid token encoding")
 
     if header.get("alg") != "HS256":
-        raise HTTPException(403, "unsupported alg")
+        raise ValueError("unsupported alg")
 
     # 重算签名
     signing_input = f"{head_b64}.{payload_b64}".encode()
@@ -140,7 +140,7 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     got_sig       = b64_dec(sig_b64)
 
     if not hmac.compare_digest(expect_sig, got_sig):
-        raise HTTPException(403, "invalid signature")
+        raise ValueError("invalid signature")
 
     # 时效校验
     now = int(time.time())
@@ -150,9 +150,9 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     leeway = 30
 
     if now > exp + leeway:
-        raise HTTPException(403, "token expired")
+        raise ValueError("token expired")
     if iat - now > leeway:
-        raise HTTPException(403, "iat in the future")
+        raise ValueError("iat in the future")
 
     logger.info(f"验证通过: {payload}")
 

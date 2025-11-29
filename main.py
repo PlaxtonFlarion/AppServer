@@ -7,24 +7,17 @@
 
 from fastapi import FastAPI
 from common import craft
-from routers import (
-    health, loader, predict, signature, speech
-)
 from services.redis_cache import RedisCache
 from middlewares import register_middlewares
+from routers import register_routers
 
 app = FastAPI()
 app.state.cache = RedisCache()
 
-register_middlewares(app)
-
 craft.init_logger()
 
-app.include_router(health.router     )
-app.include_router(loader.router     )
-app.include_router(predict.router    )
-app.include_router(signature.router  )
-app.include_router(speech.router     )
+register_middlewares(app)
+register_routers(app)
 
 
 if __name__ == '__main__':
