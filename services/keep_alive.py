@@ -77,7 +77,12 @@ async def single_query(request: "Request") -> dict:
 
     url     = f"{supabase.supabase_url}/rest/v1/{const.LICENSE_CODES}"
     params  = {"select": "id", "limit": 1}
-    headers = request.headers
+    api_key = request.headers.get("apikey")
+    headers = {
+        "apikey"        : api_key,
+        "Authorization" : f"Bearer {api_key}",
+        "Content-Type"  : "application/json"
+    }
 
     logger.warning(headers)
 
