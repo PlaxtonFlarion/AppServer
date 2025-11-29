@@ -18,9 +18,7 @@ from common import const
 
 
 async def cpu_heavy_work() -> dict:
-    """
-    随机执行一个 CPU 密集型操作
-    """
+    """Render 保活"""
 
     def calc_primes() -> int:
         primes = []
@@ -70,24 +68,27 @@ async def cpu_heavy_work() -> dict:
 
 
 async def single_query() -> dict:
+    """Supabase 保活"""
+
     sup = supabase.Supabase("", "", const.LICENSE_CODES)
 
     url    = f"{supabase.supabase_url}/rest/v1/{sup.table}"
     params = {"select": "id", "limit": 1}
 
     try:
-        resp = httpx.get(
-            url, headers=supabase.HEADERS, params=params, timeout=sup.timeout
-        )
-        resp.raise_for_status()
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.request(
+                "GET", url, headers=supabase.HEADERS, params=params, timeout=sup.timeout
+            )
+            resp.raise_for_status()
 
-        logger.info("🟢 Supabase online")
-        return {
-            "status": "OK",
-            "message": "Supabase online",
-            "timestamp": int(time.time()),
-            "http_status": resp.status_code
-        }
+            logger.info("🟢 Supabase online")
+            return {
+                "status": "OK",
+                "message": "Supabase online",
+                "timestamp": int(time.time()),
+                "http_status": resp.status_code
+            }
 
     except httpx.HTTPStatusError as e:
         logger.warning(f"🟡 Supabase offline: {e.response.status_code}")
@@ -108,6 +109,8 @@ async def single_query() -> dict:
 
 
 async def predict_warmup() -> dict:
+    """Modal 预热"""
+
     url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
 
     try:
