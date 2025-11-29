@@ -7,7 +7,7 @@
 
 import time
 from fastapi import (
-    APIRouter, Query
+    APIRouter, Query, Request
 )
 from fastapi.responses import HTMLResponse
 from services import keep_alive
@@ -227,14 +227,14 @@ async def keep_render_alive():
 
 
 @alive_router.get(path="/keep-supabase-alive")
-async def keep_supabase_alive():
+async def keep_supabase_alive(request: "Request"):
     """
     防 Supabase 休眠接口。
 
     通过轻量 SQL 查询避免 Supabase 因长期无访问进入休眠状态。
     """
 
-    return await keep_alive.single_query()
+    return await keep_alive.single_query(request)
 
 
 @alive_router.get(path="/keep-modal-alive")

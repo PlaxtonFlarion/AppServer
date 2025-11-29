@@ -12,10 +12,13 @@ import httpx
 import random
 import asyncio
 import hashlib
-
-from fastapi import HTTPException
 from loguru import logger
-from services import signature, supabase
+from fastapi import (
+    Request, HTTPException
+)
+from services import (
+    signature, supabase
+)
 from common import const
 
 
@@ -69,19 +72,18 @@ async def cpu_heavy_work() -> dict:
     }
 
 
-async def single_query() -> dict:
+async def single_query(request: "Request") -> dict:
     """Supabase 保活"""
 
-    sup = supabase.Supabase("", "", const.LICENSE_CODES)
+    url     = f"{supabase.supabase_url}/rest/v1/{const.LICENSE_CODES}"
+    params  = {"select": "id", "limit": 1}
+    headers = request.headers
 
-    url    = f"{supabase.supabase_url}/rest/v1/{sup.table}"
-    params = {"select": "id", "limit": 1}
+    logger.warning(headers)
 
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.request(
-                "GET", url, headers=supabase.HEADERS, params=params, timeout=sup.timeout
-            )
+        async with httpx.AsyncClient(headers=headers, timeout=90) as client:
+            resp = await client.request("GET", url, params=params)
             resp.raise_for_status()
 
             logger.info("🟢 Supabase online")
@@ -120,7 +122,7 @@ async def predict_warmup(a: str, t: int, n: str) -> dict:
     headers   = {"X-Token": token}
 
     try:
-        async with httpx.AsyncClient(headers=headers, timeout=60) as client:
+        async with httpx.AsyncClient(headers=headers, timeout=90) as client:
             resp = await client.request("GET", url)
             resp.raise_for_status()
 
