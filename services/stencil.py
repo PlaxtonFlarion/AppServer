@@ -15,9 +15,13 @@ from common import (
 async def stencil_viewer(a: str, t: int, n: str, page: str) -> str:
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    html_template = utils.resolve_template("html", page)
+    try:
+        html_template = utils.resolve_template("html", page)
+        return html_template.read_text(encoding=const.CHARSET)
 
-    return html_template.read_text(encoding=const.CHARSET)
+    except FileNotFoundError:
+        # 合法业务错误 → 返回 404
+        raise HTTPException(status_code=404, detail=f"文件名不存在: {page}")
 
 
 async def stencil_case(a: str, t: int, n: str, case: str) -> str:
