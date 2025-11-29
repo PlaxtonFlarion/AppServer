@@ -46,6 +46,9 @@ R2_PUBLIC_URL = r"R2_PUBLIC_URL"
 # ---- Notes: 共享密钥 ----
 SHARED_SECRET = r"SHARED_SECRET"
 
+# ---- Notes: 鉴权格式 ----
+TOKEN_FORMAT = r"X-Token"
+
 # ---- Notes: 日志 ----
 SHOW_LEVEL   = r"INFO"
 PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"

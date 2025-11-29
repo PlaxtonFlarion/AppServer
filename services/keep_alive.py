@@ -75,16 +75,16 @@ async def cpu_heavy_work() -> dict:
 async def single_query(request: "Request") -> dict:
     """Supabase 保活"""
 
+    apikey        = request.headers.get("apikey")
+    authorization = f"Bearer {apikey}"
+
     url     = f"{supabase.supabase_url}/rest/v1/{const.LICENSE_CODES}"
     params  = {"select": "id", "limit": 1}
-    api_key = request.headers.get("apikey")
     headers = {
-        "apikey"        : api_key,
-        "Authorization" : f"Bearer {api_key}",
-        "Content-Type"  : "application/json"
+        "apikey"        : apikey,
+        "Authorization" : authorization,
+        "Content-Type"  : supabase.HEADERS["Content-Type"]
     }
-
-    logger.warning(headers)
 
     try:
         async with httpx.AsyncClient(headers=headers, timeout=90) as client:
@@ -118,13 +118,13 @@ async def single_query(request: "Request") -> dict:
 async def predict_warmup(a: str, t: int, n: str) -> dict:
     """Modal 预热"""
 
-    url = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
-
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token(app_desc, expire_at)
-    headers   = {"X-Token": token}
+
+    url     = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
+    headers = {const.TOKEN_FORMAT: token}
 
     try:
         async with httpx.AsyncClient(headers=headers, timeout=90) as client:

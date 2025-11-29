@@ -123,7 +123,7 @@ async def resolve_proxy_predict(
         "expire_at"     : expire_at,
         "timeout"       : 60.0,
         "content_type"  : "multipart/form-data",
-        "auth_header"   : "X-Token",
+        "auth_header"   : const.TOKEN_FORMAT,
         "token"         : token,
         "method"        : "POST",
         "url"           : "https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
