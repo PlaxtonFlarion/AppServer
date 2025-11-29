@@ -5,23 +5,80 @@
 # /_/   \_\_|_| \_/ \___| |_| \_\___/ \__,_|\__\___|_|
 #
 
+import time
 from fastapi import (
     APIRouter, Query
 )
+from fastapi.responses import HTMLResponse
 from services import keep_alive
 
 alive_router = APIRouter(tags=["Alive"])
 
 
-@alive_router.api_route(path="/", methods=["GET", "HEAD"])
+@alive_router.api_route(path="/", response_class=HTMLResponse)
 async def index():
     """
-    健康检查接口。
-
-    返回服务状态标识信息，常用于存活性探测或 Render 运行时检测。
+    Tailwind CSS 美化首页
     """
 
-    return {"message": "App Server is live"}
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- Tailwind CSS CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <title>App Server Status</title>
+
+        <style>
+            @keyframes fadeIn {{
+                0% {{ opacity: 0; transform: translateY(10px); }}
+                100% {{ opacity: 1; transform: translateY(0); }}
+            }}
+
+            @keyframes glow {{
+                0% {{ filter: drop-shadow(0 0 2px #60a5fa); }}
+                50% {{ filter: drop-shadow(0 0 12px #a78bfa); }}
+                100% {{ filter: drop-shadow(0 0 2px #60a5fa); }}
+            }}
+        </style>
+    </head>
+
+    <body class="bg-gray-950 min-h-screen flex items-center justify-center text-gray-200">
+
+        <div class="w-full max-w-md p-8 bg-gray-900/60 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-xl animate-[fadeIn_0.8s_ease-out]">
+
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-center animate-[glow_4s_infinite]">
+                App Server is Live
+            </h1>
+
+            <div class="mt-4 text-center text-green-400 font-semibold text-lg">
+                🟢 服务运行中
+            </div>
+
+            <div class="mt-2 text-center text-gray-400 text-sm">
+                {time.strftime('%Y-%m-%d %H:%M:%S')}
+            </div>
+
+            <a href="/status"
+               class="mt-6 w-full inline-block text-center py-2.5 rounded-lg
+                      bg-green-600 hover:bg-green-500 transition font-semibold">
+                查看状态 JSON
+            </a>
+
+            <footer class="mt-6 text-center text-xs text-gray-500">
+                Powered by FastAPI · TailwindCSS
+            </footer>
+        </div>
+
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html)
 
 
 @alive_router.get(path="/status")
@@ -32,7 +89,7 @@ async def status():
     用于快速确认服务可达性，返回固定 OK 响应。
     """
 
-    return {"ok": True}
+    return {"ok": True, "timestamp": int(time.time())}
 
 
 @alive_router.get(path="/keep-render-alive")
