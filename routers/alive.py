@@ -19,6 +19,17 @@ alive_router = APIRouter(tags=["Alive"])
 async def index():
     """首页"""
 
+    title       = f"App Server Status"
+    subtitle    = f"App Server is Live"
+    display     = f"🟢 服务运行中"
+    update_time = f"{time.strftime('%Y-%m-%d %H:%M:%S')}"
+    view_state  = f"查看状态 JSON"
+    fx_desc     = f"Framix"
+    fx_link     = f"https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/{fx_desc}/README.md"
+    mx_desc     = f"Memrix"
+    mx_link     = f"https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/{mx_desc}/README.md"
+    footer      = f"Powered by AppServerX · TailwindCSS"
+
     html = f"""
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -29,7 +40,7 @@ async def index():
         <!-- Tailwind CSS CDN -->
         <script src="https://cdn.tailwindcss.com"></script>
 
-        <title>App Server Status</title>
+        <title>{title}</title>
 
         <style>
             @keyframes fadeIn {{
@@ -74,47 +85,39 @@ async def index():
         <div class="w-full max-w-md p-8 bg-gray-900/60 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-xl animate-[fadeIn_0.8s_ease-out]">
 
             <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-center animate-[glow_4s_infinite]">
-                App Server is Live
+                {subtitle}
             </h1>
 
             <div class="mt-4 text-center text-green-400 font-semibold text-lg">
-                🟢 服务运行中
+                {display}
             </div>
 
             <div class="mt-2 text-center text-gray-400 text-sm">
-                {time.strftime('%Y-%m-%d %H:%M:%S')}
+                {update_time}
             </div>
 
             <!-- 查看状态 -->
             <a href="/status" class="mt-6 w-full inline-block text-center py-2.5 rounded-lg bg-green-600 hover:bg-green-500 transition font-semibold">
-                查看状态 JSON
+                {view_state}
             </a>
 
             <!-- 3D 视差卡片 -->
             <div class="mt-8 grid grid-cols-2 gap-4 select-none">
 
-                <!-- Framix 3D 卡片 -->
-                <a href="https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/Framix/README.md"
-                   target="_blank"
-                   class="tilt-card p-4 rounded-xl border border-blue-600/40
-                          bg-blue-600/10 hover:bg-blue-600/20 transition
-                          text-center font-semibold text-blue-300">
-                    Framix
+                <!-- {fx_desc} 3D 卡片 -->
+                <a href="{fx_link}" target="_blank" class="tilt-card p-4 rounded-xl border border-blue-600/40 bg-blue-600/10 hover:bg-blue-600/20 transition text-center font-semibold text-blue-300">
+                    {fx_desc}
                 </a>
 
-                <!-- Memrix 3D 卡片 -->
-                <a href="https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/Memrix/README.md"
-                   target="_blank"
-                   class="tilt-card p-4 rounded-xl border border-purple-600/40
-                          bg-purple-600/10 hover:bg-purple-600/20 transition
-                          text-center font-semibold text-purple-300">
-                    Memrix
+                <!-- {mx_desc} 3D 卡片 -->
+                <a href="{mx_link}" target="_blank" class="tilt-card p-4 rounded-xl border border-purple-600/40 bg-purple-600/10 hover:bg-purple-600/20 transition text-center font-semibold text-purple-300">
+                    {mx_desc}
                 </a>
 
             </div>
 
             <footer class="mt-6 text-center text-xs text-gray-500">
-                Powered by AppServerX · TailwindCSS
+                {footer}
             </footer>
         </div>
 
@@ -157,6 +160,11 @@ async def status():
     ts = int(time.time())
     dt = time.strftime('%Y-%m-%d %H:%M:%S')
 
+    title       = f"Service Status"
+    display     = f"🟢 服务正常运行"
+    update_time = f"更新时间：{dt}"
+    back_home   = f"返回首页"
+
     html = f"""
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -166,7 +174,7 @@ async def status():
 
         <script src="https://cdn.tailwindcss.com"></script>
 
-        <title>Service Status</title>
+        <title>{title}</title>
     </head>
 
     <body class="bg-gray-950 min-h-screen text-gray-200 flex items-center justify-center">
@@ -174,17 +182,17 @@ async def status():
         <div class="w-full max-w-lg p-8 bg-gray-900/60 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-xl">
 
             <h1 class="text-3xl font-bold text-center bg-gradient-to-r from-green-400 to-lime-400 text-transparent bg-clip-text">
-                Service Status
+                {title}
             </h1>
 
             <div class="mt-6 space-y-3 text-center">
 
                 <p class="text-lg font-semibold text-green-400">
-                    🟢 服务正常运行
+                    {display}
                 </p>
 
                 <div class="text-gray-400 text-sm">
-                    更新时间：{dt}
+                    {update_time}
                 </div>
 
                 <div class="mt-4 bg-gray-800/50 p-4 rounded-lg border border-gray-700 text-left text-sm font-mono">
@@ -193,7 +201,7 @@ async def status():
                 </div>
 
                 <a href="/" class="inline-block mt-6 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">
-                    返回首页
+                    {back_home}
                 </a>
 
             </div>
