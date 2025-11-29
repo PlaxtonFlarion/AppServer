@@ -25,8 +25,7 @@ supabase_key = env[const.SUPABASE_KEY]
 
 HEADERS = {
     "apikey"        : supabase_key,
-    "Authorization" : f"Bearer {supabase_key}",
-    "Content-Type"  : "application/json"
+    "Authorization" : f"Bearer {supabase_key}"
 }
 
 

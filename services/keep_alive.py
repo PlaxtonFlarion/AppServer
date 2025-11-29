@@ -82,8 +82,7 @@ async def single_query(request: "Request") -> dict:
     params  = {"select": "id", "limit": 1}
     headers = {
         "apikey"        : apikey,
-        "Authorization" : authorization,
-        "Content-Type"  : supabase.HEADERS["Content-Type"]
+        "Authorization" : authorization
     }
 
     try:
@@ -112,7 +111,6 @@ async def single_query(request: "Request") -> dict:
             status_code=502,
             detail=f"Supabase unreachable: {str(e)}"
         )
-
 
 
 async def predict_warmup(a: str, t: int, n: str) -> dict:
