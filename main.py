@@ -6,13 +6,14 @@
 #
 
 from fastapi import FastAPI
-from common import craft
-from services.redis_cache import RedisCache
+
+from services    import redis_cache
+from common      import craft
 from middlewares import register_middlewares
-from routers import register_routers
+from routers     import register_routers
 
 app = FastAPI()
-app.state.cache = RedisCache()
+app.state.cache = redis_cache.RedisCache()
 
 craft.init_logger()
 
