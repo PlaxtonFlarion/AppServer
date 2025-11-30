@@ -8,6 +8,7 @@
 import json
 import time
 import httpx
+import base64
 from loguru import logger
 from common import (
     const, utils
@@ -107,25 +108,17 @@ async def resolve_proxy_predict(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
-    async with httpx.AsyncClient() as client:
-        src = f"f9ea43e45d6a4f634a908cd38f41b52c/raw"
-        url = f"https://gist.githubusercontent.com/PlaxtonFlarion/{src}"
-        try:
-            resp      = await client.get(url)
-            available = (predict_status := resp.json()).get("available", False)
-        except (AttributeError, ValueError, json.JSONDecodeError):
-            available = False
-        logger.info(f"推理服务远程配置 -> {predict_status}")
-
     cache_key = f"Predict Server:{app_desc}"
+    infer_key = f"Predict Available"
+    available = False
 
     if cached := await cache.redis_get(cache_key):
-        if (cached_data := json.loads(cached)).get("available", False) == available:
-            logger.info(f"Cached={cached_data} Remote={available}")
+        signed_data = json.loads(base64.b64decode(cached["data"]))
+        infer_data  = await cache.redis_get(infer_key)
+        if signed_data.get("available", False) == (cur_data := infer_data.get("available", False)):
             logger.success(f"下发缓存推理服务 -> {cache_key}")
-            return cached_data
-        logger.info(f"推理服务状态变更 -> {cache_key}")
-        await cache.redis_delete(cache_key)
+            return json.loads(cached)
+        available = cur_data
 
     ttl = 86400
 
