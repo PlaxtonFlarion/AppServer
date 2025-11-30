@@ -7,7 +7,6 @@
 
 import json
 import time
-import httpx
 import base64
 from loguru import logger
 from common import (
@@ -109,16 +108,18 @@ async def resolve_proxy_predict(
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     cache_key = f"Predict Server:{app_desc}"
-    infer_key = f"Predict Available"
+    infer_key = f"Predict:{app_desc}"
     available = False
 
     if cached := await cache.redis_get(cache_key):
-        signed_data = json.loads(base64.b64decode(cached["data"]))
-        infer_data  = await cache.redis_get(infer_key)
-        if signed_data.get("available", False) == (cur_data := infer_data.get("available", False)):
+        sig_data = json.loads(base64.b64decode(cached["data"]))
+        inf_data = await cache.redis_get(infer_key)
+        if (pre := sig_data["available"]) == (cur := inf_data["available"]):
             logger.success(f"下发缓存推理服务 -> {cache_key}")
             return json.loads(cached)
-        available = cur_data
+        logger.info(f"推理服务状态变更 -> Cached={pre} Remote={cur}")
+        await cache.redis_delete(cache_key)
+        available = cur
 
     ttl = 86400
 
