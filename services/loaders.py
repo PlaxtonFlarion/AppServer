@@ -112,6 +112,7 @@ async def resolve_proxy_predict(
 
     infer_data = await cache.redis_get(infer_key)
     current    = infer_data.get("available", False) if infer_data else False
+    logger.info(f"远程推理服务状态 -> {current}")
 
     if cached := await cache.redis_get(cache_key):
         cache_data = json.loads(base64.b64decode(json.loads(cached)["data"]))
