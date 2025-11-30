@@ -112,7 +112,7 @@ async def resolve_proxy_predict(
     available = False
 
     if cached := await cache.redis_get(cache_key):
-        sig_data = json.loads(base64.b64decode(cached["data"]))
+        sig_data = json.loads(base64.b64decode(json.loads(cached["data"])))
         inf_data = await cache.redis_get(infer_key)
         if (pre := sig_data["available"]) == (cur := inf_data["available"]):
             logger.success(f"下发缓存推理服务 -> {cache_key}")
