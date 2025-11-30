@@ -114,12 +114,12 @@ async def resolve_proxy_predict(
     if cached := await cache.redis_get(cache_key):
         sig_data = json.loads(base64.b64decode(json.loads(cached)["data"]))
         inf_data = await cache.redis_get(infer_key)
-        if (pre := sig_data["available"]) == (cur := inf_data["available"]):
+        if (previous := sig_data["available"]) == (current := inf_data["available"]):
             logger.success(f"下发缓存推理服务 -> {cache_key}")
             return json.loads(cached)
-        logger.info(f"推理服务状态变更 -> Cached={pre} Remote={cur}")
+        logger.info(f"推理服务状态变更 -> Cached={previous} Remote={current}")
         await cache.redis_delete(cache_key)
-        available = cur
+        available = current
 
     ttl = 86400
 
