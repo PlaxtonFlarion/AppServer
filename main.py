@@ -12,6 +12,7 @@ from common      import craft
 from middlewares import register_middlewares
 from routers     import register_routers
 
+
 app = FastAPI()
 app.state.cache = redis_cache.RedisCache()
 

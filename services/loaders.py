@@ -123,6 +123,7 @@ async def resolve_proxy_predict(
             logger.success(f"下发缓存推理服务 -> {cache_key}")
             return cached_data
         logger.info(f"推理服务状态变更 -> {cache_key}")
+        await cache.redis_delete(cache_key)
 
     ttl = 86400
 
