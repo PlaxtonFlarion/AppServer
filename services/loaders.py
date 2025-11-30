@@ -7,6 +7,7 @@
 
 import json
 import time
+import httpx
 from loguru import logger
 from common import (
     const, utils
@@ -117,9 +118,16 @@ async def resolve_proxy_predict(
     expire_at = int(time.time()) + ttl
     token     = signature.sign_token(app_desc, expire_at)
 
+    async with httpx.AsyncClient() as client:
+        src = f"f9ea43e45d6a4f634a908cd38f41b52c/raw/e3a6e48fae61ec55b30c0fc453025c65e5a3f7aa/predict-file.json"
+        url = f"https://gist.githubusercontent.com/PlaxtonFlarion/{src}"
+
+        if not (response := await client.get(url)): available = False
+        else: available = response.json().get("available", False)
+
     license_info = {
         "configuration" : {},
-        "available"     : False,
+        "available"     : available,
         "expire_at"     : expire_at,
         "timeout"       : 60.0,
         "content_type"  : "multipart/form-data",
