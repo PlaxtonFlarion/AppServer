@@ -38,12 +38,16 @@ class RedisCache(object):
         return f"{self.prefix}{key}"
 
     async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
-        val = json.dumps(value)
+        val = json.dumps(value) if isinstance(value, (dict, list)) else str(value)
         return bool(await self.client.set(self.make_key(key), val, ex=ex))
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
-        val = await self.client.get(self.make_key(key))
-        return json.loads(val) if val else None
+        if (val := await self.client.get(self.make_key(key))) is None:
+            return None
+        try:
+            return json.loads(val)
+        except (json.JSONDecodeError, TypeError):
+            return val
 
     async def redis_delete(self, key: str) -> typing.Optional[int]:
         return await self.client.delete(self.make_key(key))
