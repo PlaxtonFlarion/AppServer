@@ -112,9 +112,10 @@ async def resolve_proxy_predict(
         url = f"https://gist.githubusercontent.com/PlaxtonFlarion/{src}"
         try:
             resp      = await client.get(url)
-            available = resp.json().get("available", False)
+            available = (predict_status := resp.json()).get("available", False)
         except (AttributeError, ValueError, json.JSONDecodeError):
             available = False
+        logger.info(f"推理服务配置 -> {predict_status}")
 
     cache_key = f"Predict Server:{app_desc}"
 
