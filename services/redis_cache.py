@@ -38,7 +38,7 @@ class RedisCache(object):
         return f"{self.prefix}{key}"
 
     async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
-        val = json.dumps(value) if isinstance(value, (dict, list)) else str(value)
+        val = json.dumps(value)
         return bool(await self.client.set(self.make_key(key), val, ex=ex))
 
     async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
