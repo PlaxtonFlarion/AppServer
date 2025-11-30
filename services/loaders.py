@@ -121,6 +121,7 @@ async def resolve_proxy_predict(
 
     if cached := await cache.redis_get(cache_key):
         if (cached_data := json.loads(cached)).get("available", False) == available:
+            logger.info(f"Cached={cached_data} Remote={available}")
             logger.success(f"下发缓存推理服务 -> {cache_key}")
             return cached_data
         logger.info(f"推理服务状态变更 -> {cache_key}")
