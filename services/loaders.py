@@ -107,23 +107,27 @@ async def resolve_proxy_predict(
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+    async with httpx.AsyncClient() as client:
+        src = f"f9ea43e45d6a4f634a908cd38f41b52c/raw/e3a6e48fae61ec55b30c0fc453025c65e5a3f7aa/predict-file.json"
+        url = f"https://gist.githubusercontent.com/PlaxtonFlarion/{src}"
+        try:
+            resp      = await client.get(url)
+            available = resp.json().get("available", False)
+        except (AttributeError, ValueError, json.JSONDecodeError):
+            available = False
+
     cache_key = f"Predict Server:{app_desc}"
 
     if cached := await cache.redis_get(cache_key):
-        logger.success(f"下发缓存推理服务 -> {cache_key}")
-        return json.loads(cached)
+        if (cached_data := json.loads(cached)).get("available", False) == available:
+            logger.success(f"下发缓存推理服务 -> {cache_key}")
+            return cached_data
+        logger.info(f"推理服务状态变更 -> {cache_key}")
 
     ttl = 86400
 
     expire_at = int(time.time()) + ttl
     token     = signature.sign_token(app_desc, expire_at)
-
-    async with httpx.AsyncClient() as client:
-        src = f"f9ea43e45d6a4f634a908cd38f41b52c/raw/e3a6e48fae61ec55b30c0fc453025c65e5a3f7aa/predict-file.json"
-        url = f"https://gist.githubusercontent.com/PlaxtonFlarion/{src}"
-
-        if not (response := await client.get(url)): available = False
-        else: available = response.json().get("available", False)
 
     license_info = {
         "configuration" : {},
