@@ -108,14 +108,14 @@ async def resolve_proxy_predict(
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
     async with httpx.AsyncClient() as client:
-        src = f"f9ea43e45d6a4f634a908cd38f41b52c/raw/e3a6e48fae61ec55b30c0fc453025c65e5a3f7aa/predict-file.json"
+        src = f"f9ea43e45d6a4f634a908cd38f41b52c/raw"
         url = f"https://gist.githubusercontent.com/PlaxtonFlarion/{src}"
         try:
             resp      = await client.get(url)
             available = (predict_status := resp.json()).get("available", False)
         except (AttributeError, ValueError, json.JSONDecodeError):
             available = False
-        logger.info(f"推理服务配置 -> {predict_status}")
+        logger.info(f"推理服务远程配置 -> {predict_status}")
 
     cache_key = f"Predict Server:{app_desc}"
 
