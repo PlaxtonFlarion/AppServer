@@ -7,7 +7,7 @@
 
 from loguru import logger
 from fastapi import APIRouter
-from common import models
+from schemas import model
 from services import signature
 
 permission_router = APIRouter(tags=["Permission"])
@@ -15,7 +15,7 @@ permission_router = APIRouter(tags=["Permission"])
 
 @permission_router.post(path="/sign")
 async def sign(
-    req: "models.LicenseRequest"
+    req: "model.LicenseRequest"
 ):
     """
     授权签名接口。

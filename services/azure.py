@@ -10,14 +10,15 @@ import httpx
 import typing
 import hashlib
 from loguru import logger
+from schemas import model
 from services import (
     r2_storage, redis_cache, signature
 )
-from common import (
-    const, models, utils
+from utils import (
+    const, toolset
 )
 
-env = utils.current_env(
+env = toolset.current_env(
     const.AZURE_TTS_URL, const.AZURE_TTS_KEY
 )
 
@@ -49,7 +50,7 @@ class SpeechEngine(object):
         return signed_data
 
     @staticmethod
-    async def tts_audio(req: "models.SpeechRequest", cache: "redis_cache.RedisCache") -> "typing.Any":
+    async def tts_audio(req: "model.SpeechRequest", cache: "redis_cache.RedisCache") -> "typing.Any":
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(

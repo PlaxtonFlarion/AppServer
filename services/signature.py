@@ -25,12 +25,13 @@ from cryptography.hazmat.primitives.asymmetric import (
     padding, rsa
 )
 from fastapi import HTTPException
+from schemas import model
 from services import supabase
-from common import (
-    const, models, utils
+from utils import (
+    const, toolset
 )
 
-env = utils.current_env(
+env = toolset.current_env(
     const.SHARED_SECRET
 )
 
@@ -83,7 +84,7 @@ def generate_shared_secret(length: int = 32) -> str:
 
 
 def decrypt_data(data: str, private_key: str) -> str:
-    private_key = utils.load_private_key(private_key)
+    private_key = toolset.load_private_key(private_key)
     decrypted   = private_key.decrypt(
         base64.b64decode(data), padding.PKCS1v15()
     )
@@ -101,7 +102,7 @@ def sign_token(app_id: str, expire_at: int) -> str:
 
 def signature_license(license_info: dict, private_key: str) -> dict:
     message_bytes = json.dumps(license_info, separators=(",", ":")).encode(const.CHARSET)
-    private_key   = utils.load_private_key(private_key)
+    private_key   = toolset.load_private_key(private_key)
     signature     = private_key.sign(
         message_bytes, padding.PKCS1v15(), hashes.SHA256()
     )
@@ -116,7 +117,7 @@ def signature_license(license_info: dict, private_key: str) -> dict:
 
 def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     logger.info(f"X-App-ID: {x_app_id}")
-    logger.info(f"X-App-Token: {utils.hide_string(x_app_token)}")
+    logger.info(f"X-App-Token: {toolset.hide_string(x_app_token)}")
 
     b64_dec = lambda s: base64.b64decode(s + "=" * (-len(s) % 4), validate=True)
 
@@ -159,7 +160,7 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     return payload
 
 
-def manage_signature(req: "models.LicenseRequest") -> dict:
+def manage_signature(req: "model.LicenseRequest") -> dict:
     app_name        = req.a.lower().strip()
     app_desc        = req.a
     activation_code = req.code.strip()

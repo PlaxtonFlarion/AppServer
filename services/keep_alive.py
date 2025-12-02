@@ -19,7 +19,7 @@ from fastapi import (
 from services import (
     signature, supabase
 )
-from common import const
+from utils import const
 
 
 async def cpu_heavy_work() -> dict:

@@ -8,7 +8,7 @@
 from fastapi import FastAPI
 
 from services    import redis_cache
-from common      import craft
+from utils       import toolset
 from middlewares import register_middlewares
 from routers     import register_routers
 
@@ -16,7 +16,7 @@ from routers     import register_routers
 app = FastAPI()
 app.state.cache = redis_cache.RedisCache()
 
-craft.init_logger()
+toolset.init_logger()
 
 register_middlewares(app)
 register_routers(app)

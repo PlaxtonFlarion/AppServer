@@ -9,11 +9,11 @@ import json
 import time
 import base64
 from loguru import logger
-from common import (
-    const, utils
-)
 from services import (
     r2_storage, redis_cache, signature
+)
+from utils import (
+    const, toolset
 )
 
 
@@ -34,7 +34,7 @@ async def resolve_configuration(
         logger.info(f"下发缓存全局配置 -> {cache_key}")
         return json.loads(cached)
 
-    config      = utils.resolve_template("data", const.CONFIGURATION)
+    config      = toolset.resolve_template("data", const.CONFIGURATION)
     config_dict = json.loads(config.read_text(encoding=const.CHARSET))
 
     ttl = 86400

@@ -7,10 +7,10 @@
 #
 
 from loguru import logger
-from common import models
 from fastapi import (
     APIRouter, Request, Query
 )
+from schemas import model
 from services import azure
 
 speech_router = APIRouter(tags=["Speech"])
@@ -33,7 +33,7 @@ async def speech_meta(
 
 @speech_router.post(path="/speech-voice")
 async def speech_voice(
-    req: "models.SpeechRequest",
+    req: "model.SpeechRequest",
     request: "Request",
 ):
     """

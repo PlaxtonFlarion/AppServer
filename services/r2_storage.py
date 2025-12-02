@@ -15,11 +15,11 @@ from pathlib import Path
 from loguru import logger
 from botocore.client import Config
 from boto3.s3.transfer import TransferConfig
-from common import (
-    const, utils
+from utils import (
+    const, toolset
 )
 
-env = utils.current_env(
+env = toolset.current_env(
     const.R2_BUCKET_KEY, const.R2_BUCKET_USR, const.R2_BUCKET_PWD,
     const.R2_BUCKET_URL, const.R2_PUBLIC_URL
 )
@@ -172,7 +172,7 @@ async def compress_and_upload_folder(
         logger.success(f"✅ 上传成功: {r2_key}")
 
         # 构建元信息
-        metadata = utils.generate_metadata(zip_path, display_name)
+        metadata = toolset.generate_metadata(zip_path, display_name)
         logger.success(metadata)
 
         return metadata

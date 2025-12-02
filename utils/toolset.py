@@ -1,23 +1,36 @@
-#   _   _ _   _ _
-#  | | | | |_(_) |___
-#  | | | | __| | / __|
-#  | |_| | |_| | \__ \
-#   \___/ \__|_|_|___/
+#  _____           _          _
+# |_   _|__   ___ | |___  ___| |_
+#   | |/ _ \ / _ \| / __|/ _ \ __|
+#   | | (_) | (_) | \__ \  __/ |_
+#   |_|\___/ \___/|_|___/\___|\__|
 #
 
 import os
+import sys
 import time
 import typing
 import hashlib
 from faker import Faker
 from pathlib import Path
+from loguru import logger
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.types import (
     PrivateKeyTypes, PublicKeyTypes
 )
-from common import const
+from utils import const
 
 fake: "Faker" = Faker()
+
+
+def init_logger() -> None:
+    """
+    初始化日志系统。
+
+    清除 Loguru 默认日志输出，添加新的终端输出配置，使用项目约定的日志级别与格式。
+    依赖于 common.const 中定义的 SHOW_LEVEL 和 PRINT_FORMAT。
+    """
+    logger.remove()
+    logger.add(sys.stdout, level=const.SHOW_LEVEL, format=const.PRINT_FORMAT)
 
 
 def load_env_file(env_path: "Path") -> None:

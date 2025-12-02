@@ -12,11 +12,11 @@ import redis.asyncio as aioredis
 from fastapi import (
     Request, HTTPException
 )
-from common import (
-    const, utils
+from utils import (
+    const, toolset
 )
 
-env = utils.current_env(
+env = toolset.current_env(
     const.REDIS_CACHE_URL, const.REDIS_CACHE_KEY
 )
 
