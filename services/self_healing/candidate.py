@@ -32,10 +32,10 @@ class SelfHealingCore(object):
             return resp.json()
 
     @staticmethod
-    async def rerank_candidates(url: str, headers: dict, query: str, candidates: list) -> dict:
+    async def rerank_candidates(url: str, headers: dict, query: str, candidate: list) -> dict:
         async with httpx.AsyncClient() as client:
             resp = await client.request(
-                "POST", url, headers=headers, json={"query": query, "candidates": candidates}, timeout=60
+                "POST", url, headers=headers, json={"query": query, "candidate": candidate}, timeout=60
             )
             return resp.json()
 
