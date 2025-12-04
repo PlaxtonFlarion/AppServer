@@ -16,7 +16,7 @@ async def jwt_auth_middleware(request: "Request", call_next: "typing.Callable") 
     """鉴权中间件"""
 
     if request.url.path in {
-        "/", "/status", "/keep-render-alive", "/keep-supabase-alive", "/keep-modal-alive"
+        "/", "/status", "/keep-render-alive", "/keep-supabase-alive", "/keep-modal-alive", "healing"
     }: return await call_next(request)
 
     x_app_id      = request.headers.get("X-App-ID")

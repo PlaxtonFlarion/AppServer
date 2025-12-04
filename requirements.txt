@@ -42,3 +42,19 @@ boto3                ==1.38.41      # AWS SDK for Python
 botocore             ==1.38.41      # boto3 内核支持库
 s3transfer           ==0.13.0       # S3 上传传输管理模块
 jmespath             ==1.0.1        # JSON 数据查询语言（boto3 依赖）
+
+
+# ================================
+# 🔍 向量数据库 Zilliz / Milvus 客户端（核心依赖）
+# ================================
+pymilvus             ==2.4.4        # 推荐用于 Milvus/Zilliz 向量数据库
+grpcio               ==1.63.0       # gRPC 底层依赖（pymilvus 必备）
+protobuf             ==6.33.1       # 与 grpc 兼容的 protobuf 版本
+numpy                ==2.3.5        # 向量数据结构必需
+
+
+# ================================
+# 🤖 Groq API (LLM推理)
+# ================================
+groq                ==0.37.0        # 官方 Python SDK
+sseclient-py        ==1.8.0         # 流式推理

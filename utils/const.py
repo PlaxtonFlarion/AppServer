@@ -43,6 +43,13 @@ R2_BUCKET_PWD = r"R2_BUCKET_PWD"
 R2_BUCKET_URL = r"R2_BUCKET_URL"
 R2_PUBLIC_URL = r"R2_PUBLIC_URL"
 
+# ---- Notes: Zilliz Cloud ----
+ZILLIZ_URL = r"ZILLIZ_URL"
+ZILLIZ_KEY = r"ZILLIZ_KEY"
+
+# ---- Notes: GROQ ----
+GROQ_LLM_KEY = r"GROQ_LLM_KEY"
+
 # ---- Notes: 共享密钥 ----
 SHARED_SECRET = r"SHARED_SECRET"
 
