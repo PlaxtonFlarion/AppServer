@@ -9,7 +9,7 @@ import time
 import httpx
 from loguru import logger
 from llm.llm_groq import llm_choose_best_candidate
-from schemas.heal import (
+from schemas.cognitive import (
     HealRequest, HealResponse
 )
 from services import signature

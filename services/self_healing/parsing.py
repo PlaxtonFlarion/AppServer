@@ -7,7 +7,7 @@
 #
 
 import xml.etree.ElementTree as eT
-from schemas.heal import ElementNode
+from schemas.cognitive import ElementNode
 
 
 # ---------------- Xml dump 解析 ---------------- #

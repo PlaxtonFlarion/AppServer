@@ -7,7 +7,7 @@
 
 from loguru import logger
 from fastapi import APIRouter
-from schemas.model import LicenseRequest
+from schemas.cognitive import LicenseRequest
 from services import signature
 
 permission_router = APIRouter(tags=["Permission"])

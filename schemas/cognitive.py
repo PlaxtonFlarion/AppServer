@@ -1,8 +1,9 @@
-#  _   _            _
-# | | | | ___  __ _| |
-# | |_| |/ _ \/ _` | |
-# |  _  |  __/ (_| | |
-# |_| |_|\___|\__,_|_|
+#   ____                  _ _   _
+#  / ___|___   __ _ _ __ (_) |_(_)_   _____
+# | |   / _ \ / _` | '_ \| | __| \ \ / / _ \
+# | |__| (_) | (_| | | | | | |_| |\ V /  __/
+#  \____\___/ \__, |_| |_|_|\__|_| \_/ \___|
+#             |___/
 #
 
 import json
@@ -10,6 +11,34 @@ import typing
 from pydantic import (
     BaseModel, Field
 )
+
+
+class LicenseRequest(BaseModel):
+    a : str
+    t : int
+    n : str
+
+    code   : str
+    castle : str
+
+    license_id : typing.Optional[str] = None
+
+
+class SpeechRequest(BaseModel):
+    a : str
+    t : int
+    n : str
+
+    speak : str = Field(..., description="文本内容")
+    voice : str = Field("zh-CN-XiaoxiaoNeural", description="语音名称")
+
+    waver : typing.Optional[str] = Field("mp3", description="输出格式")
+    rater : typing.Optional[str] = Field("0%", description="语速，如 +20%、-10%")
+    pitch : typing.Optional[str] = Field("0%", description="语调，如 +5%")
+
+    volume : typing.Optional[str] = Field("default", description="音量，如 +0dB")
+    manner : typing.Optional[str] = Field(None, description="情感风格，如 cheerful")
+    degree : typing.Optional[str] = Field(None, description="风格强度，如 1.0, 2.0")
 
 
 class Locator(BaseModel):
@@ -51,9 +80,6 @@ class ElementNode(BaseModel):
     __repr__ = __str__
 
     def ensure_desc(self) -> str:
-        """
-        如果desc未设置，则自动生成
-        """
         if not self.desc:
             self.desc = self.create_desc()
         return self.desc
@@ -71,7 +97,6 @@ class ElementNode(BaseModel):
         return " | ".join(parts)
 
     def to_dict(self) -> dict:
-        """可选：服务端入库/日志输出方便"""
         return {
             "id"           : self.id,
             "text"         : self.text,
@@ -87,5 +112,4 @@ class ElementNode(BaseModel):
 
 if __name__ == '__main__':
     pass
-
 

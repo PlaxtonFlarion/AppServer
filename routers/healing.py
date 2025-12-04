@@ -7,7 +7,7 @@
 #
 
 from fastapi import APIRouter
-from schemas.heal import HealRequest
+from schemas.cognitive import HealRequest
 from services.self_healing.candidate import SelfHealing
 
 healing_router = APIRouter(tags=["Healing"])

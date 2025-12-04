@@ -13,7 +13,7 @@ from groq import Groq
 from groq.types.chat import (
     ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 )
-from schemas.heal import Locator
+from schemas.cognitive import Locator
 from utils import (
     const, toolset
 )

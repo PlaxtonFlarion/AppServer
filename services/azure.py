@@ -10,7 +10,7 @@ import httpx
 import typing
 import hashlib
 from loguru import logger
-from schemas import model
+from schemas.cognitive import SpeechRequest
 from services import (
     r2_storage, redis_cache, signature
 )
@@ -50,7 +50,7 @@ class SpeechEngine(object):
         return signed_data
 
     @staticmethod
-    async def tts_audio(req: "model.SpeechRequest", cache: "redis_cache.RedisCache") -> "typing.Any":
+    async def tts_audio(req: "SpeechRequest", cache: "redis_cache.RedisCache") -> "typing.Any":
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(

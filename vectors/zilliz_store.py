@@ -30,7 +30,7 @@ class ZillizStore(object):
         self.client.load()
 
     async def insert(self, vector: list[float], text: str) -> None:
-        fp   = hashlib.md5(text.encode("UTF-8")).hexdigest()
+        fp   = hashlib.md5(text.encode(const.CHARSET)).hexdigest()
         expr = f'fingerprint == "{fp}"'
         res  = self.client.query(expr=expr, limit=1, output_fields=["id"])
         if len(res) > 0: return print(f"🔁 Skip duplicate: {text}")
