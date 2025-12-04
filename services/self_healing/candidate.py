@@ -45,7 +45,7 @@ class SelfHealingCore(object):
         expire_at = int(time.time()) + 86400
         token     = signature.sign_token(app_desc, expire_at)
 
-        url     = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
+        url     = f"https://plaxtonflarion--inference-inferenceservice-embedding.modal.run/"
         headers = {const.TOKEN_FORMAT: token}
 
         # 解析XML节点
@@ -84,7 +84,7 @@ class SelfHealingCore(object):
         expire_at = int(time.time()) + 86400
         token     = signature.sign_token(app_desc, expire_at)
 
-        url     = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
+        url     = f"https://plaxtonflarion--inference-inferenceservice-rerank.modal.run/"
         headers = {const.TOKEN_FORMAT: token}
 
         candidate = [c["text"] for c in mapped_candidates]

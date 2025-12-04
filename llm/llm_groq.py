@@ -22,7 +22,7 @@ env = toolset.current_env(
     const.GROQ_LLM_KEY
 )
 
-groq_llm_key = env[const.ZILLIZ_KEY]
+groq_llm_key = env[const.GROQ_LLM_KEY]
 
 
 # ================== LLM 决策 ==================
