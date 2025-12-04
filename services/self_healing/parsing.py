@@ -7,11 +7,11 @@
 #
 
 import xml.etree.ElementTree as eT
-from schemas import heal
+from schemas.heal import ElementNode
 
 
 # ---------------- Xml dump 解析 ---------------- #
-def parse_xml_dump(dump: str) -> list["heal.ElementNode"]:
+def parse_xml_dump(dump: str) -> list["ElementNode"]:
 
     def parse_bounds(string: str) -> list[int]:
         """
@@ -31,7 +31,7 @@ def parse_xml_dump(dump: str) -> list["heal.ElementNode"]:
 
         return []
 
-    nodes: list["heal.ElementNode"] = []
+    nodes: list["ElementNode"] = []
 
     try:
         root = eT.fromstring(dump)
@@ -52,7 +52,7 @@ def parse_xml_dump(dump: str) -> list["heal.ElementNode"]:
             # 如果想连容器节点也分析，可以删掉这段 continue
             continue
 
-        node = heal.ElementNode(
+        node = ElementNode(
             id=None,
             text=text,
             content_desc=content_desc,
@@ -63,6 +63,9 @@ def parse_xml_dump(dump: str) -> list["heal.ElementNode"]:
         nodes.append(node)
 
     return nodes
+
+
+# ---------------- Dom dump 解析 ---------------- #
 
 
 if __name__ == '__main__':
