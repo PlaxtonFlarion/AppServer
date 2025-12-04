@@ -51,7 +51,9 @@ pymilvus             ==2.4.4        # 推荐用于 Milvus/Zilliz 向量数据库
 grpcio               ==1.63.0       # gRPC 底层依赖（pymilvus 必备）
 protobuf             ==6.33.1       # 与 grpc 兼容的 protobuf 版本
 numpy                ==2.3.5        # 向量数据结构必需
-marshmallow          ==3.13.0
+pandas               ==2.3.3        # 数据分析和数据处理
+marshmallow          ==3.13.0       # 数据校验 + JSON 序列化
+environs             ==9.5.0        # 环境变量配置与解析
 
 
 # ================================
