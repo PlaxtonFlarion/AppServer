@@ -6,7 +6,6 @@
 #                             |___/
 #
 
-from loguru import logger
 from fastapi import APIRouter
 from schemas.heal import HealRequest
 from services.self_healing.candidate import SelfHealing
@@ -21,8 +20,11 @@ async def healing(
     t: int,
     n: str
 ):
+    """
+    UI 元素自愈接口
 
-    logger.info(f"healing request: {req}")
+    基于语义相似度自动寻找最可能的新控件，实现定位修复。
+    """
 
     self_healing = SelfHealing()
     return await self_healing.heal_element(req, a, t, n)
