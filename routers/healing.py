@@ -9,7 +9,7 @@
 from loguru import logger
 from fastapi import APIRouter
 from schemas.heal import HealRequest
-from services.self_healing.candidate import SelfHealingCore
+from services.self_healing.candidate import SelfHealing
 
 healing_router = APIRouter(tags=["Healing"])
 
@@ -24,8 +24,8 @@ async def healing(
 
     logger.info(f"healing request: {req}")
 
-    self_healing_core = SelfHealingCore()
-    return await self_healing_core.heal_element(req, a, t, n)
+    self_healing = SelfHealing()
+    return await self_healing.heal_element(req, a, t, n)
 
 
 if __name__ == '__main__':

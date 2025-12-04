@@ -1,8 +1,8 @@
-#   ____
-#  / ___|___  _ __ ___
-# | |   / _ \| '__/ _ \
-# | |__| (_) | | |  __/
-#  \____\___/|_|  \___|
+#   ____                _ _     _       _
+#  / ___|__ _ _ __   __| (_) __| | __ _| |_ ___
+# | |   / _` | '_ \ / _` | |/ _` |/ _` | __/ _ \
+# | |__| (_| | | | | (_| | | (_| | (_| | ||  __/
+#  \____\__,_|_| |_|\__,_|_|\__,_|\__,_|\__\___|
 #
 
 import time
@@ -18,7 +18,7 @@ from vectors.zilliz_store import ZillizStore
 from utils import const
 
 
-class SelfHealingCore(object):
+class SelfHealing(object):
 
     def __init__(self):
         self.store: "ZillizStore" = ZillizStore()
