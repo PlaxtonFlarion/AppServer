@@ -23,8 +23,8 @@ from services.infrastructure.llm.llm_groq import llm_choose_best_candidate
 from utils import const
 
 
-async def post_embedding(text_list: list) -> dict:
-    url       = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
+async def post_tensor(text_list: list) -> dict:
+    url       = f"https://plaxtonflarion--embedding-embeddingservice-tensor.modal.run/"
     expire_at = int(time.time()) + random.randint(3600, 86400)
     token     = signature.sign_token("Heal", expire_at)
     headers   = {const.TOKEN_FORMAT: token}
@@ -63,7 +63,7 @@ async def heal_element(
     desc_list = [n.ensure_desc() for n in node_list]
 
     logger.info(f"向量生成")
-    embedding_resp = await post_embedding(desc_list)
+    embedding_resp = await post_tensor(desc_list)
     logger.info(f"[[v1], [v2], ...] 维度匹配")
     page_vectors = embedding_resp["vectors"]
 
@@ -71,10 +71,10 @@ async def heal_element(
     for node, vec in zip(node_list, page_vectors):
         await store.insert(vec, node.ensure_desc())
 
-    logger.info(f"构建 old locator 文本 embedding")
     query = f"by={req.old_locator.by}, value={req.old_locator.value}"
+    logger.info(f"构建 old locator 文本 embedding: {query}")
     try:
-        query_vec = (await post_embedding([query]))["vectors"][0]
+        query_vec = (await post_tensor([query]))["vectors"][0]
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 
