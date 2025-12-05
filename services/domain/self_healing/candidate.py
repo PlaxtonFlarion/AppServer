@@ -18,22 +18,24 @@ from services.infrastructure.vector.zilliz import ZillizStore
 from services.infrastructure.llm.llm_groq import llm_choose_best_candidate
 from utils import const
 
-__all__ = ["heal_element"]
 
-
-async def embedding_batch(url: str, headers: dict, text_list: list) -> dict:
+async def post_embedding(headers: dict, text_list: list) -> dict:
+    url = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
     async with httpx.AsyncClient() as client:
-        resp = await client.request(
-            "POST", url, headers=headers, json={"texts": text_list}, timeout=60
+        resp = await client.post(
+            url, headers=headers, json={"texts": text_list}, timeout=60
         )
+        resp.raise_for_status()
         return resp.json()
 
 
-async def rerank_candidates(url: str, headers: dict, query: str, candidate: list) -> dict:
+async def post_rerank(headers: dict, query: str, candidate: list) -> dict:
+    url = f"https://plaxtonflarion--embedding-embeddingservice-rerank.modal.run/"
     async with httpx.AsyncClient() as client:
-        resp = await client.request(
-            "POST", url, headers=headers, json={"query": query, "candidate": candidate}, timeout=60
+        resp = await client.post(
+            url, headers=headers, json={"query": query, "candidate": candidate}, timeout=60
         )
+        resp.raise_for_status()
         return resp.json()
 
 
@@ -51,16 +53,14 @@ async def heal_element(
 
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token(app_desc, expire_at)
-
-    url     = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
-    headers = {const.TOKEN_FORMAT: token}
+    headers   = {const.TOKEN_FORMAT: token}
 
     logger.info(f"解析节点")
     node_list = AndroidXmlParser.parse(req.page_dump)
     desc_list = [n.ensure_desc() for n in node_list]
 
     logger.info(f"向量生成")
-    embedding_resp = await embedding_batch(url, headers, desc_list)
+    embedding_resp = await post_embedding(headers, desc_list)
     logger.info(f"[[v1], [v2], ...] 维度匹配")
     page_vectors = embedding_resp["vectors"]
 
@@ -70,7 +70,7 @@ async def heal_element(
 
     logger.info(f"构建 old locator 文本 embedding")
     query     = f"by={req.old_locator.by}, value={req.old_locator.value}"
-    query_vec = (await embedding_batch(url, headers, [query]))["vectors"][0]
+    query_vec = (await post_embedding(headers, [query]))["vectors"][0]
 
     logger.info(f"向量召回 {(k := 5)}")
     retrieved = await store.search(query_vec, k=k)
@@ -87,16 +87,14 @@ async def heal_element(
                 })
                 break
 
-    expire_at = int(time.time()) + 86400
-    token     = signature.sign_token(app_desc, expire_at)
-
-    url     = f"https://plaxtonflarion--embedding-embeddingservice-rerank.modal.run/"
-    headers = {const.TOKEN_FORMAT: token}
+    # expire_at = int(time.time()) + 86400
+    # token     = signature.sign_token(app_desc, expire_at)
+    # headers   = {const.TOKEN_FORMAT: token}
 
     candidate = [c["text"] for c in mapped_candidates]
 
     logger.info(f"结果重排")
-    rerank_resp   = await rerank_candidates(url, headers, query, candidate)
+    rerank_resp   = await post_rerank(headers, query, candidate)
     rerank_scores = rerank_resp["scores"]
 
     for c, s in zip(mapped_candidates, rerank_scores):
