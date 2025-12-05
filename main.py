@@ -16,8 +16,8 @@ from routers     import register_routers
 
 
 app = FastAPI()
-setattr(app, "state.cache", RedisCache())
-setattr(app, "state.store", ZillizStore())
+app.state.cache = RedisCache()
+app.state.store = ZillizStore()
 
 toolset.init_logger()
 
