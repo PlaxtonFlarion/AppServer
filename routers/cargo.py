@@ -34,7 +34,7 @@ async def global_configuration(
 
 
 @cargo_router.get(path="/bootstrap")
-async def bootstrap(
+async def application_bootstrap(
     request: "Request",
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
