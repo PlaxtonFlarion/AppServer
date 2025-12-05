@@ -1,8 +1,8 @@
-#  _                      _               __  __ _     _     _ _
-# | |    ___   __ _  __ _(_)_ __   __ _  |  \/  (_) __| | __| | | _____      ____ _ _ __ ___
-# | |   / _ \ / _` |/ _` | | '_ \ / _` | | |\/| | |/ _` |/ _` | |/ _ \ \ /\ / / _` | '__/ _ \
-# | |__| (_) | (_| | (_| | | | | | (_| | | |  | | | (_| | (_| | |  __/\ V  V / (_| | | |  __/
-# |_____\___/ \__, |\__, |_|_| |_|\__, | |_|  |_|_|\__,_|\__,_|_|\___| \_/\_/ \__,_|_|  \___|
+#  _                      _
+# | |    ___   __ _  __ _(_)_ __   __ _
+# | |   / _ \ / _` |/ _` | | '_ \ / _` |
+# | |__| (_) | (_| | (_| | | | | | (_| |
+# |_____\___/ \__, |\__, |_|_| |_|\__, |
 #             |___/ |___/         |___/
 #
 
@@ -11,7 +11,10 @@ from loguru import logger
 from fastapi import Request
 
 
-async def logging_middleware(request: "Request", call_next: "typing.Callable") -> "typing.Any":
+async def logging_middleware(
+    request   : "Request",
+    call_next : "typing.Callable"
+) -> "typing.Any":
     """请求日志中间件"""
 
     logger.info(f"-> {request.method} {request.url}")

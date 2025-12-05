@@ -1,8 +1,8 @@
-#  _____                    _   _               __  __ _     _     _ _
-# | ____|_  _____ ___ _ __ | |_(_) ___  _ __   |  \/  (_) __| | __| | | _____      ____ _ _ __ ___
-# |  _| \ \/ / __/ _ \ '_ \| __| |/ _ \| '_ \  | |\/| | |/ _` |/ _` | |/ _ \ \ /\ / / _` | '__/ _ \
-# | |___ >  < (_|  __/ |_) | |_| | (_) | | | | | |  | | | (_| | (_| | |  __/\ V  V / (_| | | |  __/
-# |_____/_/\_\___\___| .__/ \__|_|\___/|_| |_| |_|  |_|_|\__,_|\__,_|_|\___| \_/\_/ \__,_|_|  \___|
+#  _____                    _   _
+# | ____|_  _____ ___ _ __ | |_(_) ___  _ __
+# |  _| \ \/ / __/ _ \ '_ \| __| |/ _ \| '_ \
+# | |___ >  < (_|  __/ |_) | |_| | (_) | | | |
+# |_____/_/\_\___\___| .__/ \__|_|\___/|_| |_|
 #                    |_|
 #
 
@@ -16,7 +16,10 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 
-async def exception_middleware(request: "Request", call_next: "typing.Callable") -> "typing.Any":
+async def exception_middleware(
+    request   : "Request",
+    call_next : "typing.Callable"
+) -> "typing.Any":
     """全局异常中间件"""
 
     # 保证 trace_id 存在（防止没有 trace 中间件时报错）

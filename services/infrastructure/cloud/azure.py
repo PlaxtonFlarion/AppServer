@@ -10,10 +10,11 @@ import httpx
 import typing
 import hashlib
 from loguru import logger
+from fastapi import Request
 from schemas.cognitive import SpeechRequest
-from services import (
-    r2_storage, redis_cache, signature
-)
+from services.domain.standard import signature
+from services.infrastructure.cache.redis_cache import RedisCache
+from services.infrastructure.storage import r2_storage
 from utils import (
     const, toolset
 )
@@ -50,7 +51,7 @@ class SpeechEngine(object):
         return signed_data
 
     @staticmethod
-    async def tts_audio(req: "SpeechRequest", cache: "redis_cache.RedisCache") -> "typing.Any":
+    async def tts_audio(req: "SpeechRequest", request: "Request") -> "typing.Any":
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(
@@ -58,6 +59,7 @@ class SpeechEngine(object):
         ).hexdigest()
 
         # 👉 优先读取 Redis（只存储对象 Key）
+        cache: "RedisCache" = request.app.state.cache
         if cached := await cache.redis_get(cache_key):
             cached   = json.loads(cached)
             r2_key   = cached["key"]

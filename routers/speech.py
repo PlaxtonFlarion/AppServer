@@ -1,8 +1,8 @@
-#  ____                       _       ____             _
-# / ___| _ __   ___  ___  ___| |__   |  _ \ ___  _   _| |_ ___ _ __
-# \___ \| '_ \ / _ \/ _ \/ __| '_ \  | |_) / _ \| | | | __/ _ \ '__|
-#  ___) | |_) |  __/  __/ (__| | | | |  _ < (_) | |_| | ||  __/ |
-# |____/| .__/ \___|\___|\___|_| |_| |_| \_\___/ \__,_|\__\___|_|
+#  ____                       _
+# / ___| _ __   ___  ___  ___| |__
+# \___ \| '_ \ / _ \/ _ \/ __| '_ \
+#  ___) | |_) |  __/  __/ (__| | | |
+# |____/| .__/ \___|\___|\___|_| |_|
 #       |_|
 #
 
@@ -11,7 +11,7 @@ from fastapi import (
     APIRouter, Request, Query
 )
 from schemas.cognitive import SpeechRequest
-from services import azure
+from services.infrastructure.cloud import azure
 
 speech_router = APIRouter(tags=["Speech"])
 
@@ -43,9 +43,7 @@ async def speech_voice(
     """
     logger.info(f"voice request: {req}")
 
-    cache = request.app.state.cache
-
-    return await azure.SpeechEngine.tts_audio(req, cache)
+    return await azure.SpeechEngine.tts_audio(req, request)
 
 
 if __name__ == '__main__':

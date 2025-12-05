@@ -25,7 +25,6 @@ env = toolset.current_env(
 groq_llm_key = env[const.GROQ_LLM_KEY]
 
 
-# ================== LLM 决策 ==================
 async def llm_choose_best_candidate(old_locator: "Locator", candidates: list[dict]) -> dict:
     if not candidates: return {"index": -1, "reason": "没有候选元素。"}
 

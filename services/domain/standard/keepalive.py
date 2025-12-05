@@ -1,9 +1,9 @@
-#   _  __                    _    _ _
-#  | |/ /___  ___ _ __      / \  | (_)_   _____
-#  | ' // _ \/ _ \ '_ \    / _ \ | | \ \ / / _ \
-#  | . \  __/  __/ |_) |  / ___ \| | |\ V /  __/
-#  |_|\_\___|\___| .__/  /_/   \_\_|_| \_/ \___|
-#                |_|
+#  _  __                     _ _
+# | |/ /___  ___ _ __   __ _| (_)_   _____
+# | ' // _ \/ _ \ '_ \ / _` | | \ \ / / _ \
+# | . \  __/  __/ |_) | (_| | | |\ V /  __/
+# |_|\_\___|\___| .__/ \__,_|_|_| \_/ \___|
+#               |_|
 #
 
 import math
@@ -16,9 +16,8 @@ from loguru import logger
 from fastapi import (
     Request, HTTPException
 )
-from services import (
-    signature, supabase
-)
+from services.domain.standard import signature
+from services.infrastructure.db import supabase
 from utils import const
 
 

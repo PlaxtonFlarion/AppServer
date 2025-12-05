@@ -1,18 +1,21 @@
-#     _         _   _       __  __ _     _     _ _
-#    / \  _   _| |_| |__   |  \/  (_) __| | __| | | _____      ____ _ _ __ ___
-#   / _ \| | | | __| '_ \  | |\/| | |/ _` |/ _` | |/ _ \ \ /\ / / _` | '__/ _ \
-#  / ___ \ |_| | |_| | | | | |  | | | (_| | (_| | |  __/\ V  V / (_| | | |  __/
-# /_/   \_\__,_|\__|_| |_| |_|  |_|_|\__,_|\__,_|_|\___| \_/\_/ \__,_|_|  \___|
+#     _         _   _
+#    / \  _   _| |_| |__
+#   / _ \| | | | __| '_ \
+#  / ___ \ |_| | |_| | | |
+# /_/   \_\__,_|\__|_| |_|
 #
 
 import typing
 from loguru import logger
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from services import signature
+from services.domain.standard import signature
 
 
-async def jwt_auth_middleware(request: "Request", call_next: "typing.Callable") -> "typing.Any":
+async def jwt_auth_middleware(
+    request   : "Request",
+    call_next : "typing.Callable"
+) -> "typing.Any":
     """鉴权中间件"""
 
     if request.url.path in {

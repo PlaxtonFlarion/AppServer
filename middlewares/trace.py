@@ -1,8 +1,8 @@
-#  _____                     __  __ _     _     _ _
-# |_   _| __ __ _  ___ ___  |  \/  (_) __| | __| | | _____      ____ _ _ __ ___
-#   | || '__/ _` |/ __/ _ \ | |\/| | |/ _` |/ _` | |/ _ \ \ /\ / / _` | '__/ _ \
-#   | || | | (_| | (_|  __/ | |  | | | (_| | (_| | |  __/\ V  V / (_| | | |  __/
-#   |_||_|  \__,_|\___\___| |_|  |_|_|\__,_|\__,_|_|\___| \_/\_/ \__,_|_|  \___|
+#  _____
+# |_   _| __ __ _  ___ ___
+#   | || '__/ _` |/ __/ _ \
+#   | || | | (_| | (_|  __/
+#   |_||_|  \__,_|\___\___|
 #
 
 import uuid
@@ -11,7 +11,10 @@ from loguru import logger
 from fastapi import Request
 
 
-async def trace_middleware(request: "Request", call_next: "typing.Callable") -> "typing.Any":
+async def trace_middleware(
+    request   : "Request",
+    call_next : "typing.Callable"
+) -> "typing.Any":
     """Trace-ID 中间件"""
 
     request.state.trace_id = (trace_id := str(uuid.uuid4()))

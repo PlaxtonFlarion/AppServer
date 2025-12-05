@@ -26,7 +26,7 @@ from cryptography.hazmat.primitives.asymmetric import (
 )
 from fastapi import HTTPException
 from schemas.cognitive import LicenseRequest
-from services import supabase
+from services.infrastructure.db import supabase
 from utils import (
     const, toolset
 )

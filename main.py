@@ -7,14 +7,17 @@
 
 from fastapi import FastAPI
 
-from services    import redis_cache
+from services.infrastructure.cache.redis_cache import RedisCache
+from services.infrastructure.vector.zilliz     import ZillizStore
+
 from utils       import toolset
 from middlewares import register_middlewares
 from routers     import register_routers
 
 
 app = FastAPI()
-app.state.cache = redis_cache.RedisCache()
+setattr(app, "state.cache", RedisCache())
+setattr(app, "state.store", ZillizStore())
 
 toolset.init_logger()
 

@@ -1,8 +1,8 @@
-#   ____                        ____             _
-#  / ___|__ _ _ __ __ _  ___   |  _ \ ___  _   _| |_ ___ _ __
-# | |   / _` | '__/ _` |/ _ \  | |_) / _ \| | | | __/ _ \ '__|
-# | |__| (_| | | | (_| | (_) | |  _ < (_) | |_| | ||  __/ |
-#  \____\__,_|_|  \__, |\___/  |_| \_\___/ \__,_|\__\___|_|
+#   ____
+#  / ___|__ _ _ __ __ _  ___
+# | |   / _` | '__/ _` |/ _ \
+# | |__| (_| | | | (_| | (_) |
+#  \____\__,_|_|  \__, |\___/
 #                 |___/
 #
 
@@ -10,8 +10,8 @@ from fastapi import (
     APIRouter, Request, Query
 )
 from fastapi.responses import PlainTextResponse
-from services import (
-    loaders, stencil
+from services.domain.standard import (
+    bootstrap, configuration, download, predict, stencil
 )
 
 cargo_router = APIRouter(tags=["Cargo"])
@@ -34,7 +34,7 @@ async def global_configuration(
     x_app_version = request.state.x_app_version
     cache         = request.app.state.cache
 
-    return await loaders.resolve_configuration(
+    return await configuration.resolve_configuration(
         x_app_region, x_app_version, a, t, n, cache
     )
 
@@ -58,7 +58,7 @@ async def bootstrap(
     x_app_version = request.state.x_app_version
     cache         = request.app.state.cache
 
-    return await loaders.resolve_bootstrap(
+    return await bootstrap.resolve_bootstrap(
         x_app_region, x_app_version, a, t, n, cache
     )
 
@@ -80,7 +80,7 @@ async def proxy_predict(
     x_app_version = request.state.x_app_version
     cache         = request.app.state.cache
 
-    return await loaders.resolve_proxy_predict(
+    return await predict.resolve_proxy_predict(
         x_app_region, x_app_version, a, t, n, cache
     )
 
@@ -102,7 +102,7 @@ async def template_information(
     x_app_version = request.state.x_app_version
     cache         = request.app.state.cache
 
-    return await loaders.resolve_stencil(
+    return await download.resolve_stencil_download(
         x_app_region, x_app_version, a, t, n, cache
     )
 
@@ -125,7 +125,7 @@ async def toolkit_information(
     x_app_version = request.state.x_app_version
     cache         = request.app.state.cache
 
-    return await loaders.resolve_toolkit_download(
+    return await download.resolve_toolkit_download(
         x_app_region, x_app_version, a, t, n, platform, cache
     )
 
@@ -147,7 +147,7 @@ async def model_information(
     x_app_version = request.state.x_app_version
     cache         = request.app.state.cache
 
-    return await loaders.resolve_model_download(
+    return await download.resolve_model_download(
         x_app_region, x_app_version, a, t, n, cache
     )
 
