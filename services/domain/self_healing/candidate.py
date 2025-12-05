@@ -52,7 +52,7 @@ async def heal_element(
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token(app_desc, expire_at)
 
-    url     = f"https://plaxtonflarion--inference-inferenceservice-embedding.modal.run/"
+    url     = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
     headers = {const.TOKEN_FORMAT: token}
 
     logger.info(f"解析节点")
@@ -90,7 +90,7 @@ async def heal_element(
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token(app_desc, expire_at)
 
-    url     = f"https://plaxtonflarion--inference-inferenceservice-rerank.modal.run/"
+    url     = f"https://plaxtonflarion--embedding-embeddingservice-rerank.modal.run/"
     headers = {const.TOKEN_FORMAT: token}
 
     candidate = [c["text"] for c in mapped_candidates]
