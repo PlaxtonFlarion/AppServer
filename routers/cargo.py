@@ -30,9 +30,7 @@ async def global_configuration(
     通过签名参数校验后，返回远程全局配置中心配置结果。
     """
 
-    return await configuration.resolve_configuration(
-        request, a, t, n
-    )
+    return await configuration.resolve_configuration(request, a, t, n)
 
 
 @cargo_router.get(path="/bootstrap")
@@ -50,9 +48,7 @@ async def bootstrap(
 
     await request.app.state.cache.enforce_rate_limit(request)
 
-    return await bootstrap.resolve_bootstrap(
-        request, a, t, n
-    )
+    return await bootstrap.resolve_bootstrap(request, a, t, n)
 
 
 @cargo_router.get(path="/proxy-predict")
@@ -68,9 +64,7 @@ async def proxy_predict(
     将客户端请求转发至 Modal/GPU 模型服务，支持 Token 校验。
     """
 
-    return await predict.resolve_proxy_predict(
-        request, a, t, n
-    )
+    return await predict.resolve_proxy_predict(request, a, t, n)
 
 
 @cargo_router.get(path="/template-meta")
@@ -86,9 +80,7 @@ async def template_information(
     返回所有模板的版本号、名称与下载地址。
     """
 
-    return await download.resolve_stencil_download(
-        request, a, t, n
-    )
+    return await download.resolve_stencil_download(request, a, t, n)
 
 
 @cargo_router.get(path="/toolkit-meta")
@@ -105,9 +97,7 @@ async def toolkit_information(
     返回所有工具的版本号、名称与下载地址。
     """
 
-    return await download.resolve_toolkit_download(
-        request,  a, t, n, platform
-    )
+    return await download.resolve_toolkit_download(request,  a, t, n, platform)
 
 
 @cargo_router.get(path="/model-meta")
@@ -123,9 +113,7 @@ async def model_information(
     返回所有模型的版本号、名称与下载地址。
     """
 
-    return await download.resolve_model_download(
-        request, a, t, n
-    )
+    return await download.resolve_model_download(request, a, t, n)
 
 
 @cargo_router.get(path="/template-viewer", response_class=PlainTextResponse)

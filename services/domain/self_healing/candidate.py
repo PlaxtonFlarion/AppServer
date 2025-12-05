@@ -7,6 +7,7 @@
 
 import time
 import httpx
+import random
 import typing
 from loguru import logger
 from fastapi import Request
@@ -22,8 +23,12 @@ from services.infrastructure.llm.llm_groq import llm_choose_best_candidate
 from utils import const
 
 
-async def post_embedding(headers: dict, text_list: list) -> dict:
-    url = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
+async def post_embedding(text_list: list) -> dict:
+    url       = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
+    expire_at = int(time.time()) + random.randint(3600, 86400)
+    token     = signature.sign_token("Heal", expire_at)
+    headers   = {const.TOKEN_FORMAT: token}
+
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             url, headers=headers, json={"texts": text_list}, timeout=60
@@ -32,8 +37,12 @@ async def post_embedding(headers: dict, text_list: list) -> dict:
         return resp.json()
 
 
-async def post_rerank(headers: dict, query: str, candidate: list) -> dict:
-    url = f"https://plaxtonflarion--embedding-embeddingservice-rerank.modal.run/"
+async def post_rerank(query: str, candidate: list) -> dict:
+    url       = f"https://plaxtonflarion--embedding-embeddingservice-rerank.modal.run/"
+    expire_at = int(time.time()) + random.randint(3600, 86400)
+    token     = signature.sign_token("Heal", expire_at)
+    headers   = {const.TOKEN_FORMAT: token}
+
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             url, headers=headers, json={"query": query, "candidate": candidate}, timeout=60
@@ -44,26 +53,17 @@ async def post_rerank(headers: dict, query: str, candidate: list) -> dict:
 
 async def heal_element(
     req: "HealRequest",
-    request: "Request",
-    a: str,
-    t: int,
-    n: str
+    request: "Request"
 ) -> typing.Union["HealResponse", "JSONResponse"]:
 
-    app_name, app_desc, *_ = a.lower().strip(), a, t, n
-
     store: "ZillizStore" = request.app.state.store
-
-    expire_at = int(time.time()) + 86400
-    token     = signature.sign_token(app_desc, expire_at)
-    headers   = {const.TOKEN_FORMAT: token}
 
     logger.info(f"解析节点")
     node_list = AndroidXmlParser.parse(req.page_dump)
     desc_list = [n.ensure_desc() for n in node_list]
 
     logger.info(f"向量生成")
-    embedding_resp = await post_embedding(headers, desc_list)
+    embedding_resp = await post_embedding(desc_list)
     logger.info(f"[[v1], [v2], ...] 维度匹配")
     page_vectors = embedding_resp["vectors"]
 
@@ -72,9 +72,9 @@ async def heal_element(
         await store.insert(vec, node.ensure_desc())
 
     logger.info(f"构建 old locator 文本 embedding")
-    query     = f"by={req.old_locator.by}, value={req.old_locator.value}"
+    query = f"by={req.old_locator.by}, value={req.old_locator.value}"
     try:
-        query_vec = (await post_embedding(headers, [query]))["vectors"][0]
+        query_vec = (await post_embedding([query]))["vectors"][0]
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 
@@ -93,15 +93,11 @@ async def heal_element(
                 })
                 break
 
-    # expire_at = int(time.time()) + 86400
-    # token     = signature.sign_token(app_desc, expire_at)
-    # headers   = {const.TOKEN_FORMAT: token}
-
     candidate = [c["text"] for c in mapped_candidates]
 
     logger.info(f"结果重排")
     try:
-        rerank_resp = await post_rerank(headers, query, candidate)
+        rerank_resp = await post_rerank(query, candidate)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 

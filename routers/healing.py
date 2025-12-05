@@ -7,7 +7,7 @@
 #
 
 from fastapi import (
-    APIRouter, Request, Query
+    APIRouter, Request
 )
 from schemas.cognitive import HealRequest
 from services.domain.self_healing.candidate import heal_element
@@ -18,10 +18,7 @@ healing_router = APIRouter(tags=["Healing"])
 @healing_router.post(path="/healing")
 async def healing(
     req: "HealRequest",
-    request: "Request",
-    a: str = Query(..., alias="a"),
-    t: int = Query(..., alias="t"),
-    n: str = Query(..., alias="n")
+    request: "Request"
 ):
     """
     UI 元素自愈接口
@@ -29,9 +26,7 @@ async def healing(
     基于语义相似度自动寻找最可能的新控件，实现定位修复。
     """
 
-    return await heal_element(
-        req, request, a, t, n
-    )
+    return await heal_element(req, request)
 
 
 if __name__ == '__main__':
