@@ -6,7 +6,6 @@
 #                             |___/
 #
 
-from loguru import logger
 from fastapi import (
     APIRouter, Request, Query
 )
@@ -29,7 +28,6 @@ async def healing(
 
     基于语义相似度自动寻找最可能的新控件，实现定位修复。
     """
-    logger.info(f"healing request: {request}")
 
     return await heal_element(
         req, request, a, t, n

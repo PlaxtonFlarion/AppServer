@@ -55,25 +55,25 @@ async def heal_element(
     url     = f"https://plaxtonflarion--embedding-embeddingservice-embedding.modal.run/"
     headers = {const.TOKEN_FORMAT: token}
 
-    # 解析XML节点
+    logger.info(f"解析节点")
     node_list = AndroidXmlParser.parse(req.page_dump)
     desc_list = [n.ensure_desc() for n in node_list]
 
-    # === 批量向量生成 ===
+    logger.info(f"向量生成")
     embedding_resp = await embedding_batch(url, headers, desc_list)
-    page_vectors   = embedding_resp["vectors"]  # [[v1], [v2], ...] 维度匹配 node_list
+    logger.info(f"[[v1], [v2], ...] 维度匹配")
+    page_vectors = embedding_resp["vectors"]
 
-    # 🚀 批量插入向量
+    logger.info(f"插入向量")
     for node, vec in zip(node_list, page_vectors):
-        text = node.ensure_desc()
-        await store.insert(vec, text)  # 插入Zilliz向量库
+        await store.insert(vec, node.ensure_desc())
 
-    # 构建 old locator 文本 embedding
+    logger.info(f"构建 old locator 文本 embedding")
     query     = f"by={req.old_locator.by}, value={req.old_locator.value}"
     query_vec = (await embedding_batch(url, headers, [query]))["vectors"][0]
 
-    # --- 向量召回 ---
-    retrieved = await store.search(query_vec, k=5)
+    logger.info(f"向量召回 {(k := 5)}")
+    retrieved = await store.search(query_vec, k=k)
 
     mapped_candidates: list[dict] = []
     for r in retrieved:
@@ -87,7 +87,6 @@ async def heal_element(
                 })
                 break
 
-    # --- 结果重排 ---
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token(app_desc, expire_at)
 
@@ -96,21 +95,21 @@ async def heal_element(
 
     candidate = [c["text"] for c in mapped_candidates]
 
+    logger.info(f"结果重排")
     rerank_resp   = await rerank_candidates(url, headers, query, candidate)
     rerank_scores = rerank_resp["scores"]
 
     for c, s in zip(mapped_candidates, rerank_scores):
         c["rerank_score"] = float(s)
 
-    # --- 融合得分 ---
-    alpha = 0.2  # 20% 用向量召回，80% 用 CrossEncoder
+    logger.info(f"融合得分: 20% 用向量召回，80% 用 CrossEncoder")
+    alpha = 0.2
     for c in mapped_candidates:
         c["final_score"] = alpha * c["vector_score"] + (1 - alpha) * c["rerank_score"]
 
-    # --- Stage 3：取 top-3 ---
+    logger.info(f"取 top-3")
     top_candidates = sorted(mapped_candidates, key=lambda x: x["final_score"], reverse=True)[:3]
 
-    # 5) LLM 选择最佳
     decision = await llm_choose_best_candidate(req.old_locator, top_candidates)
     index    = decision["index"]
     reason   = decision["reason"]
