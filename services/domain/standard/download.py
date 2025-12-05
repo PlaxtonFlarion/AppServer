@@ -7,6 +7,7 @@
 
 import json
 from loguru import logger
+from fastapi import Request
 from services.domain.standard import signature
 from services.infrastructure.cache.redis_cache import RedisCache
 from services.infrastructure.storage import r2_storage
@@ -14,20 +15,22 @@ from utils import const
 
 
 async def resolve_stencil_download(
-    x_app_region: str,
-    x_app_version: str,
+    request: "Request",
     a: str,
     t: int,
-    n: str,
-    cache: "RedisCache"
+    n: str
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    x_app_region  = request.state.x_app_region
+    x_app_version = request.state.x_app_version
 
     cache_key = f"Template:{app_desc}"
 
     ttl = 86400
 
+    cache: "RedisCache" = request.app.state.cache
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模版元信息 -> {cache_key}")
         license_info = json.loads(cached)
@@ -86,22 +89,24 @@ async def resolve_stencil_download(
 
 
 async def resolve_toolkit_download(
-    x_app_region: str,
-    x_app_version: str,
+    request: "Request",
     a: str,
     t: int,
     n: str,
-    platform: str,
-    cache: "RedisCache"
+    platform: str
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    x_app_region  = request.state.x_app_region
+    x_app_version = request.state.x_app_version
 
     group     = "MacOS" if platform == "darwin" else "Windows"
     cache_key = f"Toolkit:{app_desc}:{group}"
 
     ttl = 86400
 
+    cache: "RedisCache" = request.app.state.cache
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存工具元信息 -> {cache_key}")
         license_info = json.loads(cached)
@@ -208,15 +213,16 @@ async def resolve_toolkit_download(
 
 
 async def resolve_model_download(
-    x_app_region: str,
-    x_app_version: str,
+    request: "Request",
     a: str,
     t: int,
-    n: str,
-    cache: "RedisCache"
+    n: str
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    x_app_region  = request.state.x_app_region
+    x_app_version = request.state.x_app_version
 
     cache_key = f"Models:{app_desc}"
 
@@ -226,6 +232,7 @@ async def resolve_model_download(
     faint_model = "Keras_Gray_W256_H256"
     color_model = "Keras_Hued_W256_H256"
 
+    cache: "RedisCache" = request.app.state.cache
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
         license_info = json.loads(cached)

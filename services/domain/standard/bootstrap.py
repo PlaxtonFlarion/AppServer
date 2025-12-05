@@ -8,24 +8,27 @@
 
 import json
 from loguru import logger
+from fastapi import Request
 from services.domain.standard import signature
 from services.infrastructure.cache.redis_cache import RedisCache
 from utils import const
 
 
 async def resolve_bootstrap(
-    x_app_region: str,
-    x_app_version: str,
+    request: "Request",
     a: str,
     t: int,
-    n: str,
-    cache: "RedisCache"
+    n: str
 ) -> dict:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+    x_app_region  = request.state.x_app_region
+    x_app_version = request.state.x_app_version
+
     cache_key = f"Activation Node:{app_desc}"
 
+    cache: "RedisCache" = request.app.state.cache
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存激活配置 -> {cache_key}")
         return json.loads(cached)

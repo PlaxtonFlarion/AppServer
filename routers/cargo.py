@@ -30,12 +30,8 @@ async def global_configuration(
     通过签名参数校验后，返回远程全局配置中心配置结果。
     """
 
-    x_app_region  = request.state.x_app_region
-    x_app_version = request.state.x_app_version
-    cache         = request.app.state.cache
-
     return await configuration.resolve_configuration(
-        x_app_region, x_app_version, a, t, n, cache
+        request, a, t, n
     )
 
 
@@ -54,12 +50,8 @@ async def bootstrap(
 
     await request.app.state.cache.enforce_rate_limit(request)
 
-    x_app_region  = request.state.x_app_region
-    x_app_version = request.state.x_app_version
-    cache         = request.app.state.cache
-
     return await bootstrap.resolve_bootstrap(
-        x_app_region, x_app_version, a, t, n, cache
+        request, a, t, n
     )
 
 
@@ -76,12 +68,8 @@ async def proxy_predict(
     将客户端请求转发至 Modal/GPU 模型服务，支持 Token 校验。
     """
 
-    x_app_region  = request.state.x_app_region
-    x_app_version = request.state.x_app_version
-    cache         = request.app.state.cache
-
     return await predict.resolve_proxy_predict(
-        x_app_region, x_app_version, a, t, n, cache
+        request, a, t, n
     )
 
 
@@ -98,12 +86,8 @@ async def template_information(
     返回所有模板的版本号、名称与下载地址。
     """
 
-    x_app_region  = request.state.x_app_region
-    x_app_version = request.state.x_app_version
-    cache         = request.app.state.cache
-
     return await download.resolve_stencil_download(
-        x_app_region, x_app_version, a, t, n, cache
+        request, a, t, n
     )
 
 
@@ -121,12 +105,8 @@ async def toolkit_information(
     返回所有工具的版本号、名称与下载地址。
     """
 
-    x_app_region  = request.state.x_app_region
-    x_app_version = request.state.x_app_version
-    cache         = request.app.state.cache
-
     return await download.resolve_toolkit_download(
-        x_app_region, x_app_version, a, t, n, platform, cache
+        request,  a, t, n, platform
     )
 
 
@@ -143,12 +123,8 @@ async def model_information(
     返回所有模型的版本号、名称与下载地址。
     """
 
-    x_app_region  = request.state.x_app_region
-    x_app_version = request.state.x_app_version
-    cache         = request.app.state.cache
-
     return await download.resolve_model_download(
-        x_app_region, x_app_version, a, t, n, cache
+        request, a, t, n
     )
 
 
