@@ -7,8 +7,11 @@
 
 import time
 import httpx
+import typing
 from loguru import logger
 from fastapi import Request
+from starlette.responses import JSONResponse
+
 from schemas.cognitive import (
     HealRequest, HealResponse
 )
@@ -45,7 +48,7 @@ async def heal_element(
     a: str,
     t: int,
     n: str
-) -> "HealResponse":
+) -> typing.Union["HealResponse", "JSONResponse"]:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -70,7 +73,10 @@ async def heal_element(
 
     logger.info(f"构建 old locator 文本 embedding")
     query     = f"by={req.old_locator.by}, value={req.old_locator.value}"
-    query_vec = (await post_embedding(headers, [query]))["vectors"][0]
+    try:
+        query_vec = (await post_embedding(headers, [query]))["vectors"][0]
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
 
     logger.info(f"向量召回 {(k := 5)}")
     retrieved = await store.search(query_vec, k=k)
@@ -94,9 +100,12 @@ async def heal_element(
     candidate = [c["text"] for c in mapped_candidates]
 
     logger.info(f"结果重排")
-    rerank_resp   = await post_rerank(headers, query, candidate)
-    rerank_scores = rerank_resp["scores"]
+    try:
+        rerank_resp = await post_rerank(headers, query, candidate)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
 
+    rerank_scores = rerank_resp["scores"]
     for c, s in zip(mapped_candidates, rerank_scores):
         c["rerank_score"] = float(s)
 
