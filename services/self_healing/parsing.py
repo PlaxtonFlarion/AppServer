@@ -6,7 +6,7 @@
 #                              |___/
 #
 
-import xml.etree.ElementTree as eT
+from xml.etree import ElementTree
 from schemas.cognitive import ElementNode
 
 
@@ -34,19 +34,19 @@ def parse_xml_dump(dump: str) -> list["ElementNode"]:
     nodes: list["ElementNode"] = []
 
     try:
-        root = eT.fromstring(dump)
-    except eT.ParseError:
+        root = ElementTree.fromstring(dump)
+    except ElementTree.ParseError:
         return nodes
 
     for ele in root.iter():
         class_name = ele.attrib.get("class") or ele.tag
         if not class_name: continue
 
-        text = ele.attrib.get("text") or None
+        text         = ele.attrib.get("text") or None
         content_desc = ele.attrib.get("content-desc") or ele.attrib.get("contentDescription") or None
-        resource_id = ele.attrib.get("resource-id") or ele.attrib.get("resourceId") or None
-        bounds_str = ele.attrib.get("bounds") or ""
-        bounds = parse_bounds(bounds_str) if bounds_str else []
+        resource_id  = ele.attrib.get("resource-id") or ele.attrib.get("resourceId") or None
+        bounds_str   = ele.attrib.get("bounds") or ""
+        bounds       = parse_bounds(bounds_str) if bounds_str else []
 
         if not any([text, content_desc, resource_id]):
             # 如果想连容器节点也分析，可以删掉这段 continue
