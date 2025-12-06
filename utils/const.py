@@ -78,6 +78,7 @@ PUBLIC_PATHS = {
     "/favicon.ico",
     "/docs",
     "/redoc",
+    "/custom-docs",
     "/healing"
 }
 
