@@ -17,7 +17,7 @@ async def swagger_docs() -> "HTMLResponse":
     r2_swagger_key = "docs/swagger/openapi.json"
     doc_url        = f"{r2_storage.r2_bucket_url}/{r2_swagger_key}"
 
-    logger.info(f"{title} - {doc_url}")
+    logger.warning(f"{title} - {doc_url}")
 
     html = f"""
     <!DOCTYPE html>
