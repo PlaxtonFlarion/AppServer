@@ -2,164 +2,228 @@
 <html>
 <head>
 <meta charset="utf-8"/>
-<title>{{title}}</title>
-<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"/>
+<title>AppServerX API</title>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
 
 <style>
-/* ——— 样式保持完整，不依赖 Python ——— */
-:root {
-  --bg:#0e0e0f; --fg:#f1f1f1; --panel:#171717; --border:#333; --code:#0e1117;
-  --accent:#00e0ff; --sub:#9c9c9c;
-}
-.light { --bg:#fff; --fg:#111; --panel:#f7f7f7; --border:#ddd; --code:#f6f8fa; }
+    :root{
+      --bg:#0e0e0f;--fg:#fff;--panel:#171717;--border:#333;--code:#11131a;
+      --accent:#00e0ff;--dim:#9d9d9d;
+    }
+    .light{--bg:#fff;--fg:#000;--panel:#f6f6f6;--border:#ccc;--code:#f4f5f7;}
 
-body{margin:0;display:flex;background:var(--bg);color:var(--fg);font-family:Inter,system-ui}
-.sidebar{width:260px;background:var(--panel);height:100vh;position:fixed;overflow-y:auto;border-right:1px solid var(--border);padding:24px}
-.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-bottom:24px}
-.logo img{height:28px;border-radius:6px}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--fg);display:flex;height:100vh;}
 
-#search{width:100%;padding:8px;margin-bottom:16px;background:var(--bg);color:var(--fg);border-radius:6px;border:1px solid var(--border)}
+    .sidebar{
+      width:300px;
+      background:var(--panel);
+      border-right:1px solid var(--border);
+      padding:26px;
+      overflow-y:auto;
+      position:fixed;
+      height:calc(100vh - 0px);
+      box-sizing:border-box;
+      /* 滚动条更美观 */
+      scrollbar-width:thin;
+      scrollbar-color:var(--accent) transparent;
+    }
+    .sidebar::-webkit-scrollbar{width:6px;}
+    .sidebar::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px;}
+    .sidebar::-webkit-scrollbar-track{background:transparent;}
 
-.section-title{opacity:.5;font-size:12px;font-weight:700;margin-top:16px;margin-bottom:6px}
-.api-item{cursor:pointer;padding:6px;border-radius:6px;font-size:14px}
-.api-item:hover{background:#ffffff18}
-.method{background:var(--accent);color:#000;font-size:10px;padding:2px 5px;border-radius:4px;margin-right:6px;font-weight:900}
+    .logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-bottom:22px;}
+    .logo img{height:32px;border-radius:6px;}
 
-.content{margin-left:260px;padding:50px 60px}
-h1{font-size:38px;font-weight:900;margin:0;background:linear-gradient(90deg,#00e0ff,#00ffa6);-webkit-background-clip:text;color:transparent}
-.sub{opacity:.65;margin-bottom:30px}
+    #search{
+      width:100%;padding:8px;border-radius:6px;margin-bottom:14px;
+      background:var(--bg);border:1px solid var(--border);color:var(--fg);
+    }
 
-details{background:var(--panel);margin-bottom:18px;padding:18px;border-radius:8px;border:1px solid var(--border)}
-details summary{cursor:pointer;font-weight:800;font-size:16px;display:flex;gap:10px;margin-bottom:8px}
+    .section-title{opacity:.6;font-size:12px;font-weight:700;margin-top:16px;margin-bottom:6px}
+    .api-item{padding:6px;border-radius:6px;font-size:14px;cursor:pointer}
+    .api-item:hover{background:#ffffff14}
+    .method{
+      background:var(--accent);color:#000;padding:2px 6px;border-radius:4px;
+      font-size:11px;font-weight:900;margin-right:6px;
+    }
 
-pre{background:var(--code);padding:12px;border-radius:6px;color:#c7c7c7;font-size:13px;overflow:auto}
+    .content{
+      flex:1;margin-left:260px;padding:50px 60px;overflow-y:auto;
+    }
+    h1{
+      font-size:38px;font-weight:900;margin:0;
+      background:linear-gradient(90deg,#00e0ff,#00ffa6);
+      -webkit-background-clip:text;color:transparent;
+    }
+    .sub{opacity:.65;margin-bottom:30px}
 
-.schema-box{padding-left:12px;border-left:3px solid var(--accent);margin-top:10px;margin-bottom:14px}
-.schema-item{margin-left:12px;font-size:13px;padding:2px 0}
-.schema-type{color:var(--accent);margin-left:6px}
-.schema-required{color:#ff4d4d;margin-left:6px;font-size:11px;font-weight:800}
-.schema-desc{opacity:.7;margin-left:6px;font-size:12px}
+    details{
+      background:var(--panel);border:1px solid var(--border);padding:18px;
+      margin-bottom:20px;border-radius:8px;
+    }
+    details summary{
+      cursor:pointer;font-size:16px;font-weight:800;
+      margin-bottom:12px;display:flex;gap:8px;align-items:center;
+    }
 
-.btn-theme{position:fixed;right:20px;top:18px;padding:6px 12px;border-radius:6px;background:var(--panel);border:1px solid var(--border);cursor:pointer}
+    h3{margin:14px 0 6px;}
+    pre{
+      background:var(--code);padding:12px;border-radius:8px;
+      font-size:13px;color:#cfcfcf;overflow-x:auto;
+    }
+    hr{border:none;border-bottom:1px solid var(--border);margin:18px 0}
+
+    .schema-box{padding-left:12px;border-left:3px solid var(--accent);margin-top:10px;margin-bottom:15px;}
+    .schema-item{margin-left:12px;font-size:13px;padding:3px 0}
+    .schema-type{color:var(--accent);margin-left:8px;font-size:12px;}
+    .schema-required{color:#ff5454;font-size:11px;font-weight:700;margin-left:6px;}
+    .schema-desc{opacity:.7;margin-left:6px;font-size:12px;}
+    .btn-theme{
+      position:fixed;right:20px;top:20px;padding:6px 12px;border-radius:6px;
+      background:var(--panel);border:1px solid var(--border);cursor:pointer;
+    }
 </style>
 </head>
 
 <body id="root">
 
 <div class="sidebar">
-  <div class="logo"><img src="{{logo}}"/> {{title}}</div>
-  <input id="search" placeholder="Search API..."/>
+  <div class="logo"><img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"/>API</div>
+  <input id="search" placeholder="Search API...">
   <div id="menu"></div>
 </div>
 
 <div class="content">
-  <h1>{{title}}</h1>
-  <div class="sub">✨ API Reference · Example · JSON Schema · Auto Navigation</div>
+  <h1>AppServerX API</h1>
+  <div class="sub">📑 Modern API Reference · Full Schema · Auto Example Generation</div>
   <div id="api"></div>
 </div>
 
 <div id="theme" class="btn-theme">🌙 Dark</div>
 
 <script>
-const OPENAPI_URL = "{{openapi_url}}";
+    const OPENAPI_URL="openapi.json"
 
-/* ——— 主题切换 ——— */
-let theme = localStorage.theme || "dark";
-toggleTheme();
-document.getElementById("theme").onclick=()=>{ theme=theme==="dark"?"light":"dark";localStorage.theme=theme;toggleTheme(); }
-function toggleTheme(){ document.body.classList.toggle("light",theme==="light");document.getElementById("theme").innerText=theme==="light"?"🌞 Light":"🌙 Dark" }
+    let theme=localStorage.theme||"dark";
+    applyTheme()
+    document.getElementById("theme").onclick=()=>{theme=theme==="dark"?"light":"dark";localStorage.theme=theme;applyTheme()}
+    function applyTheme(){
+      document.body.classList.toggle("light",theme==="light")
+      document.getElementById("theme").innerText=theme==="light"?"🌞 Light":"🌙 Dark"
+    }
 
-/* ——— 加载 OpenAPI ——— */
-fetch(OPENAPI_URL).then(r=>r.json()).then(buildUI);
+    fetch(OPENAPI_URL).then(r=>r.json()).then(buildUI)
 
-function buildUI(spec){
-  let groups={};
-  Object.entries(spec.paths).forEach(([path,methods])=>{
-    Object.entries(methods).forEach(([method,meta])=>{
-      const tag=meta.tags?meta.tags[0]:"Others";
-      (groups[tag]=groups[tag]||[]).push({path,method,meta});
-    })
-  });
+    function buildUI(spec){
+      let groups={}
+      for(const [path,methods] of Object.entries(spec.paths))
+        for(const [method,meta] of Object.entries(methods))
+          (groups[meta.tags?meta.tags[0]:"Others"] ||= []).push({path,method,meta})
 
-  document.getElementById("menu").innerHTML =
-    Object.entries(groups).map(([t,a])=>`
-      <div class="section-title">${t}</div>
-      ${a.map(e=>`<div class="api-item" onclick="jump('${e.path}')">
-        <span class="method">${e.method}</span>${e.path}
-      </div>`).join("")}
-    `).join("");
+      document.getElementById("menu").innerHTML=
+        Object.entries(groups).map(([t,a])=>`
+          <div class="section-title">${t}</div>
+          ${a.map(e=>`<div class="api-item" onclick="jump('${e.path}')">
+          <span class="method">${e.method}</span>${e.path}</div>`).join("")}
+        `).join("")
 
-  document.getElementById("api").innerHTML =
-    Object.entries(groups).map(([t,a])=>`
-       <h2 style="margin-top:32px;font-size:22px">${t}</h2>
-       ${a.map(e=>renderAPI(e)).join("")}
-    `).join("");
-}
+      document.getElementById("api").innerHTML=
+        Object.entries(groups).map(([t,a])=>`
+          <h2 style="margin-top:35px;font-size:24px">${t}</h2>
+          ${a.map(e=>renderAPI(e)).join("")}
+        `).join("")
+    }
 
-function renderAPI(ep){
-  const req = ep.meta.requestBody?.content?.["application/json"]?.schema;
-  const res = ep.meta.responses?.["200"]?.content?.["application/json"]?.schema;
-  const schemaObj = req || res;
+    function renderAPI(ep){
+      const req=ep.meta.requestBody?.content?.["application/json"]?.schema
+      const res=ep.meta.responses?.["200"]?.content?.["application/json"]?.schema
+      const schema=req||res
 
-  return `
-  <details>
-    <summary><span class="method">${ep.method}</span><b>${ep.path}</b></summary>
-    <p style="opacity:.75;margin:6px 0 12px">${ep.meta.summary||"No description"}</p>
+      return `
+      <details>
+        <summary><span class="method">${ep.method}</span><b>${ep.path}</b></summary>
 
-    ${renderParams(ep.meta.parameters)}
+        <p>${ep.meta.summary||""}</p>
+        ${ep.meta.description?`<div style="opacity:.7;margin-bottom:10px">${ep.meta.description}</div>`:""}
+        ${ep.meta.operationId?`<div style="font-size:12px;opacity:.4">operationId: ${ep.meta.operationId}</div>`:""}
 
-    ${req?`<b>📥 Request Example</b><pre>${JSON.stringify(mock(req),null,2)}</pre>`:""}
-    ${res?`<b>📤 Response Example</b><pre>${JSON.stringify(mock(res),null,2)}</pre>`:""}
+        ${renderParams(ep.meta.parameters)}
 
-    <details><summary>🧬 JSON Schema</summary>
-      <div class="schema-box">${renderSchema(schemaObj)}</div>
-    </details>
-  </details>`;
-}
+        ${req?`
+        <h3>📥 Request Example</h3>
+        <pre>${JSON.stringify(mock(req),null,2)}</pre>
+        `:""}
 
-function renderParams(p){
-  if(!p) return "";
-  return `<b>🔧 Parameters</b><pre>${
-    p.map(x=>`${x.name} (${x.in||"query"}) → ${x.schema?.type||"any"}`).join("\n")
-  }</pre>`;
-}
+        ${res?`
+        <h3>📤 Response Example</h3>
+        <pre>${JSON.stringify(mock(res),null,2)}</pre>
+        `:""}
 
-/* ——— mock 示例生成 ——— */
-function mock(s){
-  if(s.example) return s.example;
-  if(s.properties){
-    let o={}; for(const k in s.properties)o[k]=mock(s.properties[k]); return o;
-  }
-  return s.type==="integer"?1:s.type==="number"?1.23:
-         s.type==="boolean"?true:
-         s.type==="array"?[mock(s.items)]: "string";
-}
+        <details style="margin-top:10px">
+          <summary>🧬 JSON Schema</summary>
+          <div class="schema-box">${renderSchema(schema)}</div>
+        </details>
 
-/* ——— Schema 展开树 ——— */
-function renderSchema(s){
-  if(!s||!s.properties) return "<i>No schema</i>";
-  return Object.entries(s.properties).map(([k,v])=>{
-    const req=(s.required||[]).includes(k);
-    return v.properties ?
-      `<details class="schema-item"><summary><b>${k}</b><span class="schema-type">${v.type}</span>${req?"<span class='schema-required'>required</span>":""}</summary><div class="schema-box">${renderSchema(v)}</div></details>` :
-      `<div class="schema-item">• <b>${k}</b><span class="schema-type">${v.type}</span>${req?"<span class='schema-required'>required</span>":""}${v.description?`<span class="schema-desc">${v.description}</span>`:""}</div>`;
-  }).join("");
-}
+      </details>`
+    }
 
-/* ——— 侧边栏跳转 ——— */
-function jump(p){
-  document.querySelectorAll("details").forEach(el=>{
-    if(el.innerText.includes(p)){ el.open=true; el.scrollIntoView({behavior:"smooth"}); }
-  })
-}
+    function renderParams(p){
+      if(!p) return ""
+      return `
+        <h3>🔧 Parameters</h3>
+        <pre>${
+          p.map(x=>
+            `${x.name} (${x.in||"query"}) → ${x.schema?.type||"any"} ${
+              x.required?"[required]":""
+            }`
+          ).join("\n")
+        }</pre>`
+    }
 
-/* ——— 搜索过滤 ——— */
-document.getElementById("search").oninput=function(){
-  const k=this.value.toLowerCase();
-  document.querySelectorAll(".api-item").forEach(i=>{
-    i.style.display=i.innerText.toLowerCase().includes(k)?"":"none";
-  })
-}
+    function mock(s){
+      if(s.example) return s.example
+      if(s.properties){
+        let o={};for(const k in s.properties) o[k]=mock(s.properties[k]);return o;
+      }
+      return s.type==="integer"?1:
+            s.type==="number"?1.23:
+            s.type==="boolean"?true:
+            s.type==="array"?[mock(s.items)]: "string"
+    }
+
+    function renderSchema(s){
+      if(!s?.properties) return "<i>No Schema</i>"
+
+      return Object.entries(s.properties).map(([k,v])=>{
+        const req=s.required?.includes(k)
+        const info=[
+          v.description?`<span class='schema-desc'>${v.description}</span>`:"",
+          v.enum?`<span style='opacity:.6;font-size:12px'>enum: [${v.enum.join(", ")}]</span>`:"",
+          v.default!==undefined?`<span style='opacity:.6;font-size:12px'>default: ${v.default}</span>`:"",
+          v.format?`<span style='opacity:.6;font-size:12px'>format: ${v.format}</span>`:"",
+        ].join(" ")
+
+        return v.properties?
+          `<details class="schema-item"><summary><b>${k}</b>
+            <span class="schema-type">${v.type}</span>${req?"<span class='schema-required'>required</span>":""} ${info}
+          </summary><div class="schema-box">${renderSchema(v)}</div></details>`
+          :
+          `<div class="schema-item">• <b>${k}</b><span class="schema-type">${v.type}</span>${req?"<span class='schema-required'>required</span>":""} ${info}</div>`
+      }).join("")
+    }
+
+    function jump(p){
+      document.querySelectorAll("details").forEach(el=>{
+        if(el.innerText.includes(p)){el.open=true;el.scrollIntoView({behavior:"smooth"})}
+      })
+    }
+
+    document.getElementById("search").oninput=function(){
+      const k=this.value.toLowerCase()
+      document.querySelectorAll(".api-item").forEach(i=>{
+        i.style.display=i.innerText.toLowerCase().includes(k)?"":"none"
+      })
+    }
 </script>
 </body>
 </html>
