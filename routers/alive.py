@@ -18,7 +18,8 @@ alive_router = APIRouter(tags=["Alive"])
 @alive_router.get(
     path="/",
     response_class=HTMLResponse,
-    operation_id="index_get"
+    operation_id="index_get",
+    include_in_schema=False
 )
 async def index_get():
     """首页 - 健康检查/存活检查"""
@@ -159,17 +160,20 @@ async def index_get():
 
 @alive_router.head(
     path="/",
-    operation_id="index_head"
+    operation_id="index_head",
+    include_in_schema=False
 )
 async def index_head():
     """HEAD请求 - 无Body用于存活检测"""
+
     return ""
 
 
 @alive_router.get(
     path="/status",
     response_class=HTMLResponse,
-    operation_id="status"
+    operation_id="status",
+    include_in_schema=False
 )
 async def status():
     """状态展示页面"""
