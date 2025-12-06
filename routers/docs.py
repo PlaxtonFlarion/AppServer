@@ -33,33 +33,72 @@ async def docs() -> "HTMLResponse":
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"/>
 
     <style>
-    /* ————— CSS 和主题不变，省略头部同上 ————— */
     :root {{
       --bg:#0e0e0f; --fg:#f1f1f1; --panel:#171717; --border:#333; --code:#0e1117;
-      --ok:#28d07a; --err:#ff5566;
+      --accent:#00e0ff; --sub:#9c9c9c;
     }}
     .light {{
       --bg:#fafafa; --fg:#000; --panel:#fff; --border:#ddd; --code:#f6f8fa;
     }}
-    /* 样式同你已有版，这里省略，只添加以下新增样式 */
 
-    .trybox {{
+    body {{
+      margin:0; display:flex; font-family:Inter,system-ui,sans-serif;
+      background:var(--bg); color:var(--fg); transition:.2s;
+    }}
+
+    .sidebar {{
+      width:260px; background:var(--panel); height:100vh;
+      border-right:1px solid var(--border); padding:22px; overflow-y:auto; position:fixed;
+    }}
+    .logo img {{height:26px;border-radius:6px;}}
+    .logo {{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;margin-bottom:25px;}}
+
+    input#search {{
+      width:100%;padding:8px;border-radius:6px;margin-bottom:18px;
+      background:var(--bg);color:var(--fg);border:1px solid var(--border);
+    }}
+
+    .section-title {{opacity:.65;font-size:12px;margin-top:20px;margin-bottom:6px;font-weight:700;letter-spacing:.5px}}
+    .api-item {{cursor:pointer;padding:7px;border-radius:6px;font-size:14px;}}
+    .api-item:hover {{ background:rgba(255,255,255,.10); }}
+    .method {{
+      font-weight:700;color:var(--accent);text-transform:uppercase;font-size:11px;margin-right:6px;
+    }}
+
+    .content {{
+      margin-left:260px;width:calc(100vw - 260px);
+      padding:45px 55px;
+    }}
+    h1 {{
+      font-size:36px;
+      background:linear-gradient(to right,#00e0ff,#00ffa6);
+      -webkit-background-clip:text;
+      color:transparent;font-weight:900;margin-top:0;
+    }}
+    .sub-title {{opacity:.65;margin-top:-10px;font-size:15px;margin-bottom:30px;}}
+
+    details {{
       background:var(--panel);border:1px solid var(--border);
-      padding:14px;border-radius:8px;margin-top:16px;
+      padding:18px 22px;border-radius:8px;margin-bottom:18px;
     }}
-    .trybox input,textarea {{
-      width:100%;margin-top:8px;padding:8px;border-radius:6px;
-      border:1px solid var(--border);background:var(--bg);color:var(--fg);
+    details summary {{cursor:pointer;font-weight:700;font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:8px}}
+    details summary:hover {{opacity:.85}}
+
+    pre {{
+      background:var(--code);padding:12px;border-radius:6px;font-size:13px;
+      overflow:auto;color:#bfbfbf;margin-bottom:12px;
     }}
-    .trybtn {{
-      background:#00e0ff;color:#000;padding:6px 12px;border-radius:6px;
-      cursor:pointer;margin-top:10px;display:inline-block;
+
+    .schema-box{{padding-left:12px;border-left:3px solid var(--accent);margin-top:10px;margin-bottom:18px;}}
+    .schema-item {{margin-left:12px;font-size:13px;padding:2px 0}}
+    .schema-type {{color:var(--accent);margin-left:6px}}
+    .schema-required {{color:#ff4f4f;font-weight:700;margin-left:6px;font-size:11px}}
+    .schema-desc{{opacity:.7;margin-left:8px}}
+
+    .btn-theme {{
+      position:fixed;right:20px;top:18px;padding:6px 12px;border-radius:6px;
+      cursor:pointer;background:var(--panel);border:1px solid var(--border);
     }}
-    .resultBox {{
-      background:var(--code);padding:12px;margin-top:10px;border-radius:6px;
-      color:#c7c7c7;white-space:pre-wrap;overflow:auto;
-    }}
-    .badge{{font-size:11px;padding:1px 4px;border-radius:3px}}
     </style>
     </head>
 
@@ -73,133 +112,103 @@ async def docs() -> "HTMLResponse":
 
     <div class="content">
       <h1>{title}</h1>
-      <p style="opacity:.7;margin-top:-8px;">API Reference with Schema & Try</p>
+      <div class="sub-title">🔗 API Reference · Schemas · Examples</div>
       <div id="api"></div>
     </div>
 
     <div id="theme" class="btn-theme">🌙 Dark</div>
 
     <script>
-    const URL_OPENAPI = "{openapi_url}";
+    const URL = "{openapi_url}";
+    let theme = localStorage.theme || "dark";
+    applyTheme();
+    document.getElementById("theme").onclick = () => {{theme=theme==="dark"?"light":"dark";localStorage.theme=theme;applyTheme();}};
+    function applyTheme(){{document.body.classList.toggle("light",theme==="light");document.getElementById("theme").innerText=theme==="light"?"🌞 Light":"🌙 Dark";}}
 
-    let spec = null;
-    fetch(URL_OPENAPI).then(r=>r.json()).then(s=>{{spec=s; renderAPI();}});
+    fetch(URL).then(r=>r.json()).then(render);
 
-    function renderAPI(){{
-      const paths = spec.paths;
-      let groups = {{}};
-
-      Object.entries(paths).forEach(([path,methodMap]) => {{
-        Object.entries(methodMap).forEach(([method,meta]) => {{
-          const tag = meta.tags?meta.tags[0]:"Others";
+    function render(spec){{
+      let groups={{}};
+      Object.entries(spec.paths).forEach(([path,methods])=>{{
+        Object.entries(methods).forEach(([method,meta])=>{{
+          const tag=meta.tags?meta.tags[0]:"Others";
           (groups[tag]=groups[tag]||[]).push({{path,method,meta}});
         }});
       }});
 
-      // 左侧菜单
-      let menu="";
-      for(const tag in groups){{
-        menu+=`<div class="section-title">${{tag}}</div>`;
-        groups[tag].forEach(ep=>{{
-          menu+=`<div class="api-item" onclick="scrollToAPI('${{ep.path}}')">
-            <span class="method">${{ep.method}}</span> ${{ep.path}}
-          </div>`;
-        }});
-      }}
-      document.querySelector("#menu").innerHTML=menu;
+      let menu="";for(const tag in groups){{menu+=`<div class='section-title'>${{tag}}</div>`;groups[tag].forEach(ep=>{{menu+=`<div class='api-item' onclick="jump('${{ep.path}}')"><span class='method'>${{ep.method}}</span>${{ep.path}}</div>`}});}}
+      document.getElementById("menu").innerHTML=menu;
 
-      // 主文档
       let html="";
       for(const tag in groups){{
-        html+=`<h2 style="margin:35px 0 15px">${{tag}}</h2>`;
-        groups[tag].forEach(ep=>{{
-          const req = ep.meta.requestBody?.content?.["application/json"]?.schema;
-          const res = ep.meta.responses?.["200"]?.content?.["application/json"]?.schema;
-
-          html+=`
-          <details>
-            <summary>${{ep.method.toUpperCase()}} <b>${{ep.path}}</b></summary>
-            <p style="opacity:.7;margin:6px 0 12px">${{ep.meta.summary || "No description"}}</p>
-
-            ${{
-              req?`<b>📥 Request Body Schema</b><pre>${{formatSchema(req)}}</pre>`:""
-            }}
-            ${{
-              res?`<b>📤 Response Schema</b><pre>${{formatSchema(res)}}</pre>`:""
-            }}
-
-            ${{
-              req?`<b>📝 Request Example</b><pre>${{genExample(req)}}</pre>`:""
-            }}
-            ${{
-              res?`<b>📦 Response Example</b><pre>${{genExample(res)}}</pre>`:""
-            }}
-
-            <div class="trybox">
-              <b>⚡ Try It</b>
-              <textarea id="body-${{hash(ep)}}" placeholder="JSON Body (optional)"></textarea>
-              <input id="token-${{hash(ep)}}" placeholder="Authorization Bearer (optional)"/>
-              <div class="trybtn" onclick="send('${{ep.method}}','${{ep.path}}','${{hash(ep)}}')">Send Request →</div>
-              <pre class="resultBox" id="result-${{hash(ep)}}">waiting...</pre>
-            </div>
-          </details>
-          `;
-        }});
+        html+=`<h2 style='margin:35px 0 15px;font-size:22px;'>${{tag}}</h2>`;
+        groups[tag].forEach(ep=>{{html+=renderAPI(ep);}});
       }}
-      document.querySelector("#api").innerHTML=html;
+      document.getElementById("api").innerHTML=html;
     }}
 
-    // ============ UTILS ============
+    function renderAPI(ep){{
+      const req=ep.meta.requestBody?.content?.["application/json"]?.schema;
+      const res=ep.meta.responses?.["200"]?.content?.["application/json"]?.schema;
 
-    // JSON example builder
-    function genExample(schema){{
-      if(schema.example) return JSON.stringify(schema.example,null,2);
-      let obj={{}};
-      if(schema.properties){{
-        for(const k in schema.properties){{
-          obj[k]=schema.properties[k].type||"string";
-        }}
+    return `
+    <details>
+      <summary><span class='method'>${{ep.method}}</span> <b>${{ep.path}}</b></summary>
+      <p style="opacity:.75;margin:5px 0 15px;">📄 ${{ep.meta.summary||"No description"}}</p>
+
+      ${{renderParams(ep.meta.parameters) | | ""}}
+      ${{req?("<b>📥 Request Example</b>"+example(req)):""}}
+      ${{res?("<b>📤 Response Example</b>"+example(res)):""}}
+
+      <details style='margin-top:14px;'>
+        <summary>🧬 JSON Schema Structure</summary>
+        <div class='schema-box'>${{schema(req | | res)}}</div>
+      </details>
+    </details>`;
+    }}
+
+    function renderParams(p){{
+      if(!p) return "";
+      return `<b>🔧 Parameters</b>
+      <pre>${{p.map(x=>`${{x.name}} (${{x. in}}) : ${{x.schema?.type}}`).join("\\n")}}</pre>`;
+    }}
+
+    function example(schema){{
+      return `<pre>${{JSON.stringify(mock(schema),null,2)}}</pre>`;
+    }}
+
+    function mock(s){{
+      if(s.example) return s.example;
+      if(s.properties){{
+        let o={{}};for(const k in s.properties)o[k]=mock(s.properties[k]);
+        return o;
       }}
-      return JSON.stringify(obj,null,2);
-    }}
-
-    // Schema text builder
-    function formatSchema(s){{
-      return JSON.stringify(s,null,2);
-    }}
-
-    function hash(ep){{
-      return btoa(ep.path+ep.method).replace(/=/g,"");
-    }}
-
-    // Try request
-    async function send(m,path,id){{
-      let body=document.getElementById("body-"+id).value.trim();
-      let token=document.getElementById("token-"+id).value;
-      let opts={{method:m.toUpperCase(),headers:{{"Content-Type":"application/json"}}}};
-      if(token) opts.headers["Authorization"]="Bearer "+token;
-      if(body) opts.body=body;
-
-      try{{
-        let r=await fetch(path,opts);
-        let text=await r.text();
-        document.getElementById("result-"+id).innerText=`Status: ${{r.status}}
-    ${{text}}`;
-      }}catch(e){{
-        document.getElementById("result-"+id).innerText="❌ Error: "+e;
+      switch(s.type){{
+        case "integer":return 1;
+        case "number":return 3.14;
+        case "boolean":return true;
+        case "array":return [mock(s.items||{{type:"string"}})];
+        default:return "string";
       }}
     }}
 
-    function scrollToAPI(path){{
-      document.querySelectorAll("details").forEach(el=>{{
-        if(el.innerText.includes(path)){{
-          el.open=true;
-          el.scrollIntoView({{behavior:"smooth"}})
-        }}
-      }});
+    function schema(s){{
+      if(!s||!s.properties) return "<i>No schema</i>";
+      return Object.keys(s.properties).map(k=>{{
+        const v=s.properties[k];
+        const req=(s.required||[]).includes(k);
+        return v.properties
+          ? `<details class='schema-item'><summary><b>${{k}}</b><span class='schema-type'>${{v.type||"object"}}</span>${{req?"<span class='schema-required'>required</span>":""}}</summary><div>${{schema(v)}}</div></details>`
+          : `<div class='schema-item'>• <b>${{k}}</b><span class='schema-type'>${{v.type||"object"}}</span>${{req?"<span class='schema-required'>required</span>":""}}${{v.description?`<span class='schema-desc'>${{v.description}}</span>`:""}}</div>`;
+      }}).join("");
     }}
 
-    // theme toggle 省略，已包含…
+    function jump(path){{document.querySelectorAll("details").forEach(el=>{{if(el.innerText.includes(path)){{el.open=true;el.scrollIntoView({{behavior:"smooth"}})}}}});}}
+
+    document.getElementById("search").oninput=function(){{
+      const k=this.value.toLowerCase();
+      document.querySelectorAll(".api-item").forEach(i=>i.style.display=i.innerText.toLowerCase().includes(k)?"":"none");
+    }};
     </script>
     </body>
     </html>
