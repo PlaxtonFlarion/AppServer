@@ -15,7 +15,11 @@ from services.domain.standard import keepalive
 alive_router = APIRouter(tags=["Alive"])
 
 
-@alive_router.get(path="/", response_class=HTMLResponse, operation_id="index_get")
+@alive_router.get(
+    path="/",
+    response_class=HTMLResponse,
+    operation_id="index_get"
+)
 async def index_get():
     """首页 - 健康检查/存活检查"""
 
@@ -153,13 +157,20 @@ async def index_get():
     return HTMLResponse(content=html)
 
 
-@alive_router.head(path="/", operation_id="index_head")
+@alive_router.head(
+    path="/",
+    operation_id="index_head"
+)
 async def index_head():
     """HEAD请求 - 无Body用于存活检测"""
     return ""
 
 
-@alive_router.get(path="/status", response_class=HTMLResponse)
+@alive_router.get(
+    path="/status",
+    response_class=HTMLResponse,
+    operation_id="status"
+)
 async def status():
     """状态展示页面"""
 
@@ -221,7 +232,10 @@ async def status():
     return HTMLResponse(html)
 
 
-@alive_router.get(path="/keep-render-alive")
+@alive_router.get(
+    path="/keep-render-alive",
+    operation_id="keep_render_alive"
+)
 async def keep_render_alive():
     """
     防 Render 休眠接口。
@@ -232,9 +246,12 @@ async def keep_render_alive():
     return await keepalive.cpu_heavy_work()
 
 
-@alive_router.get(path="/keep-supabase-alive")
+@alive_router.get(
+    path="/keep-supabase-alive",
+    operation_id="keep_supabase_alive"
+)
 async def keep_supabase_alive(
-    request: "Request"
+    request: Request
 ):
     """
     防 Supabase 休眠接口。
@@ -245,7 +262,10 @@ async def keep_supabase_alive(
     return await keepalive.single_query(request)
 
 
-@alive_router.get(path="/keep-modal-alive")
+@alive_router.get(
+    path="/keep-modal-alive",
+    operation_id="keep_modal_alive"
+)
 async def keep_modal_alive(
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),

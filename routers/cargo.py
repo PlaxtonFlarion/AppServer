@@ -17,9 +17,12 @@ from services.domain.standard import (
 cargo_router = APIRouter(tags=["Cargo"])
 
 
-@cargo_router.get(path="/global-configuration")
+@cargo_router.get(
+    path="/global-configuration",
+    operation_id="global-configuration"
+)
 async def global_configuration(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -33,9 +36,12 @@ async def global_configuration(
     return await configuration.resolve_configuration(request, a, t, n)
 
 
-@cargo_router.get(path="/bootstrap")
+@cargo_router.get(
+    path="/bootstrap",
+    operation_id="application_bootstrap"
+)
 async def application_bootstrap(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -51,9 +57,12 @@ async def application_bootstrap(
     return await bootstrap.resolve_bootstrap(request, a, t, n)
 
 
-@cargo_router.get(path="/proxy-predict")
+@cargo_router.get(
+    path="/proxy-predict",
+    operation_id="proxy-predict"
+)
 async def proxy_predict(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -67,9 +76,12 @@ async def proxy_predict(
     return await predict.resolve_proxy_predict(request, a, t, n)
 
 
-@cargo_router.get(path="/template-meta")
+@cargo_router.get(
+    path="/template-meta",
+    operation_id="template_information"
+)
 async def template_information(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -83,9 +95,12 @@ async def template_information(
     return await download.resolve_stencil_download(request, a, t, n)
 
 
-@cargo_router.get(path="/toolkit-meta")
+@cargo_router.get(
+    path="/toolkit-meta",
+    operation_id="toolkit_information"
+)
 async def toolkit_information(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n"),
@@ -100,9 +115,12 @@ async def toolkit_information(
     return await download.resolve_toolkit_download(request,  a, t, n, platform)
 
 
-@cargo_router.get(path="/model-meta")
+@cargo_router.get(
+    path="/model-meta",
+    operation_id="model_information"
+)
 async def model_information(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -116,7 +134,11 @@ async def model_information(
     return await download.resolve_model_download(request, a, t, n)
 
 
-@cargo_router.get(path="/template-viewer", response_class=PlainTextResponse)
+@cargo_router.get(
+    path="/template-viewer",
+    response_class=PlainTextResponse,
+    operation_id="template-viewer"
+)
 async def template_viewer(
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
@@ -132,7 +154,10 @@ async def template_viewer(
     return await stencil.stencil_viewer(a, t, n, page)
 
 
-@cargo_router.get("/business-case")
+@cargo_router.get(
+    path="/business-case",
+    operation_id="business_case"
+)
 async def business_case(
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),

@@ -15,10 +15,13 @@ from services.domain.self_healing.candidate import heal_element
 healing_router = APIRouter(tags=["Healing"])
 
 
-@healing_router.post(path="/healing")
+@healing_router.post(
+    path="/healing",
+    operation_id="healing"
+)
 async def healing(
-    req: "HealRequest",
-    request: "Request"
+    req: HealRequest,
+    request: Request
 ):
     """
     UI 元素自愈接口

@@ -13,9 +13,12 @@ from services.domain.standard import signature
 permission_router = APIRouter(tags=["Permission"])
 
 
-@permission_router.post(path="/sign")
+@permission_router.post(
+    path="/sign",
+    operation_id="sign"
+)
 async def sign(
-    req: "LicenseRequest"
+    req: LicenseRequest
 ):
     """
     授权签名接口。

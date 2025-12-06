@@ -15,9 +15,12 @@ from schemas.cognitive import SpeechRequest
 speech_router = APIRouter(tags=["Speech"])
 
 
-@speech_router.get(path="/speech-meta")
+@speech_router.get(
+    path="/speech-meta",
+    operation_id="speech_meta"
+)
 async def speech_meta(
-    request: "Request",
+    request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -33,10 +36,13 @@ async def speech_meta(
     )
 
 
-@speech_router.post(path="/speech-voice")
+@speech_router.post(
+    path="/speech-voice",
+    operation_id="speech_voice"
+)
 async def speech_voice(
-    req: "SpeechRequest",
-    request: "Request",
+    req: SpeechRequest,
+    request: Request,
 ):
     """
     合成语音音频文件。

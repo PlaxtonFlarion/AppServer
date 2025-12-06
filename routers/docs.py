@@ -5,7 +5,6 @@
 # |____/ \___/ \___|___/
 #
 
-from pathlib import Path
 from fastapi import APIRouter
 from fastapi.responses import (
     FileResponse, HTMLResponse
@@ -18,19 +17,15 @@ docs_router = APIRouter(tags=["Docs"])
 
 
 @docs_router.get(path="/openapi.json", include_in_schema=False)
-async def openapi_file() -> "FileResponse":
+async def openapi_file() -> FileResponse:
     return FileResponse(path="openapi.json", media_type="application/json")
 
 
 @docs_router.get(path="/docs", include_in_schema=False)
-async def docs() -> "HTMLResponse":
+async def docs() -> HTMLResponse:
     html = toolset.resolve_template("static", "api_docs.html")
     with open(html, "r", encoding=const.CHARSET) as f:
         html = f.read()
-
-    html = html.replace("{{title}}", "AppServerX API")
-    html = html.replace("{{openapi_url}}", "/openapi.json")
-    html = html.replace("{{logo}}", "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png")
 
     return HTMLResponse(html)
 
