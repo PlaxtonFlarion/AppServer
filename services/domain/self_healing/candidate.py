@@ -17,7 +17,7 @@ from schemas.cognitive import (
     HealRequest, HealResponse
 )
 from services.domain.standard import signature
-from services.domain.self_healing.parsing import AndroidXmlParser
+from services.domain.self_healing.parsing import AndroidXmlParser, WebDomParser
 from services.infrastructure.vector.zilliz import Zilliz
 from utils import const
 
@@ -48,11 +48,21 @@ async def post_rerank(query: str, candidate: list) -> dict:
         return resp.json()
 
 
-async def heal_element(req: "HealRequest", request: "Request") -> typing.Union["HealResponse", "JSONResponse"]:
+async def heal_element(
+    req: "HealRequest",
+    request: "Request"
+) -> typing.Union["HealResponse", "JSONResponse"]:
+
     store: "Zilliz" = request.app.state.store
 
-    logger.info(f"解析节点")
-    node_list = AndroidXmlParser.parse(req.page_dump)
+    # 根据平台选择不同解析器，返回 ElementNode 列表
+    logger.info(f"解析节点: {(app_platform := req.platform.strip().lower())}")
+    match app_platform:
+        case "android": node_list = AndroidXmlParser.parse(req.page_dump)
+        case "web": node_list = WebDomParser.parse(req.page_dump)
+        # 视情况扩展 iOS / 其他
+        case _: raise ValueError(f"Unsupported platform: {req.platform}")
+
     desc_list = [n.ensure_desc() for n in node_list]
 
     logger.info(f"向量生成")
