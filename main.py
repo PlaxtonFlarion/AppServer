@@ -26,13 +26,13 @@ app: "FastAPI" = FastAPI(
 
 toolset.init_logger()
 
-app.state.cache      = UpStash()
-app.state.azure      = Azure()
-app.state.llm_groq   = LLMGroq()
-app.state.r2_storage = R2Storage()
-app.state.store      = Zilliz()
+app.state.cache    = UpStash()
+app.state.azure    = Azure()
+app.state.llm_groq = LLMGroq()
+app.state.r2       = R2Storage()
+app.state.store    = Zilliz()
 
-app.state.r2_storage.upload_openapi(app)
+app.state.r2.upload_openapi(app)
 
 register_middlewares(app)
 register_routers(app)

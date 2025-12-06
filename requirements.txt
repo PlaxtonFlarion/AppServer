@@ -34,6 +34,7 @@ lxml                 ==6.0.2        # 读取并理解 HTML 或 XML 文件内容
 loguru               ==0.7.3        # 高级日志记录工具
 cryptography         ==44.0.3       # 加密与签名支持（RSA、AES 等）
 Faker                ==37.3.0       # 虚拟测试数据生成器
+setuptools            <81           # 避免 pkg_resources 废弃问题（Milvus 相关警告来源）
 
 
 # ================================

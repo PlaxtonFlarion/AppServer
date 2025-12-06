@@ -1,23 +1,29 @@
 from loguru import logger
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
-from services.infrastructure.storage import r2_storage
+from services.infrastructure.storage.r2_storage import R2Storage
 
 docs_router = APIRouter(tags=["Docs"])
 
 
 @docs_router.get(path="/docs", include_in_schema=False)
-async def swagger_docs() -> "HTMLResponse":
+async def swagger_docs(request: "Request") -> "HTMLResponse":
     title = "AppServerX API Console"
     logo  = "https://your-cdn/logo.png"
 
     light_theme = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-material.css"
     dark_theme  = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-monokai.css"
 
-    r2_swagger_key = "docs/swagger/openapi.json"
-    doc_url        = f"{r2_storage.r2_public_url}/{r2_swagger_key}"
+    r2_key   = "docs/swagger/openapi.json"
+    filename = "openapi.json"
 
-    logger.warning(f"{title} - {doc_url}")
+    r2: "R2Storage" = request.app.state.r2
+
+    signed_url = r2.signed_url_for_stream(
+        key=r2_key, expires_in=3600, disposition_filename=filename
+    )
+
+    logger.warning(f"{title} - {signed_url}")
 
     html = f"""
     <!DOCTYPE html>
@@ -96,7 +102,7 @@ async def swagger_docs() -> "HTMLResponse":
 
     //===== Swagger Init =====
     SwaggerUIBundle({{
-        url: "{doc_url}",
+        url: "{signed_url}",
         dom_id: '#swagger-ui',
         deepLinking: true,
         displayRequestDuration:true,

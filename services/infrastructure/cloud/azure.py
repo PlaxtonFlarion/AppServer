@@ -58,8 +58,8 @@ class Azure(object):
             f"{req.voice}|{req.speak}".encode(const.CHARSET)
         ).hexdigest()
 
-        cache: "UpStash"        = request.app.state.cache
-        r2_storage: "R2Storage" = request.app.state.r2_storage
+        cache: "UpStash" = request.app.state.cache
+        r2: "R2Storage"  = request.app.state.r2
 
         # 👉 优先读取 Redis（只存储对象 Key）
         if cached := await cache.redis_get(cache_key):
@@ -67,7 +67,7 @@ class Azure(object):
             r2_key   = cached["key"]
             filename = f"speech.{req.waver}"
 
-            signed_url = r2_storage.signed_url_for_stream(
+            signed_url = r2.signed_url_for_stream(
                 key=r2_key, expires_in=3600, disposition_filename=filename
             )
             logger.info(f"下发缓存签名 URL -> {signed_url}")
@@ -78,11 +78,11 @@ class Azure(object):
         filename = f"speech.{req.waver}"
 
         # 👉 如果 Cloudflare R2 已存在，生成签名 URL
-        if r2_storage.file_exists(r2_key):
+        if r2.file_exists(r2_key):
             await cache.redis_set(cache_key, json.dumps({"key": r2_key}), ex=86400)
             logger.info(f"Redis cache -> {r2_key}")
 
-            signed_url = r2_storage.signed_url_for_stream(
+            signed_url = r2.signed_url_for_stream(
                 key=r2_key, expires_in=3600, disposition_filename=filename
             )
             logger.info(f"下发 R2 签名 URL -> {signed_url}")
@@ -139,7 +139,7 @@ class Azure(object):
             media_type  = cfg["mime"]
 
             # 👉 上传至 Cloudflare R2
-            r2_storage.upload_file(
+            r2.upload_file(
                 key=r2_key,
                 content=audio_bytes,
                 content_type=media_type,
@@ -151,7 +151,7 @@ class Azure(object):
             logger.info(f"Redis cache -> {r2_key}")
 
             # 👉 生成签名 URL（每次请求都重新生成）
-            signed_url = r2_storage.signed_url_for_stream(
+            signed_url = r2.signed_url_for_stream(
                 key=r2_key, expires_in=3600, disposition_filename=filename
             )
 

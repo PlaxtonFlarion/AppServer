@@ -37,6 +37,9 @@ r2_public_url = env[const.R2_PUBLIC_URL]
 class R2Storage(object):
 
     def __init__(self):
+        self.r2_bucket_url = r2_bucket_url
+        self.r2_public_url = r2_public_url
+
         self.r2_client = boto3.client(
             "s3",
             endpoint_url=r2_bucket_url,
@@ -58,7 +61,6 @@ class R2Storage(object):
         """
         extra = {
             "ContentType"        : content_type,
-            "ACL"                : "public-read",
             "ContentDisposition" : f'inline; filename="{disposition_filename}"'
         }
 
