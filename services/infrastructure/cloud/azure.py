@@ -13,8 +13,8 @@ from loguru import logger
 from fastapi import Request
 from schemas.cognitive import SpeechRequest
 from services.domain.standard import signature
-from services.infrastructure.cache.redis_cache import RedisCache
-from services.infrastructure.storage import r2_storage
+from services.infrastructure.cache.upstash import UpStash
+from services.infrastructure.storage.r2_storage import R2Storage
 from utils import (
     const, toolset
 )
@@ -26,15 +26,16 @@ env = toolset.current_env(
 azure_tts_url = env[const.AZURE_TTS_URL]
 azure_tts_key = env[const.AZURE_TTS_KEY]
 
-HEADERS = {
-    "User-Agent"                : "AzureTTSClient",
-    "Content-Type"              : "application/ssml+xml",
-    "X-Microsoft-OutputFormat"  : "audio-16khz-128kbitrate-mono-mp3",
-    "Ocp-Apim-Subscription-Key" : azure_tts_key
-}
 
+class Azure(object):
 
-class SpeechEngine(object):
+    def __init__(self):
+        self.headers = {
+            "User-Agent"                : "AzureTTSClient",
+            "Content-Type"              : "application/ssml+xml",
+            "X-Microsoft-OutputFormat"  : "audio-16khz-128kbitrate-mono-mp3",
+            "Ocp-Apim-Subscription-Key" : azure_tts_key
+        }
 
     @staticmethod
     async def tts_meta(a: str, t: int, n: str) -> dict:
@@ -50,16 +51,17 @@ class SpeechEngine(object):
 
         return signed_data
 
-    @staticmethod
-    async def tts_audio(req: "SpeechRequest", request: "Request") -> "typing.Any":
+    async def tts_audio(self, req: "SpeechRequest", request: "Request") -> "typing.Any":
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(
             f"{req.voice}|{req.speak}".encode(const.CHARSET)
         ).hexdigest()
 
+        cache: "UpStash"        = request.app.state.cache
+        r2_storage: "R2Storage" = request.app.state.r2_storage
+
         # 👉 优先读取 Redis（只存储对象 Key）
-        cache: "RedisCache" = request.app.state.cache
         if cached := await cache.redis_get(cache_key):
             cached   = json.loads(cached)
             r2_key   = cached["key"]
@@ -72,7 +74,7 @@ class SpeechEngine(object):
             return {"url": signed_url}
 
         # 👉 构建 R2 Key 和文件名
-        r2_key = f"speech-cache/{cache_key}.{req.waver}"
+        r2_key   = f"speech-cache/{cache_key}.{req.waver}"
         filename = f"speech.{req.waver}"
 
         # 👉 如果 Cloudflare R2 已存在，生成签名 URL
@@ -125,10 +127,10 @@ class SpeechEngine(object):
             }
         }
 
-        cfg = waver_map.get(req.waver.lower(), waver_map["mp3"])
-        HEADERS["X-Microsoft-OutputFormat"] = cfg["waver"]
+        cfg     = waver_map.get(req.waver.lower(), waver_map["mp3"])
+        headers = self.headers.copy() | {"X-Microsoft-OutputFormat": cfg["waver"]}
 
-        async with httpx.AsyncClient(headers=HEADERS, timeout=10) as client:
+        async with httpx.AsyncClient(headers=headers, timeout=10) as client:
             resp = await client.request("POST", azure_tts_url, content=ssml.encode(const.CHARSET))
             resp.raise_for_status()
 

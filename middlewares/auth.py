@@ -18,8 +18,15 @@ async def jwt_auth_middleware(
 ) -> "typing.Any":
     """鉴权中间件"""
 
+    # Notes: ==== 白名单 ====
     if request.url.path in {
-        "/", "/status", "/keep-render-alive", "/keep-supabase-alive", "/keep-modal-alive", "/healing"
+        "/",
+        "/status",
+        "/docs",
+        "/keep-render-alive",
+        "/keep-supabase-alive",
+        "/keep-modal-alive",
+        "/healing"
     }: return await call_next(request)
 
     x_app_id      = request.headers.get("X-App-ID")

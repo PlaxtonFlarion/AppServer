@@ -9,8 +9,8 @@ import json
 from loguru import logger
 from fastapi import Request
 from services.domain.standard import signature
-from services.infrastructure.cache.redis_cache import RedisCache
-from services.infrastructure.storage import r2_storage
+from services.infrastructure.cache.upstash import UpStash
+from services.infrastructure.storage.r2_storage import R2Storage
 from utils import const
 
 
@@ -30,7 +30,7 @@ async def resolve_stencil_download(
 
     ttl = 86400
 
-    cache: "RedisCache" = request.app.state.cache
+    cache: "UpStash" = request.app.state.cache
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模版元信息 -> {cache_key}")
         license_info = json.loads(cached)
@@ -106,7 +106,9 @@ async def resolve_toolkit_download(
 
     ttl = 86400
 
-    cache: "RedisCache" = request.app.state.cache
+    cache: "UpStash"        = request.app.state.cache
+    r2_storage: "R2Storage" = request.app.state.r2_storage
+
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存工具元信息 -> {cache_key}")
         license_info = json.loads(cached)
@@ -232,7 +234,9 @@ async def resolve_model_download(
     faint_model = "Keras_Gray_W256_H256"
     color_model = "Keras_Hued_W256_H256"
 
-    cache: "RedisCache" = request.app.state.cache
+    cache: "UpStash"        = request.app.state.cache
+    r2_storage: "R2Storage" = request.app.state.r2_storage
+
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
         license_info = json.loads(cached)

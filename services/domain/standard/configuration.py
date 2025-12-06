@@ -10,7 +10,7 @@ import json
 from loguru import logger
 from fastapi import Request
 from services.domain.standard import signature
-from services.infrastructure.cache.redis_cache import RedisCache
+from services.infrastructure.cache.upstash import UpStash
 from utils import (
     const, toolset
 )
@@ -30,7 +30,7 @@ async def resolve_configuration(
 
     cache_key = f"Global Config:{app_desc}"
 
-    cache: "RedisCache" = request.app.state.cache
+    cache: "UpStash" = request.app.state.cache
     if cached := await cache.redis_get(cache_key):
         logger.info(f"下发缓存全局配置 -> {cache_key}")
         return json.loads(cached)

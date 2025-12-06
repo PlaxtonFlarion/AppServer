@@ -7,17 +7,29 @@
 
 from fastapi import FastAPI
 
-from services.infrastructure.cache.redis_cache import RedisCache
-from services.infrastructure.vector.zilliz     import ZillizStore
+from services.infrastructure.cache.upstash      import UpStash
+from services.infrastructure.cloud.azure        import Azure
+from services.infrastructure.llm.llm_groq       import LLMGroq
+from services.infrastructure.storage.r2_storage import R2Storage
+from services.infrastructure.vector.zilliz      import Zilliz
 
 from utils       import toolset
 from middlewares import register_middlewares
 from routers     import register_routers
 
 
-app = FastAPI()
-app.state.cache = RedisCache()
-app.state.store = ZillizStore()
+app: "FastAPI" = FastAPI(
+    title="AppServerX",
+    description="AppServerX Application Server",
+    version="1.0.0"
+)
+app.state.cache      = UpStash()
+app.state.azure      = Azure()
+app.state.llm_groq   = LLMGroq()
+app.state.r2_storage = R2Storage()
+app.state.store      = Zilliz()
+
+app.state.r2_storage.upload_openapi(app)
 
 toolset.init_logger()
 

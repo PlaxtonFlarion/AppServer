@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from .alive      import alive_router
 from .cargo      import cargo_router
+from .docs       import docs_router
 from .healing    import healing_router
 from .permission import permission_router
 from .speech     import speech_router
@@ -17,6 +18,7 @@ from .speech     import speech_router
 def register_routers(app: "FastAPI") -> None:
     app.include_router(alive_router       )
     app.include_router(cargo_router       )
+    app.include_router(docs_router        )
     app.include_router(healing_router     )
     app.include_router(permission_router  )
     app.include_router(speech_router      )

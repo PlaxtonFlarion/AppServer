@@ -23,11 +23,6 @@ env = toolset.current_env(
 supabase_url = env[const.SUPABASE_URL]
 supabase_key = env[const.SUPABASE_KEY]
 
-HEADERS = {
-    "apikey"        : supabase_key,
-    "Authorization" : f"Bearer {supabase_key}"
-}
-
 
 class Supabase(object):
 
@@ -37,6 +32,10 @@ class Supabase(object):
         self.table   = table
         self.timeout = 10.0
 
+        self.headers = {
+            "apikey"        : supabase_key,
+            "Authorization" : f"Bearer {supabase_key}"
+        }
         self.params = {
             "app": f"eq.{self.app}", "code": f"eq.{self.code}"
         }
@@ -45,7 +44,7 @@ class Supabase(object):
         url = f"{supabase_url}/rest/v1/{self.table}"
 
         response = httpx.get(
-            url, headers=HEADERS, params=self.params, timeout=self.timeout
+            url, headers=self.headers, params=self.params, timeout=self.timeout
         )
         response.raise_for_status()
 
@@ -55,7 +54,7 @@ class Supabase(object):
         url = f"{supabase_url}/rest/v1/{self.table}"
 
         response = httpx.patch(
-            url, headers=HEADERS, params=self.params, json=json, timeout=self.timeout
+            url, headers=self.headers, params=self.params, json=json, timeout=self.timeout
         )
         response.raise_for_status()
 
@@ -64,7 +63,7 @@ class Supabase(object):
     def mark_code_pending(self) -> bool:
         url     = f"{supabase_url}/rest/v1/{self.table}"
         json    = {"pending": True}
-        headers = HEADERS | {"Prefer": "return=minimal"}
+        headers = self.headers.copy() | {"Prefer": "return=minimal"}
 
         response = httpx.patch(
             url, headers=headers, params=self.params, json=json, timeout=self.timeout
@@ -76,7 +75,7 @@ class Supabase(object):
     def wash_code_pending(self) -> bool:
         url     = f"{supabase_url}/rest/v1/{self.table}"
         json    = {"pending": False}
-        headers = HEADERS | {"Prefer": "return=minimal"}
+        headers = self.headers.copy() | {"Prefer": "return=minimal"}
 
         response = httpx.patch(
             url, headers=headers, params=self.params, json=json, timeout=self.timeout
@@ -105,7 +104,7 @@ class Supabase(object):
             }
 
             try:
-                response = httpx.post(url, headers=HEADERS, json=json)
+                response = httpx.post(url, headers=self.headers, json=json)
                 response.raise_for_status()
 
             except httpx.HTTPStatusError as e:

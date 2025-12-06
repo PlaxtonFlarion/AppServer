@@ -19,7 +19,7 @@ zilliz_url = env[const.ZILLIZ_URL]
 zilliz_key = env[const.ZILLIZ_KEY]
 
 
-class ZillizStore(object):
+class Zilliz(object):
 
     def __init__(self, name: str = "healer_elements"):
         pymilvus.connections.connect(

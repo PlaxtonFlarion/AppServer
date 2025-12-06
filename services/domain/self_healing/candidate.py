@@ -18,8 +18,7 @@ from schemas.cognitive import (
 )
 from services.domain.standard import signature
 from services.domain.self_healing.parsing import AndroidXmlParser
-from services.infrastructure.vector.zilliz import ZillizStore
-from services.infrastructure.llm.llm_groq import llm_choose_best_candidate
+from services.infrastructure.vector.zilliz import Zilliz
 from utils import const
 
 
@@ -50,7 +49,7 @@ async def post_rerank(query: str, candidate: list) -> dict:
 
 
 async def heal_element(req: "HealRequest", request: "Request") -> typing.Union["HealResponse", "JSONResponse"]:
-    store: "ZillizStore" = request.app.state.store
+    store: "Zilliz" = request.app.state.store
 
     logger.info(f"解析节点")
     node_list = AndroidXmlParser.parse(req.page_dump)
@@ -107,9 +106,11 @@ async def heal_element(req: "HealRequest", request: "Request") -> typing.Union["
     logger.info(f"取 top-3")
     top_candidates = sorted(mapped_candidates, key=lambda x: x["final_score"], reverse=True)[:3]
 
-    decision = await llm_choose_best_candidate(req.old_locator, top_candidates)
-    index    = decision["index"]
-    reason   = decision["reason"]
+    decision = await request.app.state.llm_groq.best_candidate(
+        req.old_locator, top_candidates
+    )
+    index  = decision["index"]
+    reason = decision["reason"]
     logger.info(f"LLM 选择最佳: {decision}")
 
     if index < 0 or index >= len(top_candidates):

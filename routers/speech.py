@@ -11,13 +11,13 @@ from fastapi import (
     APIRouter, Request, Query
 )
 from schemas.cognitive import SpeechRequest
-from services.infrastructure.cloud import azure
 
 speech_router = APIRouter(tags=["Speech"])
 
 
 @speech_router.get(path="/speech-meta")
 async def speech_meta(
+    request: "Request",
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
     n: str = Query(..., alias="n")
@@ -28,7 +28,9 @@ async def speech_meta(
     返回可用的语音格式、语调模型与语言设置。
     """
 
-    return await azure.SpeechEngine.tts_meta(a, t, n)
+    return await request.app.state.azure.tts_meta(
+        a, t, n
+    )
 
 
 @speech_router.post(path="/speech-voice")
@@ -43,7 +45,9 @@ async def speech_voice(
     """
     logger.info(f"voice request: {req}")
 
-    return await azure.SpeechEngine.tts_audio(req, request)
+    return await request.app.state.azure.tts_audio(
+        req, request
+    )
 
 
 if __name__ == '__main__':

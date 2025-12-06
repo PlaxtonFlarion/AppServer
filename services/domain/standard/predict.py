@@ -11,7 +11,7 @@ import base64
 from loguru import logger
 from fastapi import Request
 from services.domain.standard import signature
-from services.infrastructure.cache.redis_cache import RedisCache
+from services.infrastructure.cache.upstash import UpStash
 from utils import const
 
 
@@ -30,7 +30,7 @@ async def resolve_proxy_predict(
     cache_key = f"Predict Server:{app_desc}"
     infer_key = f"Predict:{app_desc}"
 
-    cache: "RedisCache" = request.app.state.cache
+    cache: "UpStash" = request.app.state.cache
 
     infer_data = await cache.redis_get(infer_key)
     current    = infer_data.get("available", False) if infer_data else False

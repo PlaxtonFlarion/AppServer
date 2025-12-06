@@ -25,18 +25,20 @@ env = toolset.current_env(
 groq_llm_key = env[const.GROQ_LLM_KEY]
 
 
-async def llm_choose_best_candidate(old_locator: "Locator", candidates: list[dict]) -> dict:
-    if not candidates: return {"index": -1, "reason": "没有候选元素。"}
+class LLMGroq(object):
 
-    groq_llm_model = "llama-3.1-8b-instant"
+    def __init__(self):
+        self.llm_groq_client = Groq(api_key=groq_llm_key)
+        self.llm_groq_model  = "llama-3.1-8b-instant"
 
-    client = Groq(api_key=groq_llm_key)
+    async def best_candidate(self, old_locator: "Locator", candidates: list[dict]) -> dict:
+        if not candidates: return {"index": -1, "reason": "没有候选元素。"}
 
-    cand_desc = ""
-    for i, c in enumerate(candidates):
-        cand_desc += f"[{i}]\nscore={c['final_score']:.4f}\ntext={c['text']}\n"
+        cand_desc = ""
+        for i, c in enumerate(candidates):
+            cand_desc += f"[{i}]\nscore={c['final_score']:.4f}\ntext={c['text']}\n"
 
-    prompt = f"""
+        prompt = f"""
 你是自动化测试中的元素自愈专家。
 
 旧定位：
@@ -53,37 +55,37 @@ async def llm_choose_best_candidate(old_locator: "Locator", candidates: list[dic
 }}
 """
 
-    logger.info(prompt)
+        logger.info(prompt)
 
-    resp = await asyncio.to_thread(
-        client.chat.completions.create,
-        model=groq_llm_model,
-        messages=[
-            ChatCompletionSystemMessageParam(
-                role="system",
-                content="你是一个严谨的 UI 元素自愈模型，只返回 JSON。"
-            ),
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=prompt
-            )
-        ],
-        temperature=0.1
-    )
+        resp = await asyncio.to_thread(
+            self.llm_groq_client.chat.completions.create,
+            model=self.llm_groq_model,
+            messages=[
+                ChatCompletionSystemMessageParam(
+                    role="system",
+                    content="你是一个严谨的 UI 元素自愈模型，只返回 JSON。"
+                ),
+                ChatCompletionUserMessageParam(
+                    role="user",
+                    content=prompt
+                )
+            ],
+            temperature=0.1
+        )
 
-    content = resp.choices[0].message.content.strip()
+        content = resp.choices[0].message.content.strip()
 
-    try:
-        data = json.loads(content)
-        return {
-            "index"  : int(data.get("index", -1)),
-            "reason" : data.get("reason", "")
-        }
-    except (AttributeError, TypeError, json.JSONDecodeError):
-        return {
-            "index"  : 0,
-            "reason" : "解析失败，默认选择第一个"
-        }
+        try:
+            data = json.loads(content)
+            return {
+                "index"  : int(data.get("index", -1)),
+                "reason" : data.get("reason", "")
+            }
+        except (AttributeError, TypeError, json.JSONDecodeError):
+            return {
+                "index"  : 0,
+                "reason" : "解析失败，默认选择第一个"
+            }
 
 
 if __name__ == '__main__':
