@@ -200,7 +200,7 @@ async def resolve_toolkit_download(
     for name, tool in toolkit.items():
         if not (filename := tool.get("filename")):
             continue
-        tool["url"] = await r2_storage.signed_url_for_stream(
+        tool["url"] = r2_storage.signed_url_for_stream(
             key=f"toolkit-store/{app_desc}/{group}/{filename}",
             expires_in=3600,
             disposition_filename=filename
@@ -268,7 +268,7 @@ async def resolve_model_download(
 
     # 每次都重新签名 URL
     for model in license_info["models"].values():
-        model["url"] = await r2_storage.signed_url_for_stream(
+        model["url"] = r2_storage.signed_url_for_stream(
             key=f"model-store/{model['filename']}",
             expires_in=3600,
             disposition_filename=model["filename"]

@@ -10,7 +10,6 @@ import os
 import json
 import boto3
 import typing
-import asyncio
 import zipfile
 from pathlib import Path
 from loguru import logger
@@ -47,7 +46,7 @@ class R2Storage(object):
             region_name="auto"
         )
 
-    async def upload_file(
+    def upload_file(
         self,
         key: str,
         content: bytes,
@@ -62,14 +61,14 @@ class R2Storage(object):
             "ContentDisposition" : f'inline; filename="{disposition_filename}"'
         }
 
-        await asyncio.to_thread(
-            self.r2_client.put_object, Bucket=const.BUCKET, Key=key, Body=content, **extra
+        self.r2_client.put_object(
+            Bucket=const.BUCKET, Key=key, Body=content, **extra
         )
         logger.info(f"R2 上传完成 -> {key}")
 
         return key
 
-    async def signed_url_for_stream(
+    def signed_url_for_stream(
         self,
         key: str,
         expires_in: int,
@@ -78,8 +77,8 @@ class R2Storage(object):
         """
         生成支持播放 + 下载的签名 URL，Content-Disposition 为 inline。
         """
-        signed_url = await asyncio.to_thread(
-            self.r2_client.generate_presigned_url, "get_object",
+        signed_url = self.r2_client.generate_presigned_url(
+            "get_object",
             Params={
                 "Bucket": const.BUCKET,
                 "Key": key,
@@ -91,7 +90,7 @@ class R2Storage(object):
 
         return signed_url
 
-    async def file_exists(
+    def file_exists(
         self,
         key: str
     ) -> typing.Optional[bool]:
@@ -99,16 +98,14 @@ class R2Storage(object):
         检查文件是否已存在于 R2。
         """
         try:
-            await asyncio.to_thread(
-                self.r2_client.head_object, Bucket=const.BUCKET, Key=key
-            )
+            self.r2_client.head_object(Bucket=const.BUCKET, Key=key)
             return True
         except ClientError as e:
             if e.response["Error"]["Code"] == "404":
                 return False
             logger.error(f"R2 检查失败: {e}")
 
-    async def compress_and_upload_folder(
+    def compress_and_upload_folder(
         self,
         folder_path: str,
         r2_prefix: str,
@@ -168,8 +165,7 @@ class R2Storage(object):
             r2_key = f"{r2_prefix.rstrip('/')}/{zip_name}"
 
             logger.info(f"🚀 上传到 R2: {bucket}/{r2_key}")
-            await asyncio.to_thread(
-                self.r2_client.upload_file,
+            self.r2_client.upload_file(
                 Filename=str(zip_path),
                 Bucket=bucket,
                 Key=r2_key,
@@ -190,10 +186,10 @@ class R2Storage(object):
         finally:
             # 清理临时压缩包
             if zip_path.exists():
-                await asyncio.to_thread(os.remove, zip_path)
+                os.remove(zip_path)
                 logger.info(f"🧹 本地压缩文件已清理: {zip_path}")
 
-    async def upload_openapi(self, app: "FastAPI") -> None:
+    def upload_openapi(self, app: "FastAPI") -> None:
         """服务启动时生成最新 Swagger 并上传至 R2"""
 
         r2_swagger_key = "docs/swagger/latest.json"                # 上传路径
@@ -203,7 +199,7 @@ class R2Storage(object):
             title=app.title, version=app.version, routes=app.routes
         )
 
-        await self.upload_file(
+        self.upload_file(
             key=r2_swagger_key,
             content=json.dumps(schema, indent=2).encode(),
             content_type="application/json",
