@@ -192,7 +192,7 @@ class R2Storage(object):
     def upload_openapi(self, app: "FastAPI") -> None:
         """服务启动时生成最新 Swagger 并上传至 R2"""
 
-        r2_swagger_key = "docs/swagger/latest.json"                # 上传路径
+        r2_swagger_key = "docs/swagger/openapi.json"                # 上传路径
         doc_url        = f"{r2_bucket_url}/{r2_swagger_key}"  # 访问路径（Swagger UI 读取）
 
         schema = get_openapi(

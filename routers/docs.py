@@ -14,7 +14,7 @@ async def swagger_docs() -> "HTMLResponse":
     light_theme = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-material.css"
     dark_theme  = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-monokai.css"
 
-    r2_swagger_key = "docs/swagger/latest.json"
+    r2_swagger_key = "docs/swagger/openapi.json"
     doc_url        = f"{r2_storage.r2_bucket_url}/{r2_swagger_key}"
 
     logger.info(f"{title} - {doc_url}")
