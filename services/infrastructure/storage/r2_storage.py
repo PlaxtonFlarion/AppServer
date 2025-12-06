@@ -201,9 +201,6 @@ class R2Storage(object):
             title=app.title, version=app.version, routes=app.routes
         )
 
-        logger.warning(app.routes)
-        logger.warning(schema)
-
         self.upload_file(
             key=r2_key,
             content=json.dumps(schema, indent=2).encode(),

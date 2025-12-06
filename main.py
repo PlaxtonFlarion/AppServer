@@ -26,7 +26,10 @@ from routers     import register_routers
 app: "FastAPI" = FastAPI(
     title="AppServerX",
     description="AppServerX Application Server",
-    version="1.0.0"
+    version="1.0.0",
+    openapi_url=None,
+    docs_url=None,
+    redoc_url=None
 )
 
 toolset.init_logger()

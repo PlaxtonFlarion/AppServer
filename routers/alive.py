@@ -15,7 +15,12 @@ from services.domain.standard import keepalive
 alive_router = APIRouter(tags=["Alive"])
 
 
-@alive_router.api_route(path="/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@alive_router.api_route(
+    path="/",
+    response_class=HTMLResponse,
+    methods=["GET", "HEAD"],
+    operation_id="alive_index"
+)
 async def index():
     """首页"""
 
