@@ -196,8 +196,12 @@ class R2Storage(object):
         doc_url        = f"{r2_bucket_url}/{r2_swagger_key}"  # 访问路径（Swagger UI 读取）
 
         schema = get_openapi(
-            title=app.title, version=app.version, routes=app.routes
+            title=getattr(app, "title", "title"),
+            version=getattr(app, "version", "version"),
+            routes=app.routes
         )
+
+        logger.info(schema)
 
         self.upload_file(
             key=r2_swagger_key,
