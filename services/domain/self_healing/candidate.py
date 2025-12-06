@@ -24,28 +24,26 @@ from utils import const
 
 
 async def post_tensor(text_list: list) -> dict:
-    url       = f"https://plaxtonflarion--embedding-embeddingservice-tensor.modal.run/"
     expire_at = int(time.time()) + random.randint(3600, 86400)
     token     = signature.sign_token("Heal", expire_at)
     headers   = {const.TOKEN_FORMAT: token}
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(headers=headers, timeout=60) as client:
         resp = await client.post(
-            url, headers=headers, json={"texts": text_list}, timeout=60
+            const.MODAL_TENSOR, json={"texts": text_list}
         )
         resp.raise_for_status()
         return resp.json()
 
 
 async def post_rerank(query: str, candidate: list) -> dict:
-    url       = f"https://plaxtonflarion--embedding-embeddingservice-rerank.modal.run/"
     expire_at = int(time.time()) + random.randint(3600, 86400)
     token     = signature.sign_token("Heal", expire_at)
     headers   = {const.TOKEN_FORMAT: token}
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(headers=headers, timeout=60) as client:
         resp = await client.post(
-            url, headers=headers, json={"query": query, "candidate": candidate}, timeout=60
+            const.MODAL_RERANK, json={"query": query, "candidate": candidate}
         )
         resp.raise_for_status()
         return resp.json()

@@ -119,13 +119,11 @@ async def predict_warmup(a: str, t: int, n: str) -> dict:
 
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token(app_desc, expire_at)
-
-    url     = f"https://plaxtonflarion--inference-inferenceservice-service.modal.run/"
-    headers = {const.TOKEN_FORMAT: token}
+    headers   = {const.TOKEN_FORMAT: token}
 
     try:
         async with httpx.AsyncClient(headers=headers, timeout=90) as client:
-            resp = await client.request("GET", url)
+            resp = await client.request("GET", const.MODAL_SERVICE)
             resp.raise_for_status()
 
             logger.info("🟢 Modal online")

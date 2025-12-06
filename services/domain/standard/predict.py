@@ -59,7 +59,7 @@ async def resolve_proxy_predict(
         "auth_header"   : const.TOKEN_FORMAT,
         "token"         : token,
         "method"        : "POST",
-        "url"           : "https://plaxtonflarion--inference-inferenceservice-predict.modal.run",
+        "url"           : const.MODAL_PREDICT,
         "ttl"           : ttl,
         "region"        : x_app_region,
         "version"       : x_app_version,

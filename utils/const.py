@@ -56,6 +56,12 @@ SHARED_SECRET = r"SHARED_SECRET"
 # ---- Notes: 鉴权格式 ----
 TOKEN_FORMAT = r"X-Token"
 
+# ---- Notes: Modal Apps ----
+MODAL_TENSOR  = r"https://plaxtonflarion--apps-embeddingservice-tensor.modal.run"
+MODAL_RERANK  = r"https://plaxtonflarion--apps-embeddingservice-rerank.modal.run"
+MODAL_PREDICT = r"https://plaxtonflarion--apps-inferenceservice-predict.modal.run"
+MODAL_SERVICE = r"https://plaxtonflarion--apps-inferenceservice-service.modal.run"
+
 # ---- Notes: 日志 ----
 SHOW_LEVEL   = r"INFO"
 PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
