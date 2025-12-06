@@ -37,10 +37,10 @@ app.state.llm_groq = LLMGroq()
 app.state.r2       = R2Storage()
 app.state.store    = Zilliz()
 
-app.state.r2.upload_openapi(app)
-
 register_middlewares(app)
 register_routers(app)
+
+app.state.r2.upload_openapi(app)
 
 
 if __name__ == '__main__':
