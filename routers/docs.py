@@ -116,112 +116,94 @@ async def swagger_docs() -> "HTMLResponse":
 
 
 @docs_router.get(path="/custom-docs", include_in_schema=False)
-async def custom_docs() -> "HTMLResponse":
+async def custom_docs():
 
     openapi_url = "/openapi.json"
-    logo = "https://fastapi.tiangolo.com/img/icon-white.svg"
+    logo = "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
 
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <title>AppServerX Developer Console</title>
 
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"/>
-    <link id="theme-css" rel="stylesheet" href="https://unpkg.com/swagger-ui-themes/themes/3.x/theme-material.css">
+    <link id="theme-css" rel="stylesheet" href="https://unpkg.com/swagger-ui-themes/themes/3.x/theme-material.css"/>
 
     <style>
 
+    /* ——— 全局结构 ——— */
     body {{
-      margin:0;
+      margin:0; font-family:Inter, sans-serif;
+      color:var(--fg); background:var(--bg);
+      transition:.25s;
       display:flex;
-      font-family: Inter, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      transition:.25s ease;
     }}
 
-    :root {{
-      --bg:#0e0e0f;
-      --fg:#fff;
-      --panel:#161616;
-      --border:#333;
-    }}
-
-    .loud {{
-      --bg:#fafafa;
-      --fg:#000;
-      --panel:#ffffff;
-      --border:#ddd;
-    }}
+    :root {{ --bg:#0e0e0f; --fg:#fff; --panel:#161616; --border:#333; }}
+    .light{{ --bg:#fafafa; --fg:#000; --panel:#fff; --border:#ddd; }}
 
     .sidebar {{
-      width:250px;
-      background:var(--panel);
+      width:270px; background:var(--panel); height:100vh;
       border-right:1px solid var(--border);
-      height:100vh;
-      padding:20px;
-      overflow-y:auto;
-      position:fixed;
-    }}
-
-    .logo {{
-      display:flex;
-      align-items:center;
-      font-size:20px;
-      gap:8px;
-      font-weight:700;
-      margin-bottom:24px;
-    }}
-
-    .logo img {{ width:28px; border-radius:6px; }}
-
-    .section-title {{
-      opacity:.7;
-      font-size:12px;
-      margin-top:24px;
-      margin-bottom:6px;
-      font-weight:600;
-    }}
-
-    .api-item {{
-      cursor:pointer;
-      padding:6px 4px;
-      border-radius:6px;
-      font-size:14px;
-      margin-bottom:4px;
-    }}
-
-    .api-item:hover {{
-      background:rgba(255,255,255,0.06);
+      padding:20px; overflow-y:auto; position:fixed;
     }}
 
     .content {{
-      margin-left:250px;
-      width:calc(100vw - 250px);
+      margin-left:270px; width:calc(100vw - 270px);
       padding:20px 40px;
     }}
 
-    .top-right {{
-      position:fixed; right:20px; top:20px;
-      display:flex; gap:12px;
+    /* ——— Landing Header ——— */
+    .landing {{
+      padding:60px 10px 40px;
+      text-align:center;
+      border-bottom:1px solid var(--border);
     }}
 
-    .btn {{
-      padding:6px 12px;
-      border-radius:6px;
-      cursor:pointer;
-      font-size:13px;
-      background:var(--panel);
+    .landing h1{{ font-size:32px; margin:0; font-weight:800; }}
+    .landing p{{ opacity:.8; margin-top:10px; max-width:580px;margin:auto; }}
+
+    .landing img{{height:48px;margin-bottom:14px;}}
+
+    .btn-main {{
+      padding:10px 18px; margin-top:22px; margin-right:8px;
+      border-radius:8px; font-weight:600; cursor:pointer;
+      background:#00b4d8; color:#fff; border:none;
+    }}
+
+    .btn-outline {{
+      padding:10px 18px; margin-top:22px;
+      border-radius:8px; font-weight:600; cursor:pointer;
       border:1px solid var(--border);
+      background:var(--panel); color:var(--fg);
     }}
 
-    .swagger-ui .opblock-summary-method {{
-      border-radius:6px;
+    .quickstart {{
+      margin-top:40px; text-align:left; max-width:720px; margin:auto;
     }}
 
-    .swagger-ui .topbar {{ display:none !important; }}
+    pre {{
+      background:#111; padding:14px; overflow-x:auto;
+      border-radius:8px; color:#e0e0e0;
+    }}
+
+    .top-right {{
+      position:fixed; right:20px; top:18px;
+    }}
+    .btn-theme {{ padding:6px 12px; border-radius:6px; cursor:pointer;
+      background:var(--panel); border:1px solid var(--border);
+    }}
+
+    /* Sidebar */
+    .section-title{{opacity:.6;font-size:12px;margin-top:18px;margin-bottom:6px;}}
+    .api-item{{padding:6px;border-radius:6px;cursor:pointer;display:flex;gap:8px}}
+    .api-item:hover{{background:rgba(255,255,255,.06)}}
+    .method{{font-weight:700;color:#00e0ff;text-transform:uppercase;}}
+
+    /* Hide default Swagger topbar */
+    .swagger-ui .topbar {{display:none!important;}}
 
     </style>
 
@@ -229,72 +211,118 @@ async def custom_docs() -> "HTMLResponse":
     <body id="root" class="dark">
 
     <div class="sidebar">
-      <div class="logo">
-        <img src="{logo}"/> AppServerX
+      <div class="logo" style="font-weight:700;font-size:19px;margin-bottom:22px;">
+          <img src="{logo}"/> AppServerX
       </div>
+      <input id="search" placeholder="Search API..."
+          style="width:100%;padding:8px;border-radius:6px;margin-bottom:16px;
+          background:var(--bg);color:var(--fg);border:1px solid var(--border);"/>
 
-      <div class="section-title">API Endpoints</div>
       <div id="menu"></div>
     </div>
 
-    <div class="top-right">
-      <div id="theme-toggle" class="btn">🌙 Dark</div>
+    <!-- ███ Landing Page ███ -->
+    <div class="content">
+
+      <div class="landing">
+         <img src="{logo}"/>
+         <h1>AppServerX API Platform</h1>
+         <p>Automation · Vector AI · Self-Healing · R2 Docs · Cloud Functions</p>
+
+         <button onclick="jumpToAPI()" class="btn-main">📚 View API Reference</button>
+         <button onclick="alert('Work In Progress')" class="btn-outline">🔑 Get API Key</button>
+
+         <div class="quickstart">
+             <h3>⭐ Quickstart</h3>
+
+             <pre># cURL
+    curl -X POST https://api.appserverx.com/healing \\
+    -H "Authorization: Bearer <TOKEN>" \\
+    -d '{{"ui":"button_login"}}'</pre>
+
+             <pre># Python
+    import requests
+    r=requests.post("https://api.appserverx.com/healing",
+      headers={{"Authorization":"Bearer TOKEN"}},
+      json={{"ui":"button_login"}}
+    )
+    print(r.json())</pre>
+
+             <pre>// Node.js
+    await fetch("https://api.appserverx.com/healing",{{
+      method:"POST",
+      headers:{{Authorization:"Bearer TOKEN"}},
+      body:JSON.stringify({{ui:"button_login"}})
+    }})</pre>
+         </div>
+      </div>
+
+      <div style="margin-top:40px" id="swagger-ui"></div>
     </div>
 
-    <div class="content">
-      <div id="swagger-ui"></div>
-    </div>
+    <div class="top-right"><div id="theme-btn" class="btn-theme">🌙 Dark</div></div>
+
 
     <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
 
     <script>
+    const ui=SwaggerUIBundle({{
+       url:"{openapi_url}",
+       dom_id:"#swagger-ui",
+       tryItOutEnabled:true,
+       persistAuthorization:true
+    }})
 
-    const ui = SwaggerUIBundle({{
-        url: "{openapi_url}",
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        layout: "BaseLayout",
-        persistAuthorization:true,
-        tryItOutEnabled:true,
-    }});
+    // Jump to API Reference
+    function jumpToAPI(){{ document.getElementById('swagger-ui').scrollIntoView({{behavior:'smooth'}}) }}
 
-    // build sidebar menu tree from schema
-    ui.getSystem().events.on('loaded', () => {{
-        const paths = ui.getSystem().specSelectors.paths();
+    // Build Sidebar (with tags grouping)
+    setTimeout(function build(){{
+       let spec = ui.getSystem().specSelectors.specJson().toJS()
+       if(!spec.paths) return setTimeout(build,500)
 
-        let menuHTML="";
-        Object.keys(paths.toJS()).forEach(p => {{
-            menuHTML += `<div class='api-item' onclick="scrollToEndpoint('${{p}}')">${{p}}</div>`;
-        }});
-        document.querySelector("#menu").innerHTML = menuHTML;
-    }});
+       let groups={{}}
+       for(let p in spec.paths)
+         for(let m in spec.paths[p]){{
+            let t = spec.paths[p][m].tags?.[0] || "Others"
+            ;(groups[t]=groups[t]||[]).push({{path:p,method:m}})
+         }}
 
-    function scrollToEndpoint(path) {{
-        const el = document.querySelector(`div.opblock-summary[data-path="${{path}}"]`);
-        if(el) el.scrollIntoView({{ behavior:'smooth', block:'start' }});
+       let html=""
+       for(let t in groups){{
+          html+=`<div class='section-title'>${{t}}</div>`
+          groups[t].forEach(ep=>{{
+            html+=`<div class='api-item' onclick="jumpPath('${{ep.path}}')">
+                     <span class='method'>${{ep.method}}</span> ${{ep.path}}
+                   </div>`
+          }})
+       }}
+       document.querySelector("#menu").innerHTML=html
+    }},500)
+
+    function jumpPath(path){{
+      const el=document.querySelector(`[data-path="${{path}}"]`);
+      el?.scrollIntoView({{behavior:"smooth"}});
     }}
 
-    // theme switch
-    const root = document.getElementById("root")
-    const toggle = document.getElementById("theme-toggle")
-    let mode = localStorage.getItem("mode") || "dark";
-
-    function applyTheme() {{
-        if(mode==="loud") {{
-            root.classList.add("loud");
-            toggle.textContent="🌞 Loud";
-        }} else {{
-            root.classList.remove("loud");
-            toggle.textContent="🌙 Dark";
-        }}
-        localStorage.setItem("mode",mode);
+    // Search filter
+    document.getElementById("search").oninput=e=>{{
+      const key=e.target.value.toLowerCase()
+      document.querySelectorAll(".api-item").forEach(i=>{{
+        i.style.display=i.innerText.toLowerCase().includes(key)?"":"none"
+      }})
     }}
 
-    applyTheme();
-
-    toggle.onclick=()=>{{
-        mode = (mode==="dark"?"loud":"dark");
-        applyTheme();
+    // Theme toggle
+    let mode=localStorage.getItem("mode")||"dark"
+    applyTheme()
+    document.getElementById("theme-btn").onclick=()=>{{
+        mode=mode==="dark"?"light":"dark";applyTheme()
+    }}
+    function applyTheme(){{
+      document.getElementById("root").classList.toggle("light",mode==="light")
+      document.getElementById("theme-btn").innerText=mode==="dark"?"🌙 Dark":"🌞 Light"
+      localStorage.setItem("mode",mode)
     }}
 
     </script>

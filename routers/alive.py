@@ -15,9 +15,9 @@ from services.domain.standard import keepalive
 alive_router = APIRouter(tags=["Alive"])
 
 
-@alive_router.get(path="/", response_class=HTMLResponse)
-async def index():
-    """首页"""
+@alive_router.get(path="/", response_class=HTMLResponse, operation_id="index_get")
+async def index_get():
+    """首页 - 健康检查/存活检查"""
 
     title       = f"App Server Status"
     subtitle    = f"App Server is Live"
@@ -151,6 +151,12 @@ async def index():
     """
 
     return HTMLResponse(content=html)
+
+
+@alive_router.head(path="/", operation_id="index_head")
+async def index_head():
+    """HEAD请求 - 无Body用于存活检测"""
+    return ""
 
 
 @alive_router.get(path="/status", response_class=HTMLResponse)
