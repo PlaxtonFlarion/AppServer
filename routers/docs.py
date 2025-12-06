@@ -30,7 +30,6 @@ async def docs() -> "HTMLResponse":
     <head>
     <meta charset="utf-8"/>
     <title>{title}</title>
-
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"/>
 
     <style>
@@ -40,62 +39,57 @@ async def docs() -> "HTMLResponse":
     .light {{
       --bg:#fafafa; --fg:#000; --panel:#fff; --border:#ddd; --code:#f6f8fa;
     }}
-
     body {{
       margin:0; display:flex; font-family:Inter,system-ui,sans-serif;
-      background:var(--bg); color:var(--fg); transition:.25s;
+      background:var(--bg); color:var(--fg);
     }}
-
     .sidebar {{
       width:260px; background:var(--panel); height:100vh;
       border-right:1px solid var(--border);
       padding:22px; overflow-y:auto; position:fixed;
     }}
-
     .content {{
       margin-left:260px; width:calc(100vw - 260px);
       padding:40px 50px;
     }}
-
+    .logo img {{height:26px;border-radius:6px;}}
     .logo {{
-      display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;
+      display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;
       margin-bottom:25px;
     }}
-    .logo img {{height:28px;border-radius:6px;}}
-
     input#search {{
       width:100%;padding:8px;border-radius:6px;margin-bottom:18px;
       background:var(--bg);color:var(--fg);border:1px solid var(--border);
     }}
-
     .section-title {{
       opacity:.65;font-size:12px;margin-top:18px;margin-bottom:6px;font-weight:700;
     }}
     .api-item {{
       cursor:pointer;padding:7px;border-radius:6px;font-size:14px;
-      display:flex;gap:8px;align-items:center;
     }}
     .api-item:hover {{ background:rgba(255,255,255,.07); }}
     .method {{
-      font-weight:700;color:#00e0ff;text-transform:uppercase;font-size:12px;
+      font-weight:700;color:#00e0ff;text-transform:uppercase;font-size:11px;
     }}
 
-    .top-right {{
-      position:fixed;right:20px;top:18px;
-    }}
-    .btn-theme {{
-      padding:6px 12px;border-radius:6px;cursor:pointer;
+    details {{
       background:var(--panel);border:1px solid var(--border);
+      padding:14px 18px;border-radius:6px;margin-bottom:14px;
     }}
-
-    .swagger-ui .topbar {{display:none!important;}}
+    details summary {{
+      cursor:pointer;font-weight:600;font-size:15px;margin-bottom:6px;
+    }}
+    details summary:hover {{opacity:.85}}
 
     pre {{
-      background:var(--code);color:#c7c7c7;padding:14px;border-radius:8px;
-      overflow-x:auto;margin-bottom:20px;font-size:13px;
+      background:var(--code);padding:12px;border-radius:6px;font-size:13px;
+      overflow:auto;color:#c7c7c7;
     }}
-    .block {{margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:22px;}}
 
+    .btn-theme {{
+      position:fixed;right:20px;top:18px;padding:6px 12px;border-radius:6px;
+      cursor:pointer;background:var(--panel);border:1px solid var(--border);
+    }}
     </style>
     </head>
 
@@ -109,52 +103,41 @@ async def docs() -> "HTMLResponse":
 
     <div class="content">
       <h1>{title}</h1>
-      <p style="opacity:.7;margin-top:-8px;">OpenAPI Reference</p>
+      <p style="opacity:.7;margin-top:-8px;">API Reference</p>
       <div id="api"></div>
     </div>
 
-    <div class="top-right"><div id="theme" class="btn-theme">🌙 Dark</div></div>
+    <div id="theme" class="btn-theme">🌙 Dark</div>
 
     <script>
     const URL_OPENAPI = "{openapi_url}";
-    const root = document.getElementById("root");
-
-    // ============ 主题切换 ============
     let mode = localStorage.getItem("theme") || "dark";
     applyTheme();
 
     document.getElementById("theme").onclick = () => {{
-      mode = (mode === "dark" ? "light" : "dark");
+      mode = mode === "dark" ? "light" : "dark";
       localStorage.setItem("theme", mode);
       applyTheme();
     }}
-
     function applyTheme() {{
-      root.classList.toggle("light", mode === "light");
-      document.getElementById("theme").innerText = (mode === "dark" ? "🌙 Dark" : "🌞 Light");
+      document.body.classList.toggle("light", mode === "light");
+      document.getElementById("theme").innerText = mode === "light" ? "🌞 Light" : "🌙 Dark";
     }}
 
-    // ============ 加载 OpenAPI ============
-    fetch(URL_OPENAPI)
-      .then(r => r.json())
-      .then(renderAPI)
-      .catch(() => document.getElementById("api").innerHTML = "<b style='color:red'>❌ openapi.json 加载失败</b>");
+    fetch(URL_OPENAPI).then(r => r.json()).then(renderAPI);
 
     function renderAPI(spec) {{
       const paths = spec.paths;
-      const menu = document.getElementById("menu");
-      const api = document.getElementById("api");
-
       let groups = {{}};
 
       Object.entries(paths).forEach(([path, methods]) => {{
         Object.entries(methods).forEach(([method, meta]) => {{
-          let tag = meta.tags ? meta.tags[0] : "Others";
+          const tag = meta.tags ? meta.tags[0] : "Others";
           (groups[tag] = groups[tag] || []).push({{ path, method, meta }});
         }});
       }});
 
-      // ===== 左侧导航 =====
+      // 左侧导航
       let menuHTML = "";
       for (const tag in groups) {{
         menuHTML += `<div class='section-title'>${{tag}}</div>`;
@@ -164,52 +147,57 @@ async def docs() -> "HTMLResponse":
           </div>`;
         }});
       }}
-      menu.innerHTML = menuHTML;
+      document.getElementById("menu").innerHTML = menuHTML;
 
-      // ===== 文档主体 =====
-      let apiHTML = "";
+      // 主文档（折叠）
+      let html = "";
       for (const tag in groups) {{
-        apiHTML += `<h2 style='margin-top:40px;'>${{tag}}</h2>`;
+        html += `<h2 style='margin-top:40px;'>${{tag}}</h2>`;
         groups[tag].forEach(ep => {{
-          apiHTML += `<div class='block'>
-            <h3>${{ep.method.toUpperCase()}} ${{ep.path}}</h3>
-            <p>${{ep.meta.summary || ""}}</p>
+          html += `
+          <details>
+            <summary>${{ep.method.toUpperCase()}} <b>${{ep.path}}</b></summary>
+            <p style="opacity:.75;margin:8px 0 12px;">${{ep.meta.summary || ""}}</p>
 
-            <pre>curl -X ${{ep.method.toUpperCase()}} \\
-    https://api.appserverx.com${{ep.path}} \\
-    -H "Authorization: Bearer <TOKEN>" \\
-    -d '{{"sample":"value"}}'</pre>
+            ${{
+              ep.meta.parameters
+                ? `<b>📥 Params</b><pre>${{ep.meta.parameters.map(p => `${{p.name}}: ${{p.schema?.type || "any"}}`).join("\\n")}}</pre>`
+                : ""
+            }}
 
-          </div>`;
+            ${{
+              ep.meta.responses
+                ? `<b>📤 Responses</b><pre>${{
+                    Object.entries(ep.meta.responses).map(([code,val]) => `${{code}} → ${{val.description}}`).join("\\n")
+                 }}</pre>`
+                : ""
+            }}
+          </details>`;
         }});
       }}
-      api.innerHTML = apiHTML;
+      document.getElementById("api").innerHTML = html;
     }}
 
-    // ===== 滚动定位 =====
     function jump(path) {{
-      const blocks = document.querySelectorAll(".block");
-      for (const b of blocks) {{
-        if (b.innerText.includes(path)) {{
-          b.scrollIntoView({{ behavior: "smooth" }});
-          return;
+      document.querySelectorAll("details").forEach(el => {{
+        if(el.innerText.includes(path)) {{
+          el.open = true;
+          el.scrollIntoView({{behavior:"smooth",block:"start"}});
         }}
-      }}
+      }});
     }}
 
-    // ===== 搜索 =====
-    const search = document.getElementById("search");
-    search.oninput = () => {{
-      const key = search.value.toLowerCase();
+    document.getElementById("search").oninput = function() {{
+      const key = this.value.toLowerCase();
       document.querySelectorAll(".api-item").forEach(i => {{
         i.style.display = i.innerText.toLowerCase().includes(key) ? "" : "none";
       }});
     }}
     </script>
-
     </body>
     </html>
     """
+
     return HTMLResponse(html)
 
 
