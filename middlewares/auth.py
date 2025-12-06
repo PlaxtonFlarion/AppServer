@@ -10,6 +10,7 @@ from loguru import logger
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from services.domain.standard import signature
+from services.infrastructure.cache.upstash import UpStash
 from utils import const
 
 
@@ -19,7 +20,15 @@ async def jwt_auth_middleware(
 ) -> "typing.Any":
     """鉴权中间件"""
 
-    if request.url.path in const.PUBLIC_PATHS:
+    cache_key = f"WhiteList"
+
+    cache: "UpStash" = request.app.state.cache
+
+    public_paths = cached if (
+        cached := await cache.redis_get(cache_key)
+    ) else const.PUBLIC_PATHS
+
+    if request.url.path in public_paths:
         return await call_next(request)
 
     x_app_id      = request.headers.get("X-App-ID")

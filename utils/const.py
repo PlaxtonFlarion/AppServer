@@ -77,9 +77,7 @@ PUBLIC_PATHS = {
     "/openapi.json",
     "/favicon.ico",
     "/docs",
-    "/redoc",
-    "/custom-docs",
-    "/healing"
+    "/redoc"
 }
 
 
