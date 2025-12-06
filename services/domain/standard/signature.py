@@ -160,7 +160,7 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     return payload
 
 
-def manage_signature(req: "LicenseRequest") -> dict:
+def manage_signature(req: LicenseRequest) -> dict:
     app_name        = req.a.lower().strip()
     app_desc        = req.a
     activation_code = req.code.strip()

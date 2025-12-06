@@ -49,11 +49,11 @@ async def post_rerank(query: str, candidate: list) -> dict:
 
 
 async def heal_element(
-    req: "HealRequest",
-    request: "Request"
-) -> typing.Union["HealResponse", "JSONResponse"]:
+    req: HealRequest,
+    request: Request
+) -> typing.Union[HealResponse, JSONResponse]:
 
-    store: "Zilliz" = request.app.state.store
+    store: Zilliz = request.app.state.store
 
     # 根据平台选择不同解析器，返回 ElementNode 列表
     logger.info(f"解析节点: {(app_platform := req.platform.strip().lower())}")

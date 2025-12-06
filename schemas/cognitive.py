@@ -45,7 +45,7 @@ class HealRequest(BaseModel):
     app_id: str                              # 包名 or 域名
     page_id: str                             # Activity / URL / 路由
     platform: str                            # "android" / "web" / "ios"
-    old_locator: "Locator"                   # 用例里原始定位
+    old_locator: Locator                     # 用例里原始定位
     page_dump: str                           # 整个页面的 dump：Android XML / Web HTML
     screenshot: typing.Optional[str] = None  # base64 PNG，可选
     context: typing.Optional[dict] = None    # 例如 intent、用例ID 等

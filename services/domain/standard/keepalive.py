@@ -71,7 +71,7 @@ async def cpu_heavy_work() -> dict:
     }
 
 
-async def single_query(request: "Request") -> dict:
+async def single_query(request: Request) -> dict:
     """Supabase 保活"""
 
     apikey        = request.headers.get("apikey")

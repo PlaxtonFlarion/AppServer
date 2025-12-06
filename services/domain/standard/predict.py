@@ -16,7 +16,7 @@ from utils import const
 
 
 async def resolve_proxy_predict(
-    request: "Request",
+    request: Request,
     a: str,
     t: int,
     n: str
@@ -30,7 +30,7 @@ async def resolve_proxy_predict(
     cache_key = f"Predict Server:{app_desc}"
     infer_key = f"Predict:{app_desc}"
 
-    cache: "UpStash" = request.app.state.cache
+    cache: UpStash = request.app.state.cache
 
     infer_data = await cache.redis_get(infer_key)
     current    = infer_data.get("available", False) if infer_data else False

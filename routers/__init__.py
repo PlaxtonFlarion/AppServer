@@ -15,7 +15,7 @@ from .permission import permission_router
 from .speech     import speech_router
 
 
-def register_routers(app: "FastAPI") -> None:
+def register_routers(app: FastAPI) -> None:
     app.include_router(alive_router       )
     app.include_router(cargo_router       )
     app.include_router(docs_router        )

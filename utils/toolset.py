@@ -22,7 +22,7 @@ from cryptography.hazmat.primitives.asymmetric.types import (
 )
 from utils import const
 
-fake: "Faker" = Faker()
+fake: Faker = Faker()
 
 
 def init_logger() -> None:
@@ -36,7 +36,7 @@ def init_logger() -> None:
     logger.add(sys.stdout, level=const.SHOW_LEVEL, format=const.PRINT_FORMAT)
 
 
-def generate_openapi_json(app: "FastAPI") -> None:
+def generate_openapi_json(app: FastAPI) -> None:
     schema = get_openapi(
         title=getattr(app, "title"),
         version=getattr(app, "version"),
@@ -46,7 +46,7 @@ def generate_openapi_json(app: "FastAPI") -> None:
         f.write(json.dumps(schema))
 
 
-def load_env_file(env_path: "Path") -> None:
+def load_env_file(env_path: Path) -> None:
     """
     加载指定 .env 文件中的环境变量到系统环境中。
 
@@ -90,7 +90,7 @@ def current_env(*args, **__) -> dict[str, str]:
     }
 
 
-def resolve_key(key_file: str) -> "Path":
+def resolve_key(key_file: str) -> Path:
     """
     获取密钥文件的绝对路径。
 
@@ -111,7 +111,7 @@ def resolve_key(key_file: str) -> "Path":
     ).exists() else Path(__file__).resolve().parents[1] / const.KEYS_DIR) / key_file
 
 
-def resolve_template(directory: str, template_file: str) -> "Path":
+def resolve_template(directory: str, template_file: str) -> Path:
     """
     获取模板文件的绝对路径。
 
@@ -131,7 +131,7 @@ def resolve_template(directory: str, template_file: str) -> "Path":
     return Path(__file__).resolve().parents[1] / const.TEMPLATES / directory / template_file
 
 
-def load_private_key(key_file: str) -> "PrivateKeyTypes":
+def load_private_key(key_file: str) -> PrivateKeyTypes:
     """
     加载 PEM 格式私钥。
 
@@ -150,7 +150,7 @@ def load_private_key(key_file: str) -> "PrivateKeyTypes":
         return serialization.load_pem_private_key(f.read(), password=None)
 
 
-def load_public_key(key_file: str) -> "PublicKeyTypes":
+def load_public_key(key_file: str) -> PublicKeyTypes:
     """
     加载 PEM 格式公钥。
 
@@ -207,7 +207,7 @@ def hide_string(
 
 
 def generate_metadata(
-    file_path: typing.Union[str, "Path"],
+    file_path: typing.Union[str, Path],
     file_name: str,
     version: str = "1.0.0"
 ) -> dict:

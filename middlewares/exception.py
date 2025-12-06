@@ -17,9 +17,9 @@ from fastapi.exceptions import RequestValidationError
 
 
 async def exception_middleware(
-    request: "Request",
-    call_next: "typing.Callable"
-) -> "typing.Any":
+    request: Request,
+    call_next: typing.Callable
+) -> typing.Any:
     """全局异常中间件"""
 
     # 保证 trace_id 存在（防止没有 trace 中间件时报错）

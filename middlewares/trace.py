@@ -12,9 +12,9 @@ from fastapi import Request
 
 
 async def trace_middleware(
-    request: "Request",
-    call_next: "typing.Callable"
-) -> "typing.Any":
+    request: Request,
+    call_next: typing.Callable
+) -> typing.Any:
     """Trace-ID 中间件"""
 
     request.state.trace_id = (trace_id := str(uuid.uuid4()))

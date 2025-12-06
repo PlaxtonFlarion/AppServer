@@ -12,9 +12,9 @@ from fastapi import Request
 
 
 async def performance_middleware(
-    request: "Request",
-    call_next: "typing.Callable"
-) -> "typing.Any":
+    request: Request,
+    call_next: typing.Callable
+) -> typing.Any:
     """性能耗时中间件"""
 
     start    = time.time()

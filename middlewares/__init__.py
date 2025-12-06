@@ -14,7 +14,7 @@ from .auth        import jwt_auth_middleware
 from .exception   import exception_middleware
 
 
-def register_middlewares(app: "FastAPI") -> None:
+def register_middlewares(app: FastAPI) -> None:
     # inbound 1（最外层）
     app.middleware("http")(trace_middleware        )
     # inbound 2

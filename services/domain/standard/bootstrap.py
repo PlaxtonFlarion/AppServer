@@ -15,7 +15,7 @@ from utils import const
 
 
 async def resolve_bootstrap(
-    request: "Request",
+    request: Request,
     a: str,
     t: int,
     n: str
@@ -28,7 +28,8 @@ async def resolve_bootstrap(
 
     cache_key = f"Activation Node:{app_desc}"
 
-    cache: "UpStash" = request.app.state.cache
+    cache: UpStash = request.app.state.cache
+
     if cached := await cache.redis_get(cache_key):
         logger.success(f"下发缓存激活配置 -> {cache_key}")
         return json.loads(cached)

@@ -15,14 +15,14 @@ from utils import const
 
 
 async def jwt_auth_middleware(
-    request: "Request",
-    call_next: "typing.Callable"
-) -> "typing.Any":
+    request: Request,
+    call_next: typing.Callable
+) -> typing.Any:
     """鉴权中间件"""
 
     cache_key = f"WhiteList"
 
-    cache: "UpStash" = request.app.state.cache
+    cache: UpStash = request.app.state.cache
 
     public_paths = cached if (
         cached := await cache.redis_get(cache_key)

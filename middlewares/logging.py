@@ -12,9 +12,9 @@ from fastapi import Request
 
 
 async def logging_middleware(
-    request: "Request",
-    call_next: "typing.Callable"
-) -> "typing.Any":
+    request: Request,
+    call_next: typing.Callable
+) -> typing.Any:
     """请求日志中间件"""
 
     logger.info(f"-> {request.method} {request.url}")

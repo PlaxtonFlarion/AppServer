@@ -51,15 +51,15 @@ class Azure(object):
 
         return signed_data
 
-    async def tts_audio(self, req: "SpeechRequest", request: "Request") -> "typing.Any":
+    async def tts_audio(self, req: SpeechRequest, request: Request) -> typing.Any:
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(
             f"{req.voice}|{req.speak}".encode(const.CHARSET)
         ).hexdigest()
 
-        cache: "UpStash" = request.app.state.cache
-        r2: "R2Storage"  = request.app.state.r2
+        cache: UpStash = request.app.state.cache
+        r2: R2Storage  = request.app.state.r2
 
         # 👉 优先读取 Redis（只存储对象 Key）
         if cached := await cache.redis_get(cache_key):

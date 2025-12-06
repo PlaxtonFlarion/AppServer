@@ -132,6 +132,7 @@ class R2Storage(object):
         dict
             文件元数据信息。
         """
+
         folder_path = Path(folder_path)
         if not folder_path.exists() or not folder_path.is_dir():
             raise FileNotFoundError(f"❌ 目录不存在: {folder_path}")

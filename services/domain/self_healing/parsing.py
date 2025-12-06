@@ -31,13 +31,13 @@ class AndroidXmlParser(object):
         return [int(n) for n in nums] if nums else []
 
     @staticmethod
-    def parse(xml_str: str) -> list["ElementNode"]:
+    def parse(xml_str: str) -> list[ElementNode]:
         """整个页面的 XML 字符串"""
 
         root = etree.fromstring(xml_str.encode("utf-8"))
         tree = root.getroottree()
 
-        nodes: list["ElementNode"] = []
+        nodes: list[ElementNode] = []
 
         for el in root.iter("node"):
             bounds = AndroidXmlParser.parse_bounds(el.get("bounds") or "")
@@ -64,7 +64,7 @@ class WebDomParser(object):
     """
 
     @staticmethod
-    def parse(dom_str: str) -> list["ElementNode"]:
+    def parse(dom_str: str) -> list[ElementNode]:
         """页面 HTML 字符串"""
 
         root = html.fromstring(dom_str)
@@ -75,7 +75,7 @@ class WebDomParser(object):
             "//*[self::a or self::button or self::input or @onclick or @role='button']"
         )
 
-        nodes: list["ElementNode"] = []
+        nodes: list[ElementNode] = []
 
         for el in elements:
             text        = (el.text_content() or "").strip()
