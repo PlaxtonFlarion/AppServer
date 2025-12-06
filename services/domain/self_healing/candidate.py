@@ -51,11 +51,7 @@ async def post_rerank(query: str, candidate: list) -> dict:
         return resp.json()
 
 
-async def heal_element(
-    req: "HealRequest",
-    request: "Request"
-) -> typing.Union["HealResponse", "JSONResponse"]:
-
+async def heal_element(req: "HealRequest", request: "Request") -> typing.Union["HealResponse", "JSONResponse"]:
     store: "ZillizStore" = request.app.state.store
 
     logger.info(f"解析节点")
@@ -69,17 +65,17 @@ async def heal_element(
 
     logger.info(f"插入向量")
     for node, vec in zip(node_list, page_vectors):
-        await store.insert(vec, node.ensure_desc())
+        store.insert(vec, node.ensure_desc())
 
     query = f"by={req.old_locator.by}, value={req.old_locator.value}"
-    logger.info(f"构建 old locator 文本 embedding: {query}")
+    logger.info(f"构建文本: {query}")
     try:
         query_vec = (await post_tensor([query]))["vectors"][0]
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 
     logger.info(f"向量召回 {(k := 5)}")
-    retrieved = await store.search(query_vec, k=k)
+    retrieved = store.search(query_vec, k=k)
 
     mapped_candidates: list[dict] = []
     for r in retrieved:

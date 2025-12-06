@@ -5,7 +5,6 @@
 # /____|_|_|_|_/___|
 #
 
-import asyncio
 import hashlib
 import pymilvus
 from utils import (
@@ -29,22 +28,20 @@ class ZillizStore(object):
         self.client = pymilvus.Collection(name)
         self.client.load()
 
-    async def insert(self, vector: list[float], text: str) -> None:
+    def insert(self, vector: list[float], text: str) -> None:
         fp   = hashlib.md5(text.encode(const.CHARSET)).hexdigest()
         expr = f'fingerprint == "{fp}"'
         res  = self.client.query(expr=expr, limit=1, output_fields=["id"])
         if len(res) > 0: return print(f"🔁 Skip duplicate: {text}")
 
-        await asyncio.to_thread(
-            self.client.insert,
+        self.client.insert(
             data={"vector": vector, "text": text, "fingerprint": fp},
             timeout=30
         )
-        return await asyncio.to_thread(self.client.flush)
+        return self.client.flush()
 
-    async def search(self, vector: list[float], k: int) -> list[dict]:
-        results = await asyncio.to_thread(
-            self.client.search,
+    def search(self, vector: list[float], k: int) -> list[dict]:
+        results = self.client.search(
             data=[vector],
             anns_field="vector",
             param={"metric_type": "COSINE", "params": {}},
