@@ -128,7 +128,7 @@ def resolve_template(directory: str, template_file: str) -> "Path":
     Path
         模板文件完整路径
     """
-    return Path(__file__).resolve().parents[1] / const.TEMPLATES/ directory / template_file
+    return Path(__file__).resolve().parents[1] / const.TEMPLATES / directory / template_file
 
 
 def load_private_key(key_file: str) -> "PrivateKeyTypes":
