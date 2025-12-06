@@ -23,6 +23,7 @@ async def jwt_auth_middleware(
         "/",
         "/status",
         "/docs",
+        "/openapi.json",
         "/keep-render-alive",
         "/keep-supabase-alive",
         "/keep-modal-alive",

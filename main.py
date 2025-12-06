@@ -5,6 +5,11 @@
 #  |_|  |_|\__,_|_|_| |_|
 #
 
+import warnings
+warnings.filterwarnings(
+    action="ignore", message="pkg_resources is deprecated"
+)
+
 from fastapi import FastAPI
 
 from services.infrastructure.cache.upstash      import UpStash

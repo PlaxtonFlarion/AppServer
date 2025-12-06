@@ -67,7 +67,7 @@ class R2Storage(object):
         self.r2_client.put_object(
             Bucket=const.BUCKET, Key=key, Body=content, **extra
         )
-        logger.info(f"R2 上传完成 -> {key}")
+        logger.info(f"📤 R2 上传完成 -> {key}")
 
         return key
 
@@ -195,25 +195,21 @@ class R2Storage(object):
     def upload_openapi(self, app: "FastAPI") -> None:
         """服务启动时生成最新 Swagger 并上传至 R2"""
 
-        r2_swagger_key = "docs/swagger/openapi.json"                # 上传路径
-        doc_url        = f"{r2_public_url}/{r2_swagger_key}"  # 访问路径（Swagger UI 读取）
+        r2_key = "docs/swagger/openapi.json"
 
         schema = get_openapi(
-            title=getattr(app, "title", "title"),
-            version=getattr(app, "version", "version"),
-            routes=app.routes
+            title=app.title, version=app.version, routes=app.routes
         )
 
-        logger.info(schema)
+        logger.warning(app.routes)
+        logger.warning(schema)
 
         self.upload_file(
-            key=r2_swagger_key,
+            key=r2_key,
             content=json.dumps(schema, indent=2).encode(),
             content_type="application/json",
             disposition_filename="swagger.json"
         )
-
-        return logger.info(f"📤 Swagger 已自动上传 → {doc_url}")
 
 
 if __name__ == '__main__':
