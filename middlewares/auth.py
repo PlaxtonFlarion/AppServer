@@ -10,25 +10,17 @@ from loguru import logger
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from services.domain.standard import signature
+from utils import const
 
 
 async def jwt_auth_middleware(
-    request   : "Request",
-    call_next : "typing.Callable"
+    request: "Request",
+    call_next: "typing.Callable"
 ) -> "typing.Any":
     """鉴权中间件"""
 
-    # Notes: ==== 白名单 ====
-    if request.url.path in {
-        "/",
-        "/status",
-        "/docs",
-        "/openapi.json",
-        "/keep-render-alive",
-        "/keep-supabase-alive",
-        "/keep-modal-alive",
-        "/healing"
-    }: return await call_next(request)
+    if request.url.path in const.PUBLIC_PATHS:
+        return await call_next(request)
 
     x_app_id      = request.headers.get("X-App-ID")
     x_app_token   = request.headers.get("X-App-Token")

@@ -12,8 +12,8 @@ from fastapi import Request
 
 
 async def trace_middleware(
-    request   : "Request",
-    call_next : "typing.Callable"
+    request: "Request",
+    call_next: "typing.Callable"
 ) -> "typing.Any":
     """Trace-ID 中间件"""
 

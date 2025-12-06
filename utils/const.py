@@ -67,6 +67,20 @@ SHOW_LEVEL   = r"INFO"
 PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
 WRITE_FORMAT = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 
+# ---- Notes: 白名单 ----
+PUBLIC_PATHS = {
+    "/",
+    "/status",
+    "/keep-render-alive",
+    "/keep-supabase-alive",
+    "/keep-modal-alive",
+    "/openapi.json",
+    "/favicon.ico",
+    "/docs",
+    "/redoc",
+    "/healing"
+}
+
 
 if __name__ == '__main__':
     pass
