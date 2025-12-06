@@ -7,7 +7,6 @@
 #
 
 import os
-import json
 import boto3
 import typing
 import zipfile
@@ -16,8 +15,6 @@ from loguru import logger
 from botocore.client import Config
 from botocore.exceptions import ClientError
 from boto3.s3.transfer import TransferConfig
-from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
 from utils import (
     const, toolset
 )
@@ -37,9 +34,6 @@ r2_public_url = env[const.R2_PUBLIC_URL]
 class R2Storage(object):
 
     def __init__(self):
-        self.r2_bucket_url = r2_bucket_url
-        self.r2_public_url = r2_public_url
-
         self.r2_client = boto3.client(
             "s3",
             endpoint_url=r2_bucket_url,
@@ -191,22 +185,6 @@ class R2Storage(object):
             if zip_path.exists():
                 os.remove(zip_path)
                 logger.info(f"🧹 本地压缩文件已清理: {zip_path}")
-
-    def upload_openapi(self, app: "FastAPI") -> None:
-        """服务启动时生成最新 Swagger 并上传至 R2"""
-
-        r2_key = "docs/swagger/openapi.json"
-
-        schema = get_openapi(
-            title=app.title, version=app.version, routes=app.routes
-        )
-
-        self.upload_file(
-            key=r2_key,
-            content=json.dumps(schema, indent=2).encode(),
-            content_type="application/json",
-            disposition_filename="swagger.json"
-        )
 
 
 if __name__ == '__main__':

@@ -1,29 +1,29 @@
-from loguru import logger
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
-from services.infrastructure.storage.r2_storage import R2Storage
+#  ____
+# |  _ \  ___   ___ ___
+# | | | |/ _ \ / __/ __|
+# | |_| | (_) | (__\__ \
+# |____/ \___/ \___|___/
+#
+
+from fastapi import APIRouter
+from fastapi.responses import (
+    FileResponse, HTMLResponse
+)
 
 docs_router = APIRouter(tags=["Docs"])
 
 
+@docs_router.get("/openapi.json", include_in_schema=False)
+def openapi_file():
+    return FileResponse("openapi.json", media_type="application/json")
+
+
 @docs_router.get(path="/docs", include_in_schema=False)
-async def swagger_docs(request: "Request") -> "HTMLResponse":
+async def swagger_docs() -> "HTMLResponse":
     title = "AppServerX API Console"
-    logo  = "https://your-cdn/logo.png"
 
-    light_theme = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-material.css"
+    loud_theme = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-material.css"
     dark_theme  = "https://unpkg.com/swagger-ui-themes/themes/3.x/theme-monokai.css"
-
-    r2_key   = "docs/swagger/openapi.json"
-    filename = "openapi.json"
-
-    r2: "R2Storage" = request.app.state.r2
-
-    signed_url = r2.signed_url_for_stream(
-        key=r2_key, expires_in=3600, disposition_filename=filename
-    )
-
-    logger.warning(f"{title} - {signed_url}")
 
     html = f"""
     <!DOCTYPE html>
@@ -62,7 +62,6 @@ async def swagger_docs(request: "Request") -> "HTMLResponse":
 
     <div class="topbar">
         <div class="brand">
-            <img src="{logo}">
             {title}
         </div>
         <div id="theme-btn">🌙 Dark</div>
@@ -77,8 +76,8 @@ async def swagger_docs(request: "Request") -> "HTMLResponse":
     const theme = document.getElementById("swagger-theme");
 
     function setTheme(mode) {{
-        if (mode === "light") {{
-            theme.href = "{light_theme}";
+        if (mode === "loud_theme") {{
+            theme.href = "{loud_theme}";
             themeBtn.textContent = "🌞 Light";
             themeBtn.style.background = "#f0f0f0";
             themeBtn.style.color = "#333";
@@ -96,13 +95,13 @@ async def swagger_docs(request: "Request") -> "HTMLResponse":
     setTheme(saved);
 
     themeBtn.onclick = () => {{
-        saved = (saved === "dark" ? "light" : "dark");
+        saved = (saved === "dark" ? "loud_theme" : "dark");
         setTheme(saved);
     }};
 
     //===== Swagger Init =====
     SwaggerUIBundle({{
-        url: "{signed_url}",
+        url: "/openapi.json",
         dom_id: '#swagger-ui',
         deepLinking: true,
         displayRequestDuration:true,

@@ -7,7 +7,8 @@
 
 import warnings
 warnings.filterwarnings(
-    action="ignore", message="pkg_resources is deprecated"
+    action="ignore",
+    message="pkg_resources is deprecated"
 )
 
 from fastapi import FastAPI
@@ -18,12 +19,12 @@ from services.infrastructure.llm.llm_groq       import LLMGroq
 from services.infrastructure.storage.r2_storage import R2Storage
 from services.infrastructure.vector.zilliz      import Zilliz
 
-from utils       import toolset
 from middlewares import register_middlewares
 from routers     import register_routers
+from utils       import toolset
 
 
-app: "FastAPI" = FastAPI(
+app = FastAPI(
     title="AppServerX",
     description="AppServerX Application Server",
     version="1.0.0",
@@ -43,7 +44,7 @@ app.state.store    = Zilliz()
 register_middlewares(app)
 register_routers(app)
 
-app.state.r2.upload_openapi(app)
+toolset.generate_openapi_json(app)
 
 
 if __name__ == '__main__':

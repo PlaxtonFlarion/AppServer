@@ -7,12 +7,15 @@
 
 import os
 import sys
+import json
 import time
 import typing
 import hashlib
 from faker import Faker
 from pathlib import Path
 from loguru import logger
+from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.types import (
     PrivateKeyTypes, PublicKeyTypes
@@ -31,6 +34,16 @@ def init_logger() -> None:
     """
     logger.remove()
     logger.add(sys.stdout, level=const.SHOW_LEVEL, format=const.PRINT_FORMAT)
+
+
+def generate_openapi_json(app: "FastAPI") -> None:
+    schema = get_openapi(
+        title=getattr(app, "title"),
+        version=getattr(app, "version"),
+        routes=getattr(app, "routes")
+    )
+    with open("openapi.json", "w", encoding=const.CHARSET) as f:
+        f.write(json.dumps(schema))
 
 
 def load_env_file(env_path: "Path") -> None:
