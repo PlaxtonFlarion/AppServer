@@ -40,10 +40,7 @@ async def rate_limit_middleware(
 
     # Notes: ==== 生成最终配置 (IP > route > default) ===
     final = {**default_config, **route_config, **ip_config}
-
-    logger.info(
-        f"RateRule> default={default_config}, route={route_config}, ip={ip_config}, final={final}"
-    )
+    logger.info(f"RateRule={final}")
 
     burst    = final.get("burst",   10)
     rate     = final.get("rate",     2)
