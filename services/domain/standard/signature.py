@@ -170,7 +170,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
     supabase: Supabase = request.app.state.supabase
 
     # Notes: ==== 1) 通行证预检 ====
-    if not (codes := supabase.fetch_activation_code(app_name, activation_code)):
+    if not (codes := supabase.fetch_activation_code(app_desc, activation_code)):
         raise HTTPException(status_code=403, detail=f"[!] 通行证无效")
 
     if codes["is_revoked"]:
@@ -191,7 +191,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
     pre_license_id = codes["license_id"]
 
     # pending 正在处理授权请求
-    supabase.mark_code_pending(app_name, activation_code)
+    supabase.mark_code_pending(app_desc, activation_code)
 
     try:
         issued  = datetime.now(timezone.utc).isoformat()
@@ -211,7 +211,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
                 raise HTTPException(status_code=403, detail=f"[!] 超过最大激活次数")
 
             issued_at  = issued
-            license_id = supabase.generate_license_id(app_name, activation_code, issued)
+            license_id = supabase.generate_license_id(app_desc, activation_code, issued)
 
             payload.update({
                 "castle": cur_castle, "is_used": True, "activations": codes["activations"] + 1
@@ -234,7 +234,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
 
         # 更新状态
         supabase.update_activation_status(
-            app_name, activation_code, payload | {
+            app_desc, activation_code, payload | {
                 "issued_at": issued_at, "last_nonce": req.n, "license_id": license_id
             }
         )
@@ -244,7 +244,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
 
     finally:
         # 不管成功失败都要清除 pending 状态
-        supabase.wash_code_pending(app_name, activation_code)
+        supabase.wash_code_pending(app_desc, activation_code)
 
 
 if __name__ == '__main__':
