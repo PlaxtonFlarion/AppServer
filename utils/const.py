@@ -67,6 +67,16 @@ SHOW_LEVEL   = r"INFO"
 PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
 WRITE_FORMAT = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 
+# ---- Notes: 应用 ----
+SETTINGS = {
+    "title": "AppServerX",
+    "description": "AppServerX Application Server",
+    "version": "1.0.0",
+    "openapi_url": None,
+    "docs_url": None,
+    "redoc_url": None,
+}
+
 # ---- Notes: 白名单 ----
 PUBLIC_PATHS = {
     "/",

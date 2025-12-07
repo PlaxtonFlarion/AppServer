@@ -21,14 +21,13 @@ from services.infrastructure.vector.zilliz      import Zilliz
 
 from middlewares import register_middlewares
 from routers     import register_routers
-from utils       import toolset
 
-
-app = FastAPI(
-    title="AppServerX",
-    description="AppServerX Application Server",
-    version="1.0.0"
+from utils import (
+    const, toolset
 )
+
+
+app = FastAPI(**const.SETTINGS)
 
 toolset.init_logger()
 

@@ -9,7 +9,7 @@
 import json
 import typing
 from pydantic import (
-    BaseModel, Field
+    BaseModel, Field, ConfigDict
 )
 
 
@@ -40,17 +40,7 @@ class LicenseRequest(BaseModel):
     castle: str = Field(..., description="环境标识，例如 prod/test/dev")
     license_id: typing.Optional[str] = Field(None, description="续期时传入旧LicenseID，新生成可不传")
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "a": "app",
-                "t": 1735805200,
-                "n": "device_001",
-                "code": "invite_abc123",
-                "castle": "prod",
-                "license_id": None
-            }
-        }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LicenseResponse(BaseModel):
@@ -68,13 +58,7 @@ class LicenseResponse(BaseModel):
     data: str = Field(..., description="Base64编码后的 License 数据载荷(JSON encoded)")
     signature: str = Field(..., description="Base64编码的数字签名，用于校验授权合法性")
 
-    class Config(object):
-        schema_extra = {
-            "example": {
-                "data": "eyJhIjogImFwcF9zZXJ2ZXJ4IiwgInQiOiAxNz..." ,
-                "signature": "X3a9Kls82LS1r...=="
-            }
-        }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PredictResponse(BaseModel):
@@ -125,24 +109,7 @@ class PredictResponse(BaseModel):
     version: str = Field(..., description="版本号")
     message: str = Field("Predict service online", description="响应状态消息")
 
-    class Config(object):
-        schema_extra = {
-            "example": {
-                "configuration": {},
-                "available": True,
-                "expire_at": 1735689600,
-                "timeout": 60.0,
-                "content_type": "multipart/form-data",
-                "auth_header": "Bearer {token}",
-                "token": "sign_xxxxxxxx",
-                "method": "POST",
-                "url": "https://api.xxx.com/modal/predict",
-                "ttl": 7200,
-                "region": "jp1",
-                "version": "1.0.0",
-                "message": "Predict service online"
-            }
-        }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SpeechRequest(BaseModel):
@@ -187,22 +154,7 @@ class SpeechRequest(BaseModel):
     manner: typing.Optional[str] = Field(None, description="情感风格，如 cheerful")
     degree: typing.Optional[str] = Field(None, description="风格强度，如 1.0、2.0")
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "a": "app",
-                "t": 1735701000,
-                "n": "random_nonce_764",
-                "speak": "你好，欢迎使用语音合成服务。",
-                "voice": "zh-CN-XiaoxiaoNeural",
-                "waver": "mp3",
-                "rater": "+10%",
-                "pitch": "+3%",
-                "volume": "+0dB",
-                "manner": "cheerful",
-                "degree": "1.2"
-            }
-        }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SpeechResponse(BaseModel):
@@ -220,6 +172,8 @@ class SpeechResponse(BaseModel):
         examples=["https://cdn.xxx.com/audio/20250101/voice_xxx.wav?token=abc123"]
     )
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Locator(BaseModel):
     """
@@ -234,6 +188,8 @@ class Locator(BaseModel):
     """
     by: str = Field(..., description="定位方式，如 id/xpath/css/bounds")
     value: str = Field(..., description="定位值")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HealRequest(BaseModel):
@@ -266,18 +222,7 @@ class HealRequest(BaseModel):
     screenshot: typing.Optional[str] = Field(None, description="base64截图(可选)")
     context: typing.Optional[dict] = Field(None, description="上下文信息，例如intent/测试ID")
 
-    class Config(object):
-        schema_extra = {
-            "example": {
-                "app_id": "com.demo.app",
-                "page_id": "MainActivity",
-                "platform": "android",
-                "old_locator": {"by": "id", "value": "btn_login"},
-                "page_dump": "<hierarchy><node index='0' ... />...</hierarchy>",
-                "screenshot": None,
-                "context": {"case_id": "login_001", "retry": 1}
-            }
-        }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HealResponse(BaseModel):
@@ -306,19 +251,7 @@ class HealResponse(BaseModel):
         description="调试信息/候选列表等"
     )
 
-    class Config(object):
-        schema_extra = {
-            "example": {
-                "healed": True,
-                "confidence": 0.92,
-                "new_locator": {"by": "bounds", "value": "[100,200][300,400]"},
-                "details": {
-                    "candidate_count": 4,
-                    "strategy": "image+text+structure",
-                    "latency_ms": 82
-                }
-            }
-        }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ElementNode(BaseModel):
