@@ -88,7 +88,7 @@
 <body id="root">
 
 <div class="sidebar">
-  <div class="logo"><img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"/>API</div>
+  <div class="logo"><img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"/>AppServerX</div>
   <input id="search" placeholder="Search API...">
   <div id="menu"></div>
 </div>
@@ -102,128 +102,149 @@
 <div id="theme" class="btn-theme">🌙 Dark</div>
 
 <script>
-    const OPENAPI_URL="openapi.json"
+    const OPENAPI_URL="openapi.json";
+    let SPEC=null;
 
-    let theme=localStorage.theme||"dark";
-    applyTheme()
-    document.getElementById("theme").onclick=()=>{theme=theme==="dark"?"light":"dark";localStorage.theme=theme;applyTheme()}
-    function applyTheme(){
-      document.body.classList.toggle("light",theme==="light")
-      document.getElementById("theme").innerText=theme==="light"?"🌞 Light":"🌙 Dark"
+    /* 全局请求头 */
+    const GLOBAL_HEADERS=[
+      { key:"X-APP-ID", required:true, desc:"应用唯一标识", example:"app_xxx" },
+      { key:"X-APP-TOKEN", required:true, desc:"访问鉴权令牌", example:"token_xxx" }
+    ];
+
+    /* Theme */
+    let theme=localStorage.theme||"dark";applyTheme();
+    document.getElementById("theme").onclick=()=>{ theme=theme==="dark"?"light":"dark";localStorage.theme=theme;applyTheme(); }
+    function applyTheme(){ document.body.classList.toggle("light",theme==="light"); document.getElementById("theme").innerText=theme==="light"?"🌞 Light":"🌙 Dark"; }
+
+    /* Load API */
+    fetch(OPENAPI_URL).then(r=>r.json()).then(spec=>{SPEC=spec;buildUI(spec)});
+
+    /* ===== resolve $ref 递归解析 ===== */
+    function resolveRef(s){
+      if(!s) return null;
+      if(!s.$ref) return s;
+      let name=s.$ref.replace("#/components/schemas/","");
+      let real=SPEC.components?.schemas?.[name];
+      return real ? resolveRef(real) : s;
     }
 
-    fetch(OPENAPI_URL).then(r=>r.json()).then(buildUI)
-
+    /* ======================= build UI ======================= */
     function buildUI(spec){
-      let groups={}
-      for(const [path,methods] of Object.entries(spec.paths))
-        for(const [method,meta] of Object.entries(methods))
-          (groups[meta.tags?meta.tags[0]:"Others"] ||= []).push({path,method,meta})
+      let groups={};
+      Object.entries(spec.paths).forEach(([path,methods])=>{
+        Object.entries(methods).forEach(([method,meta])=>{
+          (groups[meta.tags?meta.tags[0]:"Others"] ||= []).push({path,method,meta});
+        });
+      });
 
       document.getElementById("menu").innerHTML=
         Object.entries(groups).map(([t,a])=>`
           <div class="section-title">${t}</div>
           ${a.map(e=>`<div class="api-item" onclick="jump('${e.path}')">
-          <span class="method">${e.method}</span>${e.path}</div>`).join("")}
-        `).join("")
+            <span class="method">${e.method}</span>${e.path}
+          </div>`).join("")}
+        `).join("");
+
+      /* =========================📌 顶部全局请求头展示 ========================= */
+      let globalHeaderHTML=`
+      <details open style="margin-bottom:26px;">
+        <summary style="font-size:18px;font-weight:900;cursor:pointer">
+          🔐 Global Request Headers
+        </summary>
+        <div style="margin-top:12px;border-left:3px solid var(--accent);padding-left:14px;">
+          ${GLOBAL_HEADERS.map(h=>`
+          <div style="margin-bottom:10px;font-size:14px;">
+            <b>${h.key}</b>
+            ${h.required?`<span style="color:#ff4d4d;font-size:11px;margin-left:6px">required</span>`:""}
+            <div style="opacity:.75;margin-left:4px">${h.desc}</div>
+            <code style="padding:2px 6px;font-size:12px;background:#222;border-radius:4px;margin-left:4px;">
+              Example: ${h.example}
+            </code>
+          </div>
+          `).join("")}
+        </div>
+      </details>`;
 
       document.getElementById("api").innerHTML=
+        globalHeaderHTML +
         Object.entries(groups).map(([t,a])=>`
           <h2 style="margin-top:35px;font-size:24px">${t}</h2>
           ${a.map(e=>renderAPI(e)).join("")}
-        `).join("")
+        `).join("");
     }
 
+
+    /* ======================渲染每个接口====================== */
     function renderAPI(ep){
-      const req=ep.meta.requestBody?.content?.["application/json"]?.schema
-      const res=ep.meta.responses?.["200"]?.content?.["application/json"]?.schema
-      const schema=req||res
+      const req=resolveRef(ep.meta.requestBody?.content?.["application/json"]?.schema);
+      const res=resolveRef(ep.meta.responses?.["200"]?.content?.["application/json"]?.schema);
+      const schema=req||res;
 
       return `
       <details>
         <summary><span class="method">${ep.method}</span><b>${ep.path}</b></summary>
-
         <p>${ep.meta.summary||""}</p>
         ${ep.meta.description?`<div style="opacity:.7;margin-bottom:10px">${ep.meta.description}</div>`:""}
-        ${ep.meta.operationId?`<div style="font-size:12px;opacity:.4">operationId: ${ep.meta.operationId}</div>`:""}
+
+        <!-- 🔥 添加全局请求头展示到接口内部 -->
+        <div style="margin:12px 0;border-left:3px solid var(--accent);padding-left:10px;">
+          <b>🔐 Global Headers Applied</b>
+          <pre style="margin-top:6px;">${
+            GLOBAL_HEADERS.map(h=>`${h.key}: ${h.required?"(required)":""}`).join("\n")
+          }</pre>
+        </div>
 
         ${renderParams(ep.meta.parameters)}
+        ${req?`<h3>📥 Request Example</h3><pre>${JSON.stringify(mock(req),null,2)}</pre>`:""}
+        ${res?`<h3>📤 Response Example</h3><pre>${JSON.stringify(mock(res),null,2)}</pre>`:""}
 
-        ${req?`
-        <h3>📥 Request Example</h3>
-        <pre>${JSON.stringify(mock(req),null,2)}</pre>
-        `:""}
-
-        ${res?`
-        <h3>📤 Response Example</h3>
-        <pre>${JSON.stringify(mock(res),null,2)}</pre>
-        `:""}
-
-        <details style="margin-top:10px">
+        ${schema?`
+          <details style="margin-top:10px">
           <summary>🧬 JSON Schema</summary>
           <div class="schema-box">${renderSchema(schema)}</div>
-        </details>
-
-      </details>`
+          </details>`:""}
+      </details>`;
     }
 
+
+    /* params */
     function renderParams(p){
-      if(!p) return ""
+      if(!p) return "";
       return `
-        <h3>🔧 Parameters</h3>
-        <pre>${
-          p.map(x=>
-            `${x.name} (${x.in||"query"}) → ${x.schema?.type||"any"} ${
-              x.required?"[required]":""
-            }`
-          ).join("\n")
-        }</pre>`
+      <h3>🔧 Parameters</h3>
+      <pre>${
+        p.map(x=>`${x.name} (${x.in}) → ${x.schema?.type||"any"} ${x.required?"[required]":""}`).join("\n")
+      }</pre>`;
     }
 
+    /* mock example */
     function mock(s){
-      if(s.example) return s.example
-      if(s.properties){
-        let o={};for(const k in s.properties) o[k]=mock(s.properties[k]);return o;
-      }
-      return s.type==="integer"?1:
-            s.type==="number"?1.23:
-            s.type==="boolean"?true:
-            s.type==="array"?[mock(s.items)]: "string"
+      if(s.example) return s.example;
+      if(s.default!==undefined) return s.default;
+      if(s.enum) return s.enum[0];
+      if(s.properties){let o={};for(const k in s.properties)o[k]=mock(s.properties[k]);return o;}
+      if(s.items) return [mock(s.items)];
+      return s.type==="integer"?1:s.type==="number"?1.23:s.type==="boolean"?true:"string"
     }
 
+    /* schema */
     function renderSchema(s){
-      if(!s?.properties) return "<i>No Schema</i>"
-
+      if(!s?.properties) return "<i>No Schema</i>";
       return Object.entries(s.properties).map(([k,v])=>{
-        const req=s.required?.includes(k)
-        const info=[
-          v.description?`<span class='schema-desc'>${v.description}</span>`:"",
-          v.enum?`<span style='opacity:.6;font-size:12px'>enum: [${v.enum.join(", ")}]</span>`:"",
-          v.default!==undefined?`<span style='opacity:.6;font-size:12px'>default: ${v.default}</span>`:"",
-          v.format?`<span style='opacity:.6;font-size:12px'>format: ${v.format}</span>`:"",
-        ].join(" ")
-
+        v=resolveRef(v);
         return v.properties?
-          `<details class="schema-item"><summary><b>${k}</b>
-            <span class="schema-type">${v.type}</span>${req?"<span class='schema-required'>required</span>":""} ${info}
-          </summary><div class="schema-box">${renderSchema(v)}</div></details>`
-          :
-          `<div class="schema-item">• <b>${k}</b><span class="schema-type">${v.type}</span>${req?"<span class='schema-required'>required</span>":""} ${info}</div>`
-      }).join("")
+        `<details class="schema-item"><summary><b>${k}</b><span class="schema-type">${v.type}</span></summary><div class="schema-box">${renderSchema(v)}</div></details>`:
+        `<div class="schema-item">• <b>${k}</b><span class='schema-type'>${v.type}</span></div>`;
+      }).join("");
     }
 
-    function jump(p){
-      document.querySelectorAll("details").forEach(el=>{
-        if(el.innerText.includes(p)){el.open=true;el.scrollIntoView({behavior:"smooth"})}
-      })
-    }
-
+    /* nav+search */
+    function jump(p){document.querySelectorAll("details").forEach(el=>{if(el.innerText.includes(p)){el.open=true;el.scrollIntoView({behavior:"smooth"})}})}
     document.getElementById("search").oninput=function(){
-      const k=this.value.toLowerCase()
-      document.querySelectorAll(".api-item").forEach(i=>{
-        i.style.display=i.innerText.toLowerCase().includes(k)?"":"none"
-      })
-    }
+      const k=this.value.toLowerCase();
+      document.querySelectorAll(".api-item").forEach(i=>i.style.display=i.innerText.toLowerCase().includes(k)?"":"none");
+    };
 </script>
+
 </body>
 </html>
