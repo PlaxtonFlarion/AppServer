@@ -55,7 +55,7 @@ async def heal_element(
     logger.info(f"向量生成: {len(desc_list)}")
     try:
         embedding_resp = await delivery(
-            const.MODAL_TENSOR, json={"query": query, "texts": desc_list}
+            const.MODAL_TENSOR, json={"query": query, "elements": desc_list}
         )
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
@@ -64,8 +64,8 @@ async def heal_element(
     llm_groq: LLMGroq = request.app.state.llm_groq
 
     logger.info(f"[[v1], [v2], ...] 维度匹配")
-    query_vec    = embedding_resp["query"]
-    page_vectors = embedding_resp["vectors"]
+    query_vec    = embedding_resp["query"][0]
+    page_vectors = embedding_resp["page_vectors"]
 
     logger.info(f"插入向量")
     await asyncio.gather(
