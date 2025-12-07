@@ -9,7 +9,9 @@
 from fastapi import (
     APIRouter, Request
 )
-from schemas.cognitive import HealRequest
+from schemas.cognitive import (
+    HealRequest, HealResponse
+)
 from services.domain.self_healing.candidate import heal_element
 
 healing_router = APIRouter(tags=["Healing"])
@@ -17,6 +19,7 @@ healing_router = APIRouter(tags=["Healing"])
 
 @healing_router.post(
     path="/healing",
+    response_model=HealResponse,
     operation_id="healing"
 )
 async def healing(

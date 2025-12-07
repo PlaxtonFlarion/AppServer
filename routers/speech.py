@@ -10,7 +10,9 @@ from loguru import logger
 from fastapi import (
     APIRouter, Request, Query
 )
-from schemas.cognitive import SpeechRequest
+from schemas.cognitive import (
+    SpeechRequest, SpeechResponse
+)
 
 speech_router = APIRouter(tags=["Speech"])
 
@@ -38,11 +40,12 @@ async def speech_meta(
 
 @speech_router.post(
     path="/speech-voice",
+    response_model=SpeechResponse,
     operation_id="speech_voice"
 )
 async def speech_voice(
     req: SpeechRequest,
-    request: Request,
+    request: Request
 ):
     """
     合成语音音频文件。

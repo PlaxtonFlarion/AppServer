@@ -10,6 +10,8 @@ from fastapi import (
     APIRouter, Request, Query
 )
 from fastapi.responses import PlainTextResponse
+
+from schemas.cognitive import PredictResponse
 from services.domain.standard import (
     bootstrap, configuration, download, predict, stencil
 )
@@ -59,6 +61,7 @@ async def application_bootstrap(
 
 @cargo_router.get(
     path="/proxy-predict",
+    response_model=PredictResponse,
     operation_id="proxy-predict"
 )
 async def proxy_predict(

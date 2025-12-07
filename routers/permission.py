@@ -7,7 +7,9 @@
 
 from loguru import logger
 from fastapi import APIRouter
-from schemas.cognitive import LicenseRequest
+from schemas.cognitive import (
+    LicenseRequest, LicenseResponse
+)
 from services.domain.standard import signature
 
 permission_router = APIRouter(tags=["Permission"])
@@ -15,6 +17,7 @@ permission_router = APIRouter(tags=["Permission"])
 
 @permission_router.post(
     path="/sign",
+    response_model=LicenseResponse,
     operation_id="sign"
 )
 async def sign(

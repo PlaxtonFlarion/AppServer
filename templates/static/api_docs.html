@@ -82,6 +82,106 @@
       position:fixed;right:20px;top:20px;padding:6px 12px;border-radius:6px;
       background:var(--panel);border:1px solid var(--border);cursor:pointer;
     }
+
+    /* ==== Global Headers 区域专用样式 ==== */
+    .global-headers .gh-item{
+      margin-bottom:10px;
+      font-size:14px;
+    }
+
+    .global-headers .gh-key{
+      font-weight:700;
+    }
+
+    .global-headers .gh-required{
+      color:#ff4d4d;
+      font-size:11px;
+      margin-left:6px;
+    }
+
+    .global-headers .gh-desc{
+      margin-left:4px;
+      opacity:.75;
+    }
+
+    /* 深色模式下 Example 小块：保持深底浅字 */
+    .global-headers .gh-code{
+      padding:2px 6px;
+      font-size:12px;
+      border-radius:4px;
+      margin-left:4px;
+      background:#222;
+      color:#f5f5f5;
+    }
+
+    /* 🔆 亮色模式下：背景变浅一点，文字变深一点，看起来不那么“糊” */
+    .light .global-headers .gh-desc{
+      color:#555;
+      opacity:.9;
+    }
+
+    .light .global-headers .gh-code{
+      background:#f1f3f7;
+      color:#333;
+    }
+
+    /* === 🔆 提升亮色模式下内嵌请求头可读性（只影响 pre 中 Header 行） === */
+    .light pre {
+      color:#222 !important;                /* 默认文本深灰，提升可视性 */
+    }
+
+    /* Key 部分增强 */
+    .light pre b,
+    .light pre .header-key{
+      color:#0047b3 !important;             /* 蓝色增强标题感 */
+      font-weight:700;
+    }
+
+    /* required 标识增强 */
+    .light pre .header-required{
+      color:#d90000 !important;             /* 更醒目的红色 */
+      font-weight:900;
+    }
+
+    /* value 值增强 */
+    .light pre .header-value{
+      color:#0a6b33 !important;             /* 绿色对比，代表变量/示例 */
+      font-weight:600;
+    }
+
+    /* 🌙 暗色模式（保持你原来的视觉风格，只细微增强可读性） */
+    pre {
+      background: var(--code);
+      color:#d7d7d7;
+      border-radius:8px;
+      border:1px solid #8f8f8f;
+    }
+
+    /* 🌞 亮色模式增强：提高对比，阅读更轻松 */
+    .light pre {
+      background:#f0f3f8 !important;     /* 比原来浅灰更亮更纯净 */
+      color:#1a1c20 !important;           /* 深灰文字增强对比，避免发灰 */
+      border:1px solid #c5c9d3;           /* 柔和边框，不抢眼 */
+      box-shadow:0 0 3px rgba(0,0,0,.08); /* 微阴影区分层级 */
+    }
+
+    /* 复制按钮增强亮色对比 */
+    .light button[onclick^="copyCode"]{
+      background:#007bff !important;
+      color:white !important;
+    }
+    /* ========= 仅优化 Global Header 中 Example 背景色 ========= */
+    details[open] code {
+        background:#f0f0f5 !important;
+        color:#333 !important;
+        padding:2px 6px;
+        border-radius:4px;
+    }
+    /* 亮色模式额外微调，让对比更柔和 */
+    .light details[open] code {
+        background:#e7ebf3 !important;
+        color:#222 !important;
+    }
 </style>
 </head>
 
@@ -147,23 +247,28 @@
 
       /* =========================📌 顶部全局请求头展示 ========================= */
       let globalHeaderHTML=`
-      <details open style="margin-bottom:26px;">
-        <summary style="font-size:18px;font-weight:900;cursor:pointer">
-          🔐 Global Request Headers
-        </summary>
-        <div style="margin-top:12px;border-left:3px solid var(--accent);padding-left:14px;">
+        <details open style="margin-bottom:26px;">
+          <summary style="font-size:18px;font-weight:900;cursor:pointer">
+            🔐 Global Request Headers
+          </summary>
+          <div class="global-headers" style="margin-top:12px;border-left:3px solid var(--accent);padding-left:14px;">
           ${GLOBAL_HEADERS.map(h=>`
-          <div style="margin-bottom:10px;font-size:14px;">
-            <b>${h.key}</b>
-            ${h.required?`<span style="color:#ff4d4d;font-size:11px;margin-left:6px">required</span>`:""}
-            <div style="opacity:.75;margin-left:4px">${h.desc}</div>
-            <code style="padding:2px 6px;font-size:12px;background:#222;border-radius:4px;margin-left:4px;">
-              Example: ${h.example}
-            </code>
-          </div>
+            <div style="margin-bottom:12px;font-size:14px;">
+              <div>
+                <b>${h.key}</b>
+                ${h.required?`<span style="color:#ff4d4d;font-size:11px;margin-left:6px">(required)</span>`:""}
+              </div>
+
+              <div style="opacity:.85;margin-left:4px;display:flex;align-items:center;gap:12px;margin-top:4px;">
+                <span>${h.desc}</span>
+                <code style="padding:2px 6px;font-size:12px;background:#222;border-radius:4px;">
+                  Example: ${h.example}
+                </code>
+              </div>
+            </div>
           `).join("")}
-        </div>
-      </details>`;
+          </div>
+        </details>`;
 
       document.getElementById("api").innerHTML=
         globalHeaderHTML +
@@ -173,8 +278,7 @@
         `).join("");
     }
 
-
-    /* ======================渲染每个接口====================== */
+    /* 渲染每个接口 */
     function renderAPI(ep){
       const req=resolveRef(ep.meta.requestBody?.content?.["application/json"]?.schema);
       const res=resolveRef(ep.meta.responses?.["200"]?.content?.["application/json"]?.schema);
@@ -189,8 +293,13 @@
         <!-- 全局 Header 显示 -->
         <div style="margin:12px 0;border-left:3px solid var(--accent);padding-left:10px;">
           <b>🔐 Global Headers Applied</b>
-          <pre>${GLOBAL_HEADERS.map(h=>`${h.key}: ${h.example} ${h.required?'(required)':''}`).join("\n")}</pre>
+          <pre>${
+            GLOBAL_HEADERS.map(h =>
+              `<span class="header-key">${h.key}</span>: <span class="header-value">${h.example}</span> ${h.required?`<span class="header-required">(required)</span>`:""}`
+            ).join("\n")
+          }</pre>
         </div>
+
 
         ${renderParams(ep.meta.parameters)}
 
@@ -246,7 +355,7 @@
       document.querySelectorAll(".api-item").forEach(i=>i.style.display=i.innerText.toLowerCase().includes(k)?"":"none");
     };
 
-    /* === 🌟 生成请求样例展示 + 复制按钮 === */
+    /* 生成请求样例展示 + 复制按钮 */
     function renderSamples(ep, req){
       const url = `${location.origin}${ep.path}`;
       const method = ep.method.toUpperCase();
@@ -268,7 +377,7 @@
       `;
     }
 
-    /* --- 代码块组件 + Copy按钮 --- */
+    /* 代码块组件 + Copy按钮 */
     function codeBlock(title, content){
       const id=`code_${Math.random().toString(36).slice(2)}`;
       return `
@@ -284,7 +393,7 @@
       `;
     }
 
-    /* === 复制到剪贴板 === */
+    /* 复制到剪贴板 */
     function copyCode(id){
       const el = document.getElementById(id);
       navigator.clipboard.writeText(el.innerText);
@@ -292,6 +401,5 @@
       setTimeout(()=>el.style.outline="none",600);
     }
 </script>
-
 </body>
 </html>
