@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>AppServerX</title>
+
+    <style>
+        @keyframes fadeIn {0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
+        @keyframes glow {0%{filter:drop-shadow(0 0 2px #60a5fa);}50%{filter:drop-shadow(0 0 12px #a78bfa);}100%{filter:drop-shadow(0 0 2px #60a5fa);}}
+
+        .tilt-card{
+            transform-style:preserve-3d;
+            transition:transform .2s ease,box-shadow .2s ease;
+            cursor:pointer;position:relative;
+        }
+        .tilt-card::after{
+            content:"";position:absolute;inset:0;border-radius:12px;
+            background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(255,255,255,.08),transparent 60%);
+            transition:opacity .2s ease;opacity:0;
+        }
+        .tilt-card:hover::after{opacity:1;}
+        .tilt-card:active{transform:scale(.97)rotateX(0)rotateY(0)!important;}
+    </style>
+</head>
+
+<body class="bg-gray-950 min-h-screen flex items-center justify-center text-gray-200">
+
+    <div class="w-full max-w-md p-8 bg-gray-900/60 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-xl animate-[fadeIn_0.8s_ease-out]">
+
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-center animate-[glow_4s_infinite]">
+            App Server is Live
+        </h1>
+
+        <div class="mt-4 text-center text-green-400 font-semibold text-lg">
+            🟢 服务运行中
+        </div>
+
+        <!-- 🔥 动态插入更新时间 -->
+        <div id="update_time" class="mt-2 text-center text-gray-400 text-sm"></div>
+
+        <a href="/status" class="mt-6 w-full inline-block text-center py-2.5 rounded-lg bg-green-600 hover:bg-green-500 transition font-semibold">
+            查看状态 JSON
+        </a>
+
+        <!-- 功能卡片区 -->
+        <div class="mt-8 grid grid-cols-2 gap-4 select-none">
+
+            <a href="https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/Framix/README.md" target="_blank"
+               class="tilt-card p-4 rounded-xl border border-blue-600/40 bg-blue-600/10 hover:bg-blue-600/20 transition text-center font-semibold text-blue-300">
+               Framix
+            </a>
+
+            <a href="https://github.com/PlaxtonFlarion/SoftwareCenter/blob/main/Assets/Memrix/README.md" target="_blank"
+               class="tilt-card p-4 rounded-xl border border-purple-600/40 bg-purple-600/10 hover:bg-purple-600/20 transition text-center font-semibold text-purple-300">
+               Memrix
+            </a>
+
+            <!-- 🔥 新增 API 文档入口卡片 -->
+            <a href="/docs" class="tilt-card p-4 rounded-xl border border-teal-500/40 bg-teal-500/10 hover:bg-teal-500/20 transition text-center font-semibold text-teal-300 col-span-2">
+                📘 API Documentation
+            </a>
+
+        </div>
+
+        <footer class="mt-6 text-center text-xs text-gray-500">
+            Powered by AppServerX · TailwindCSS
+        </footer>
+    </div>
+
+    <!-- 3D 交互 & 时间注入脚本 -->
+    <script>
+        document.querySelectorAll('.tilt-card').forEach(card=>{
+            card.addEventListener('mousemove',e=>{
+                const rect=card.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
+                card.style.transform=`rotateX(${(y-rect.height/2)/12}deg) rotateY(${(rect.width/2-x)/12}deg)`;
+                card.style.setProperty('--x',`${x/rect.width*100}%`);
+                card.style.setProperty('--y',`${y/rect.height*100}%`);
+            });
+            card.addEventListener('mouseleave',()=>card.style.transform='rotateX(0) rotateY(0)');
+        });
+
+        // 🔥 格式化时间
+        (function(){
+            const el=document.getElementById("update_time");
+            if(!el) return;
+            const t=new Date();
+            const format=v=>String(v).padStart(2,"0");
+            el.textContent=`Last update: ${t.getFullYear()}-${format(t.getMonth()+1)}-${format(t.getDate())} `+
+                           `${format(t.getHours())}:${format(t.getMinutes())}:${format(t.getSeconds())}`;
+        })();
+    </script>
+</body>
+</html>

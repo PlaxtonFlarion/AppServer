@@ -27,10 +27,7 @@ from utils       import toolset
 app = FastAPI(
     title="AppServerX",
     description="AppServerX Application Server",
-    version="1.0.0",
-    openapi_url=None,
-    docs_url=None,
-    redoc_url=None
+    version="1.0.0"
 )
 
 toolset.init_logger()
