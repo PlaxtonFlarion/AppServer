@@ -64,7 +64,7 @@ async def heal_element(
     llm_groq: LLMGroq = request.app.state.llm_groq
 
     logger.info(f"[[v1], [v2], ...] 维度匹配")
-    query_vec    = embedding_resp["query_vec"][0]
+    query_vec    = embedding_resp["query_vec"]
     page_vectors = embedding_resp["page_vectors"]
 
     logger.info(f"插入向量")
