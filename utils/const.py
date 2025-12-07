@@ -90,6 +90,57 @@ PUBLIC_PATHS = {
     "/redoc"
 }
 
+# ---- Notes: 令牌桶 ----
+TOKEN_BUCKET_LUA = """
+local key   = KEYS[1]
+local burst = tonumber(ARGV[1])
+local rate  = tonumber(ARGV[2])
+local now   = tonumber(ARGV[3])
+
+local data = redis.call("HMGET", key, "tokens", "time")
+local tokens = tonumber(data[1])
+local last   = tonumber(data[2])
+
+if tokens == nil then
+    tokens = burst
+    last   = now
+else
+    local delta = (now - last) / 1000.0
+    if delta > 0 then
+        tokens = math.min(burst, tokens + delta * rate)
+    end
+end
+
+if tokens >= 1 then
+    tokens = tokens - 1
+    redis.call("HMSET", key, "tokens", tokens, "time", now)
+    redis.call("EXPIRE", key, math.ceil(burst/rate)+2)
+    return tokens
+else
+    return -1
+end
+"""
+
+# ---- Notes: 限流 ----
+RATE_CONFIG = {
+    "default": {
+        "burst"    : 10,  # 令牌桶容量 （瞬时最大并发）
+        "rate"     : 2,   # 每秒恢复几个令牌（QPS限制）
+        "max_wait" : 1    # 超过等待秒数后直接报错
+    },
+    "routes": {
+        "/sign": {
+            "burst" : 2,
+            "rate"  : 0.2  # 5秒才能恢复1个令牌
+        },
+        "/healing": {
+            "burst" : 5,
+            "rate"  : 1
+        }
+    },
+    "ip": {}
+}
+
 
 if __name__ == '__main__':
     pass

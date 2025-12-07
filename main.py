@@ -15,6 +15,7 @@ from fastapi import FastAPI
 
 from services.infrastructure.cache.upstash      import UpStash
 from services.infrastructure.cloud.azure        import Azure
+from services.infrastructure.db.supabase        import Supabase
 from services.infrastructure.llm.llm_groq       import LLMGroq
 from services.infrastructure.storage.r2_storage import R2Storage
 from services.infrastructure.vector.zilliz      import Zilliz
@@ -33,6 +34,7 @@ toolset.init_logger()
 
 app.state.cache    = UpStash()
 app.state.azure    = Azure()
+app.state.supabase = Supabase()
 app.state.llm_groq = LLMGroq()
 app.state.r2       = R2Storage()
 app.state.store    = Zilliz()

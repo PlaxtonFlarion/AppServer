@@ -6,7 +6,9 @@
 #
 
 from loguru import logger
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter, Request
+)
 from schemas.cognitive import (
     LicenseRequest, LicenseResponse
 )
@@ -21,7 +23,8 @@ permission_router = APIRouter(tags=["Permission"])
     operation_id="sign"
 )
 async def sign(
-    req: LicenseRequest
+    req: LicenseRequest,
+    request: Request,
 ):
     """
     授权签名接口。
@@ -30,7 +33,7 @@ async def sign(
     """
     logger.info(f"signature request: {req}")
 
-    return signature.manage_signature(req)
+    return signature.manage_signature(req, request)
 
 
 if __name__ == '__main__':
