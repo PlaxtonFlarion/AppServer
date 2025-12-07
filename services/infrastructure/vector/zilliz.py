@@ -7,6 +7,7 @@
 
 import hashlib
 import pymilvus
+from loguru import logger
 from utils import (
     const, toolset
 )
@@ -32,13 +33,16 @@ class Zilliz(object):
         fp   = hashlib.md5(text.encode(const.CHARSET)).hexdigest()
         expr = f'fingerprint == "{fp}"'
         res  = self.client.query(expr=expr, limit=1, output_fields=["id"])
-        if len(res) > 0: return print(f"🔁 Skip duplicate: {text}")
+        if len(res) > 0: return logger.info(f"🔁 Duplicate ignored | fp={fp[:10]}...")
 
         self.client.insert(
-            data={"vector": vector, "text": text, "fingerprint": fp},
-            timeout=30
+            data={"vector": vector, "text": text, "fingerprint": fp}, timeout=30
         )
-        return self.client.flush()
+        self.client.flush()
+        return logger.info(
+            f"🟢 Inserted vector ✓ | dim={len(vector)} | fp={fp[:10]}..."
+        )
+
 
     def search(self, vector: list[float], k: int) -> list[dict]:
         results = self.client.search(

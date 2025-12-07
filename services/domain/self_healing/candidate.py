@@ -63,7 +63,7 @@ async def heal_element(
     store: Zilliz     = request.app.state.store
     llm_groq: LLMGroq = request.app.state.llm_groq
 
-    logger.info(f"[[v1], [v2], ...] 维度匹配")
+    logger.info(f"维度匹配: [[v1], [v2], ...]")
     query_vec    = embedding_resp["query_vec"]
     page_vectors = embedding_resp["page_vectors"]
 
@@ -72,12 +72,10 @@ async def heal_element(
         *(asyncio.to_thread(store.insert, vec, node.ensure_desc())
           for node, vec in zip(node_list, page_vectors))
     )
-    # for node, vec in zip(node_list, page_vectors):
-    #     store.insert(vec, node.ensure_desc())
 
     k, top_k, beta = 5, 3, 1 - (alpha := 0.1)
 
-    logger.info(f"向量召回 {k}")
+    logger.info(f"向量召回: k={k}")
     retrieved = store.search(query_vec, k=k)
 
     mapped_candidates: list[dict] = []
@@ -96,7 +94,9 @@ async def heal_element(
 
     logger.info(f"结果重排")
     try:
-        rerank_resp = await delivery(const.MODAL_RERANK, json={"query": query, "candidate": candidate})
+        rerank_resp = await delivery(
+            const.MODAL_RERANK, json={"query": query, "candidate": candidate}
+        )
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=400)
 
@@ -108,7 +108,7 @@ async def heal_element(
     for c in mapped_candidates:
         c["final_score"] = alpha * c["vector_score"] + beta * c["rerank_score"]
 
-    logger.info(f"取 top-{top_k}")
+    logger.info(f"取 top-k={top_k}")
     top_candidates = sorted(mapped_candidates, key=lambda x: x["final_score"], reverse=True)[:top_k]
 
     decision = await llm_groq.best_candidate(
@@ -133,13 +133,15 @@ async def heal_element(
     element    = chosen["element"]
     confidence = chosen["final_score"]
 
-    new_by    = "id" if element.resource_id else "text"
-    new_value = element.resource_id or element.text or ""
+    new_by      = "id" if element.resource_id else "text"
+    new_value   = element.resource_id or element.text or ""
+    new_locator = {"by": new_by, "value": new_value}
+    logger.info(f"{new_locator}")
 
     return HealResponse(
         healed=True,
         confidence=confidence,
-        new_locator={"by": new_by, "value": new_value},
+        new_locator=new_locator,
         details={
             "reason": reason,
             "candidates": top_candidates,
