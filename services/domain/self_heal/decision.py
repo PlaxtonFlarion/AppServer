@@ -164,56 +164,78 @@ class Decision(object):
         return await self.llm_decision(top_candidates)
 
     async def heal_element_stream(self) -> typing.AsyncGenerator[str, None]:
-        fmt   : typing.Callable[[str], str] = lambda x: f"\n\033[38;5;81m▶ {x}\033[0m\n"      # 青色标题
-        ok    : typing.Callable[[str], str] = lambda x: f"\033[38;5;120m✔ {x}\033[0m\n"       # 绿色成功
-        info  : typing.Callable[[str], str] = lambda x: f"\033[38;5;245m• {x}\033[0m\n"       # 灰色信息
-        block : typing.Callable[[str], str] = lambda x: f"\033[48;5;57;38;5;230m {x} \033[0m" # 反色结果
+        fmt   : typing.Callable[[str], str] = lambda x: f"\n\033[38;5;81m▶ {x}\033[0m\n"
+        ok    : typing.Callable[[str], str] = lambda x: f"\033[38;5;120m✔ {x}\033[0m\n"
+        info  : typing.Callable[[str], str] = lambda x: f"\033[38;5;245m• {x}\033[0m\n"
+        block : typing.Callable[[str], str] = lambda x: f"\033[48;5;57;38;5;230m {x} \033[0m"
+        stamp : typing.Callable[
+            [], str
+        ] = lambda: f"\033[38;5;141m time={time.time() - t:.2f}s\033[0m\n"
+
+        t0, step =time.time(), 0
 
         try:
-            t0 = time.time()
-
             # ===== Step 1 =====
-            yield fmt(f"📩 [1/6] 解析页面结构中...\n")
+            step += 1
+            yield fmt(f"📩 [{step}/6] 解析页面结构中...\n")
+            t = time.time()
             node_list = await self.parse_tree()
-            yield ok(f"📨 完成 -> 检测到节点数 {len(node_list)}") + info("✓ 页面结构树构建成功\n")
+            yield ok(f"  └ done. nodes={len(node_list)},{stamp()}")
+            yield info("------------------------------------------------------------\n")
 
             # ===== Step 2 =====
-            yield fmt(f"📩 [2/6] 生成语义向量 Embedding...\n")
+            step += 1
+            yield fmt(f"📩 [{step}/6] 生成语义向量 Embedding...\n")
+            t = time.time()
             query, query_vec, page_vectors = await self.transform(node_list)
-            yield ok(f"📨 完成 -> Embedding 生成完毕") + info("✓ 已进入向量计算阶段\n")
+            yield ok(f"  └ done. dim={len(query_vec)}, vectors={len(page_vectors)},{stamp()}")
+            yield info("------------------------------------------------------------\n")
 
             # ===== Step 3 =====
-            yield fmt(f"📩 [3/6] 写入向量存储中...\n")
+            step += 1
+            yield fmt(f"📩 [{step}/6] 写入向量存储中...\n")
+            t = time.time()
             await self.burning(node_list, page_vectors)
-            yield ok(f"📨 完成 -> 向量入库成功\n")
+            yield ok(f"  └ done. db_insert={len(page_vectors)},{stamp()}")
+            yield info("------------------------------------------------------------\n")
 
             # ===== Step 4 =====
-            yield fmt(f"📩 [4/6] 向量召回 K 查询中...\n")
+            step += 1
+            yield fmt(f"📩 [{step}/6] 向量召回 K 查询中...\n")
+            t = time.time()
             mapped_candidates, candidate = await self.recall(query_vec, node_list)
-            yield ok(f"📨 完成 -> 召回 {len(mapped_candidates)} 个候选") + info("✓ 语义检索完成\n")
+            yield ok(f"  └ done. retrieved={len(mapped_candidates)},{stamp()}")
+            yield info("------------------------------------------------------------\n")
 
             # ===== Step 5 =====
-            yield fmt(f"📩 [5/6] CrossEncoder 重排中...\n")
+            step += 1
+            yield fmt(f"📩 [{step}/6] CrossEncoder 重排中...\n")
+            t = time.time()
             top_candidates = await self.rerank(query, candidate, mapped_candidates)
-            yield ok(f"📨 完成 -> Top-K={len(top_candidates)}\n")
+            yield ok(f"  └ done. top_k={len(top_candidates)},{stamp()}")
+            yield info("------------------------------------------------------------\n")
 
             # ===== Step 6 =====
-            yield fmt(f"📩 [6/6] LLM 参与最终决策中...\n")
+            step += 1
+            yield fmt(f"📩 [{step}/6] LLM 参与最终决策中...\n")
+            t = time.time()
             result = await self.llm_decision(top_candidates)
-            yield ok(f"📨 完成 -> LLM 评估完成\n")
+            yield ok(f"  └ done. healed={result.healed}, confidence={result.confidence:.4f},{stamp()}")
+            yield info("============================================================\n\n")
 
             # ========= Result Block =========
             yield "\n\033[38;5;45m════ FINAL RESULT ════\033[0m\n"
             yield block(f"Heal       : {'SUCCESS' if result.healed else 'FAILED'}") + "\n"
-            yield block(f"Confidence : {result.confidence:.2f}") + "\n"
+            yield block(f"Confidence : {result.confidence:.2f}")
+            yield "\n\033[38;5;45m══════════════════════\033[0m\n"
             yield info("智能定位已输出 JSON 结构👇") + "\n\n"
 
-            yield result.model_dump_json(indent=2)
+            yield result.model_dump_json(indent=4)
 
-            yield f"\n\n⏱ 总耗时: {time.time() - t0:.2f}s\n"
+            yield f"\n\n🏁 Total: {time.time() - t0:.2f}s\n"
 
         except Exception as e:
-            yield f"\033[31m[FATAL ERROR] {e}\033[0m\n"
+            yield f"\033[31m[FATAL ERROR] ❌ {e}\033[0m\n"
 
 
 if __name__ == '__main__':
