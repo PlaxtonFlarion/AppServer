@@ -30,7 +30,7 @@ class Zilliz(object):
         self.client.load()
 
     def __str__(self) -> str:
-        return f"<{self.client.name}>"
+        return f"<Zilliz Vector {self.client.name}>"
 
     __repr__ = __str__
 

@@ -32,7 +32,7 @@ class LLMGroq(object):
         self.llm_groq_model  = "llama-3.1-8b-instant"
 
     def __str__(self) -> str:
-        return f"<LLM Groq: {self.llm_groq_model}>"
+        return f"<LLM Groq {self.llm_groq_model}>"
 
     __repr__ = __str__
 

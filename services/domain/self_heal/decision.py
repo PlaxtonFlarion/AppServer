@@ -48,7 +48,8 @@ class Decision(object):
             return resp.json()
 
     async def parse_tree(self) -> list:
-        match self.req.platform.strip().lower():
+        logger.info(f"解析节点: {(app_platform := self.req.platform.strip().lower())}")
+        match app_platform:
             case "android": node_list = AndroidXmlParser.parse(self.req.page_dump)
             case "web": node_list = WebDomParser.parse(self.req.page_dump)
             case _: raise ValueError(f"Unsupported platform: {self.req.platform}")
@@ -71,7 +72,15 @@ class Decision(object):
 
         return query, query_vec, page_vectors
 
+    async def burning(self, node_list: list, page_vectors: list[list]) -> None:
+        logger.info(f"写入向量: {str(self.store)}")
+        await asyncio.gather(
+            *(asyncio.to_thread(self.store.insert, vec, node.ensure_desc())
+              for node, vec in zip(node_list, page_vectors))
+        )
+
     async def recall(self, query_vec: list, node_list: list) -> tuple[list[dict], list[str]]:
+        logger.info(f"向量召回: K={self.k}")
         retrieved = self.store.search(query_vec, k=self.k)
 
         mapped_candidates: list[dict] = []
@@ -89,6 +98,8 @@ class Decision(object):
         return mapped_candidates, [c["text"] for c in mapped_candidates]
 
     async def rerank(self, query: str, candidate: list[str], mapped_candidates: list[dict]):
+        logger.info(f"结果重排: Top-K={self.top_k}")
+        logger.info(f"融合模式: 向量({self.alpha * 100:.0f}%), CrossEncoder({self.beta * 100:.0f}%)")
         rerank_resp = await self.delivery(
             const.MODAL_RERANK, json={"query": query, "candidate": candidate}
         )
@@ -102,6 +113,7 @@ class Decision(object):
         return sorted(mapped_candidates, key=lambda x: x["final_score"], reverse=True)[:self.top_k]
 
     async def llm_decision(self, top_candidates: list[dict]) -> HealResponse:
+        logger.info(f"模型决策: {str(self.llm_groq)}")
         decision = await self.llm_groq.best_candidate(
             self.req.old_locator, top_candidates
         )
@@ -139,61 +151,69 @@ class Decision(object):
         )
 
     async def heal_element(self) -> HealResponse:
-        logger.info(f"解析节点: {self.req.platform}")
         node_list = await self.parse_tree()
 
         query, query_vec, page_vectors = await self.transform(node_list)
 
-        logger.info(f"插入向量")
-        await asyncio.gather(
-            *(asyncio.to_thread(self.store.insert, vec, node.ensure_desc())
-              for node, vec in zip(node_list, page_vectors))
-        )
+        await self.burning(node_list, page_vectors)
 
-        logger.info(f"向量召回: K={self.k}")
         mapped_candidates, candidate = await self.recall(query_vec, node_list)
 
-        logger.info(f"结果重排: Top-K={self.top_k}")
-        logger.info(f"融合模式: 向量({self.alpha * 100:.0f}%), CrossEncoder({self.beta * 100:.0f}%)")
         top_candidates = await self.rerank(query, candidate, mapped_candidates)
 
-        logger.info(f"模型决策: {str(self.llm_groq)}")
         return await self.llm_decision(top_candidates)
 
     async def heal_element_stream(self) -> typing.AsyncGenerator[str, None]:
+        fmt   : typing.Callable[[str], str] = lambda x: f"\n\033[38;5;81m▶ {x}\033[0m\n"      # 青色标题
+        ok    : typing.Callable[[str], str] = lambda x: f"\033[38;5;120m✔ {x}\033[0m\n"       # 绿色成功
+        info  : typing.Callable[[str], str] = lambda x: f"\033[38;5;245m• {x}\033[0m\n"       # 灰色信息
+        block : typing.Callable[[str], str] = lambda x: f"\033[48;5;57;38;5;230m {x} \033[0m" # 反色结果
+
         try:
-            yield f"📌 Step 1: 解析节点 ...\n"
+            t0 = time.time()
+
+            # ===== Step 1 =====
+            yield fmt(f"📩 [1/6] 解析页面结构中...\n")
             node_list = await self.parse_tree()
-            yield f"✔ 节点解析完成，共 {len(node_list)} 个\n\n"
+            yield ok(f"📨 完成 -> 检测到节点数 {len(node_list)}") + info("✓ 页面结构树构建成功\n")
 
-            yield f"📌 Step 2: 生成向量 ...\n"
+            # ===== Step 2 =====
+            yield fmt(f"📩 [2/6] 生成语义向量 Embedding...\n")
             query, query_vec, page_vectors = await self.transform(node_list)
-            yield f"✔ 向量生成完成\n\n"
+            yield ok(f"📨 完成 -> Embedding 生成完毕") + info("✓ 已进入向量计算阶段\n")
 
-            yield f"📌 Step 3: 写入向量 ...\n"
-            await asyncio.gather(
-                *(asyncio.to_thread(self.store.insert, vec, node.ensure_desc())
-                  for node, vec in zip(node_list, page_vectors))
-            )
-            yield f"✔ 写入完成\n\n"
+            # ===== Step 3 =====
+            yield fmt(f"📩 [3/6] 写入向量存储中...\n")
+            await self.burning(node_list, page_vectors)
+            yield ok(f"📨 完成 -> 向量入库成功\n")
 
-            yield f"📌 Step 4: 向量召回 ...\n"
+            # ===== Step 4 =====
+            yield fmt(f"📩 [4/6] 向量召回 K 查询中...\n")
             mapped_candidates, candidate = await self.recall(query_vec, node_list)
-            yield f"✔ 召回 {len(mapped_candidates)} 个候选\n\n"
+            yield ok(f"📨 完成 -> 召回 {len(mapped_candidates)} 个候选") + info("✓ 语义检索完成\n")
 
-            yield f"📌 Step 5: 重排评分 ...\n"
+            # ===== Step 5 =====
+            yield fmt(f"📩 [5/6] CrossEncoder 重排中...\n")
             top_candidates = await self.rerank(query, candidate, mapped_candidates)
-            yield f"✔ 重排完成 Top-K={len(top_candidates)}\n\n"
+            yield ok(f"📨 完成 -> Top-K={len(top_candidates)}\n")
 
-            yield f"📌 Step 6: 模型决策 ...\n"
+            # ===== Step 6 =====
+            yield fmt(f"📩 [6/6] LLM 参与最终决策中...\n")
             result = await self.llm_decision(top_candidates)
-            yield f"✔ 决策完成\n\n"
+            yield ok(f"📨 完成 -> LLM 评估完成\n")
 
-            yield f"\n=== 最终结果 ===\n"
+            # ========= Result Block =========
+            yield "\n\033[38;5;45m════ FINAL RESULT ════\033[0m\n"
+            yield block(f"Heal       : {'SUCCESS' if result.healed else 'FAILED'}") + "\n"
+            yield block(f"Confidence : {result.confidence:.2f}") + "\n"
+            yield info("智能定位已输出 JSON 结构👇") + "\n\n"
+
             yield result.model_dump_json(indent=2)
 
+            yield f"\n\n⏱ 总耗时: {time.time() - t0:.2f}s\n"
+
         except Exception as e:
-            yield f"fatal error: {e}"
+            yield f"\033[31m[FATAL ERROR] {e}\033[0m\n"
 
 
 if __name__ == '__main__':
