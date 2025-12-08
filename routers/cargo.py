@@ -21,7 +21,7 @@ cargo_router = APIRouter(tags=["Cargo"])
 
 @cargo_router.get(
     path="/global-configuration",
-    operation_id="global-configuration"
+    operation_id="global_configuration"
 )
 async def global_configuration(
     request: Request,
@@ -62,7 +62,7 @@ async def application_bootstrap(
 @cargo_router.get(
     path="/proxy-predict",
     response_model=PredictResponse,
-    operation_id="proxy-predict"
+    operation_id="proxy_predict"
 )
 async def proxy_predict(
     request: Request,
@@ -140,7 +140,7 @@ async def model_information(
 @cargo_router.get(
     path="/template-viewer",
     response_class=PlainTextResponse,
-    operation_id="template-viewer"
+    operation_id="template_viewer"
 )
 async def template_viewer(
     a: str = Query(..., alias="a"),

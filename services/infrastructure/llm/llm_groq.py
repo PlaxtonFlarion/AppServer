@@ -31,6 +31,11 @@ class LLMGroq(object):
         self.llm_groq_client = Groq(api_key=groq_llm_key)
         self.llm_groq_model  = "llama-3.1-8b-instant"
 
+    def __str__(self) -> str:
+        return f"<LLM Groq: {self.llm_groq_model}>"
+
+    __repr__ = __str__
+
     async def best_candidate(self, old_locator: Locator, candidates: list[dict]) -> dict:
         if not candidates: return {"index": -1, "reason": "没有候选元素。"}
 

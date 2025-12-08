@@ -88,7 +88,8 @@ class WebDomParser(object):
                 text=text or None,
                 content_desc=el.get("title") or el.get("aria-label") or None,
                 resource_id=resource_id,
-                bounds=[],  # Web 暂时没有 bounds 信息
+                # Web 暂时没有 bounds 信息
+                bounds=[],
                 class_name=class_name,
                 xpath=tree.getpath(el),
             )

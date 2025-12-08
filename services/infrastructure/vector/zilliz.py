@@ -22,12 +22,17 @@ zilliz_key = env[const.ZILLIZ_KEY]
 
 class Zilliz(object):
 
-    def __init__(self, name: str = "healer_elements"):
+    def __init__(self):
         pymilvus.connections.connect(
             alias="default", uri=zilliz_url, token=zilliz_key, timeout=30
         )
-        self.client = pymilvus.Collection(name)
+        self.client = pymilvus.Collection("healer_elements")
         self.client.load()
+
+    def __str__(self) -> str:
+        return f"<{self.client.name}>"
+
+    __repr__ = __str__
 
     def insert(self, vector: list[float], text: str) -> None:
         fp   = hashlib.md5(text.encode(const.CHARSET)).hexdigest()
@@ -42,7 +47,6 @@ class Zilliz(object):
         return logger.info(
             f"🟢 Inserted vector ✓ | dim={len(vector)} | fp={fp[:10]}..."
         )
-
 
     def search(self, vector: list[float], k: int) -> list[dict]:
         results = self.client.search(
