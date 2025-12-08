@@ -28,7 +28,7 @@ async def self_heal(
     request: Request
 ):
     """
-    UI 元素自愈接口
+    UI 元素自愈接口，一次性返回最终结果
 
     基于语义相似度自动寻找最可能的新控件，实现定位修复。
     """
@@ -38,16 +38,27 @@ async def self_heal(
 
 @healing_router.post(
     path="/self-heal-stream",
-    response_model=StreamingResponse,
+    response_class=StreamingResponse,
     operation_id="self_heal_stream"
 )
-async def healing_stream(
+async def self_heal_stream(
     req: HealRequest,
     request: Request
 ):
+    """
+    UI 元素自愈 — 流式返回执行日志与最终决策
+
+    StreamingResponse 文本流输出:
+        [1] 解析节点 …
+        [2] 生成向量 …
+        [3] 召回 …
+        [4] 重排 …
+        [完成] 返回 JSON 结果
+    """
 
     return StreamingResponse(
-        Decision(req, request).heal_element_stream(), media_type="text/plain"
+        Decision(req, request).heal_element_stream(),
+        media_type="text/plain"
     )
 
 
