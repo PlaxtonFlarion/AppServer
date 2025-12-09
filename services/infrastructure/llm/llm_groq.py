@@ -74,7 +74,7 @@ class LLMGroq(object):
 
         cur = mix.app.get("Groq", {}).get("llm", {}).get("name", None)
         self.llm_groq_model = cur
-        logger.info(f"远程大模型 -> {self.llm_groq_model}")
+        logger.info(f"远程三方大模型 -> {self.llm_groq_model}")
 
         resp = await asyncio.to_thread(
             self.llm_groq_client.chat.completions.create,

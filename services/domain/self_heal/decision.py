@@ -13,14 +13,15 @@ import asyncio
 from loguru import logger
 from fastapi import Request
 from schemas.cognitive import (
-    HealRequest, HealResponse
+    HealRequest, HealResponse, Mix
 )
 from services.domain.standard import signature
 from services.domain.self_heal.parsing import (
     AndroidXmlParser, WebDomParser
 )
-from services.infrastructure.vector.zilliz import Zilliz
+from services.infrastructure.cache.upstash import UpStash
 from services.infrastructure.llm.llm_groq import LLMGroq
+from services.infrastructure.vector.zilliz import Zilliz
 from utils import const
 
 
@@ -30,6 +31,7 @@ class Decision(object):
         self.req: HealRequest = req
         self.request: Request = request
 
+        self.cache: UpStash    = request.app.state.cache
         self.store: Zilliz     = request.app.state.store
         self.llm_groq: LLMGroq = request.app.state.llm_groq
 
@@ -114,6 +116,12 @@ class Decision(object):
         return sorted(mapped_candidates, key=lambda x: x["final_score"], reverse=True)[:self.top_k]
 
     async def llm_decision(self, top_candidates: list[dict]) -> HealResponse:
+        if mixed := await self.cache.get(const.K_MIX): mix = Mix(**mixed)
+        else: mix = Mix(**const.V_MIX)
+
+        cur = mix.app.get("Groq", {}).get("llm", {}).get("name", None)
+        self.llm_groq.llm_groq_model = cur
+
         logger.info(f"模型决策: {str(self.llm_groq)}")
         decision = await self.llm_groq.best_candidate(
             self.request, self.req.old_locator, top_candidates

@@ -8,6 +8,7 @@
 import json
 from loguru import logger
 from fastapi import Request
+from schemas.cognitive import LicenseResponse
 from schemas.errors import BizError
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
@@ -22,7 +23,7 @@ async def resolve_template_download(
     a: str,
     t: int,
     n: str
-) -> dict:
+) -> LicenseResponse:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -37,7 +38,7 @@ async def resolve_template_download(
 
     if cached := await cache.get(cache_key):
         logger.success(f"下发缓存模版元信息 -> {cache_key}")
-        license_info = json.loads(cached)
+        license_info = cached
     else:
         stencil_info = {
             "Framix": {
@@ -81,7 +82,7 @@ async def resolve_template_download(
             "version"  : x_app_version,
             "message"  : "Available templates for client to choose"
         }
-        await cache.set(cache_key, json.dumps(license_info), ex=ttl)
+        await cache.set(cache_key, license_info, ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
 
     signed_data = signature.signature_license(
@@ -89,7 +90,7 @@ async def resolve_template_download(
     )
 
     logger.success(f"下发模版元信息 -> Available templates for client to choose")
-    return signed_data
+    return LicenseResponse(**signed_data)
 
 
 async def resolve_toolkit_download(
@@ -98,7 +99,7 @@ async def resolve_toolkit_download(
     t: int,
     n: str,
     platform: str
-) -> dict:
+) -> LicenseResponse:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -115,7 +116,7 @@ async def resolve_toolkit_download(
 
     if cached := await cache.get(cache_key):
         logger.success(f"下发缓存工具元信息 -> {cache_key}")
-        license_info = json.loads(cached)
+        license_info = cached
     else:
         toolkit_info = {
             "Framix": {
@@ -196,7 +197,7 @@ async def resolve_toolkit_download(
             "version" : x_app_version,
             "message" : "Available toolkits for client to choose"
         }
-        await cache.set(cache_key, json.dumps(license_info), ex=ttl)
+        await cache.set(cache_key, license_info, ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
 
     # 每次都重新签名 URL
@@ -215,7 +216,7 @@ async def resolve_toolkit_download(
     )
 
     logger.success(f"下发工具元信息 -> Available models for client to choose")
-    return signed_data
+    return LicenseResponse(**signed_data)
 
 
 async def resolve_model_download(
@@ -223,7 +224,7 @@ async def resolve_model_download(
     a: str,
     t: int,
     n: str
-) -> dict:
+) -> LicenseResponse:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -243,7 +244,7 @@ async def resolve_model_download(
 
     if cached := await cache.get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
-        license_info = json.loads(cached)
+        license_info = cached
     else:
         license_info = {
             "models": {
@@ -267,7 +268,8 @@ async def resolve_model_download(
             "version" : x_app_version,
             "message" : "Available models for client to choose"
         }
-        await cache.set(cache_key, json.dumps(license_info), ex=ttl)
+
+        await cache.set(cache_key, license_info, ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
 
     # 每次都重新签名 URL
@@ -283,7 +285,7 @@ async def resolve_model_download(
     )
 
     logger.success(f"下发模型元信息 -> Available models for client to choose")
-    return signed_data
+    return LicenseResponse(**signed_data)
 
 
 async def stencil_viewer(
@@ -292,6 +294,32 @@ async def stencil_viewer(
     n: str,
     page: str
 ) -> str:
+    """
+    📄 模板 HTML 内容查看接口
+
+    根据应用标识参数解析模板路径，并读取对应的 HTML 文件内容，用于前端展示或动态渲染页面。
+
+    Parameters
+    ----------
+    a : str
+        应用名称，内部会进行标准化处理 (lower + strip) 用作路径解析。
+    t : int
+        版本号或模板类型扩展字段（保留字段，暂未使用）。
+    n : str
+        备用命名或业务扩展字段（保留字段，暂未使用）。
+    page : str
+        需要读取的 HTML 文件名，例如 `"index.html"`。
+
+    Returns
+    -------
+    str
+        目标 HTML 文件的完整文本内容。
+
+    Raises
+    ------
+    BizError(404)
+        当传入的文件名不存在或无法解析模板路径时抛出。
+    """
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -309,6 +337,33 @@ async def stencil_case(
     n: str,
     case: str
 ) -> str:
+    """
+    📦 业务 Case Stencil 获取接口
+
+    根据应用参数定位业务模板文件，并读取指定 Case 的 JSON 数据，
+    多用于 Mock 测试数据、业务用例展示、案例库抽样等场景。
+
+    Parameters
+    ----------
+    a : str
+        应用名称，将会进行标准化处理作为目录索引。
+    t : int
+        业务模板版本/类型标识（预留字段，可用于版本路由）。
+    n : str
+        扩展业务字段（保留字段，用于未来横向扩展）。
+    case : str
+        Case 模板文件名，例如 `"login_case.json"`。
+
+    Returns
+    -------
+    dict
+        转换后的 JSON 结构数据，适用于 API 响应或用例展示。
+
+    Raises
+    ------
+    BizError(404)
+        当 Case 文件不存在时抛出业务异常。
+    """
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 

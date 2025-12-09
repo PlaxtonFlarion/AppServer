@@ -25,7 +25,9 @@ from cryptography.hazmat.primitives.asymmetric import (
     padding, rsa
 )
 from fastapi import Request
-from schemas.cognitive import LicenseRequest
+from schemas.cognitive import (
+    LicenseRequest, LicenseResponse
+)
 from schemas.errors import BizError
 from services.infrastructure.db.supabase import Supabase
 from utils import (
@@ -161,7 +163,7 @@ def verify_jwt(x_app_id: str, x_app_token: str) -> dict:
     return payload
 
 
-def manage_signature(req: LicenseRequest, request: Request) -> dict:
+def manage_signature(req: LicenseRequest, request: Request) -> LicenseResponse:
     app_name        = req.a.lower().strip()
     app_desc        = req.a
     activation_code = req.code.strip()
@@ -239,7 +241,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
         )
 
         logger.success(f"下发 License file {license_info}")
-        return license_data
+        return LicenseResponse(**license_data)
 
     finally:
         # 不管成功失败都要清除 pending 状态

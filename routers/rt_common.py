@@ -11,6 +11,7 @@ from fastapi import (
 from fastapi.responses import (
     HTMLResponse, FileResponse
 )
+from schemas.cognitive import LicenseResponse
 from services.domain.standard.common import (
     resolve_bootstrap,
     resolve_configuration,
@@ -96,6 +97,7 @@ async def api_openapi_file() -> FileResponse:
 
 @common_router.get(
     path="/bootstrap",
+    response_model=LicenseResponse,
     operation_id="api_bootstrap"
 )
 async def api_bootstrap(
@@ -115,6 +117,7 @@ async def api_bootstrap(
 
 @common_router.get(
     path="/global-configuration",
+    response_model=LicenseResponse,
     operation_id="api_global_configuration"
 )
 async def api_global_configuration(

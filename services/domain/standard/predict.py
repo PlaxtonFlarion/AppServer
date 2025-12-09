@@ -5,9 +5,7 @@
 # |_|   |_|  \___|\__,_|_|\___|\__|
 #
 
-import json
 import time
-import base64
 from loguru import logger
 from fastapi import Request
 from schemas.cognitive import (
@@ -41,16 +39,16 @@ async def resolve_proxy_predict(
     logger.info(f"远程推理服务状态 -> {cur}")
 
     if cached := await cache.get(cache_key):
-        # cache_data = cached["data"]
-        # cache_data = json.loads(base64.b64decode(json.loads(cached)["data"]))
         if (previous := cached["available"]) == cur:
             logger.success(f"下发缓存推理服务 -> {cache_key}")
             signed_data = signature.signature_license(
                 cached, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
             )
             return LicenseResponse(**signed_data)
+
         logger.info(f"推理服务状态变更 -> Cached={previous} Remote={cur}")
         await cache.delete(cache_key)
+
     available = cur
 
     ttl = 86400
@@ -78,7 +76,6 @@ async def resolve_proxy_predict(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
     await cache.set(cache_key, license_info, ex=ttl)
-    # await cache.set(cache_key, json.dumps(signed_data), ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发推理服务 -> Predict service online")

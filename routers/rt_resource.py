@@ -9,6 +9,7 @@ from fastapi import (
     APIRouter, Request, Query
 )
 from fastapi.responses import PlainTextResponse
+from schemas.cognitive import LicenseResponse
 from services.domain.standard.resource import (
     resolve_template_download,
     resolve_toolkit_download,
@@ -22,6 +23,7 @@ resource_router = APIRouter(tags=["Resource"])
 
 @resource_router.get(
     path="/template-meta",
+    response_model=LicenseResponse,
     operation_id="api_template_meta"
 )
 async def api_template_meta(
@@ -41,6 +43,7 @@ async def api_template_meta(
 
 @resource_router.get(
     path="/toolkit-meta",
+    response_model=LicenseResponse,
     operation_id="api_toolkit_meta"
 )
 async def api_toolkit_meta(
@@ -61,6 +64,7 @@ async def api_toolkit_meta(
 
 @resource_router.get(
     path="/model-meta",
+    response_model=LicenseResponse,
     operation_id="api_model_meta"
 )
 async def api_model_meta(

@@ -16,6 +16,7 @@ from loguru import logger
 from fastapi import (
     Request, HTTPException
 )
+from schemas.cognitive import LicenseResponse
 from schemas.errors import BizError
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
@@ -31,7 +32,7 @@ async def resolve_bootstrap(
     a: str,
     t: int,
     n: str
-) -> dict:
+) -> LicenseResponse:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -44,7 +45,10 @@ async def resolve_bootstrap(
 
     if cached := await cache.get(cache_key):
         logger.success(f"下发缓存激活配置 -> {cache_key}")
-        return json.loads(cached)
+        signed_data = signature.signature_license(
+            cached, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+        )
+        return LicenseResponse(**signed_data)
 
     ttl = 86400
 
@@ -60,11 +64,11 @@ async def resolve_bootstrap(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.set(cache_key, json.dumps(signed_data), ex=ttl)
+    await cache.set(cache_key, license_info, ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发激活配置 -> Use activation node")
-    return signed_data
+    return LicenseResponse(**signed_data)
 
 
 # workflow: configuration
@@ -73,7 +77,7 @@ async def resolve_configuration(
     a: str,
     t: int,
     n: str
-) -> dict:
+) -> LicenseResponse:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -86,7 +90,10 @@ async def resolve_configuration(
 
     if cached := await cache.get(cache_key):
         logger.info(f"下发缓存全局配置 -> {cache_key}")
-        return json.loads(cached)
+        signed_data = signature.signature_license(
+            cached, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+        )
+        return LicenseResponse(**signed_data)
 
     config      = toolset.resolve_template("data", const.CONFIGURATION)
     config_dict = json.loads(config.read_text(encoding=const.CHARSET))
@@ -105,14 +112,14 @@ async def resolve_configuration(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.set(cache_key, json.dumps(signed_data), ex=ttl)
+    await cache.set(cache_key, license_info, ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发全局配置 -> Use global configuration")
-    return signed_data
+    return LicenseResponse(**signed_data)
 
 
-# workflow: keepalive render
+# workflow: Keepalive Render
 async def keepalive_render() -> dict:
     """Render 保活"""
 
@@ -163,7 +170,7 @@ async def keepalive_render() -> dict:
     }
 
 
-# workflow: keepalive supabase
+# workflow: Keepalive Supabase
 async def keepalive_supabase(request: Request) -> dict:
     """Supabase 保活"""
 
@@ -199,7 +206,7 @@ async def keepalive_supabase(request: Request) -> dict:
         )
 
 
-# workflow: keepalive modal
+# workflow: Keepalive Modal
 async def keepalive_modal() -> dict:
     """Modal 保活"""
 
