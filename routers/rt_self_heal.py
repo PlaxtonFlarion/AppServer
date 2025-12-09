@@ -15,15 +15,15 @@ from schemas.cognitive import (
 )
 from services.domain.self_heal.decision import Decision
 
-healing_router = APIRouter(tags=["Healing"])
+self_heal_router = APIRouter(tags=["SelfHeal"])
 
 
-@healing_router.post(
+@self_heal_router.post(
     path="/self-heal",
     response_model=HealResponse,
-    operation_id="self_heal"
+    operation_id="api_self_heal"
 )
-async def self_heal(
+async def api_self_heal(
     req: HealRequest,
     request: Request
 ):
@@ -36,12 +36,12 @@ async def self_heal(
     return await Decision(req, request).heal_element()
 
 
-@healing_router.post(
+@self_heal_router.post(
     path="/self-heal-stream",
     response_class=StreamingResponse,
-    operation_id="self_heal_stream"
+    operation_id="api_self_heal_stream"
 )
-async def self_heal_stream(
+async def api_self_heal_stream(
     req: HealRequest,
     request: Request
 ):

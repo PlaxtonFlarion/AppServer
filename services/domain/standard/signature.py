@@ -24,10 +24,9 @@ from cryptography.hazmat.primitives import (
 from cryptography.hazmat.primitives.asymmetric import (
     padding, rsa
 )
-from fastapi import (
-    Request, HTTPException
-)
+from fastapi import Request
 from schemas.cognitive import LicenseRequest
+from schemas.errors import BizError
 from services.infrastructure.db.supabase import Supabase
 from utils import (
     const, toolset
@@ -171,19 +170,19 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
 
     # Notes: ==== 1) 通行证预检 ====
     if not (codes := supabase.fetch_activation_code(app_desc, activation_code)):
-        raise HTTPException(status_code=403, detail=f"[!] 通行证无效")
+        raise BizError(status_code=403, detail=f"[!] 通行证无效")
 
     if codes["is_revoked"]:
-        raise HTTPException(status_code=403, detail=f"[!] 通行证已吊销")
+        raise BizError(status_code=403, detail=f"[!] 通行证已吊销")
 
     if datetime.now(timezone.utc).date() > datetime.fromisoformat(codes["expire"]).date():
-        raise HTTPException(status_code=403, detail=f"[!] 通行证已过期")
+        raise BizError(status_code=403, detail=f"[!] 通行证已过期")
 
     if codes["pending"]:
-        raise HTTPException(status_code=423, detail=f"[!] 授权正在处理中")
+        raise BizError(status_code=423, detail=f"[!] 授权正在处理中")
 
     if req.n == codes["last_nonce"]:
-        raise HTTPException(status_code=409, detail=f"[!] 重放请求被拒绝")
+        raise BizError(status_code=409, detail=f"[!] 重放请求被拒绝")
 
     # Notes: ==== 2) 业务逻辑层 ====
     pre_castle     = codes["castle"]
@@ -208,7 +207,7 @@ def manage_signature(req: LicenseRequest, request: Request) -> dict:
         else:
             # 达到最大激活次数
             if codes["activations"] >= codes["max_activations"]:
-                raise HTTPException(status_code=403, detail=f"[!] 超过最大激活次数")
+                raise BizError(status_code=403, detail=f"[!] 超过最大激活次数")
 
             issued_at  = issued
             license_id = supabase.generate_license_id(app_desc, activation_code, issued)

@@ -301,6 +301,12 @@ class ElementNode(BaseModel):
         }
 
 
+class Mix(BaseModel):
+    app: dict[str, typing.Any] = Field(default_factory=dict)
+    white_list: list[str] = Field(default_factory=list)
+    rate_config: dict[str, typing.Any] = Field(default_factory=dict)
+
+
 if __name__ == '__main__':
     pass
 

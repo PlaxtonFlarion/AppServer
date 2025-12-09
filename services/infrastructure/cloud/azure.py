@@ -11,7 +11,9 @@ import typing
 import hashlib
 from loguru import logger
 from fastapi import Request
-from schemas.cognitive import SpeechRequest
+from schemas.cognitive import (
+    SpeechRequest, Mix
+)
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
 from services.infrastructure.storage.r2_storage import R2Storage
@@ -38,11 +40,16 @@ class Azure(object):
         }
 
     @staticmethod
-    async def tts_meta(a: str, t: int, n: str) -> dict:
+    async def tts_meta(request: Request, a: str, t: int, n: str) -> dict:
         app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
+        cache: UpStash = request.app.state.cache
+
+        mix = Mix(**await cache.get(const.MIX))
+        cur = mix.app.get("Azure", {}).get("tts_engine", {}).get("enabled", False)
+
         license_info = {
-            "mode": {"enabled": False, "formats": ["mp3"]}
+            "mode": {"enabled": cur, "formats": ["mp3"]}
         }
 
         signed_data = signature.signature_license(
@@ -62,7 +69,7 @@ class Azure(object):
         r2: R2Storage  = request.app.state.r2
 
         # 👉 优先读取 Redis（只存储对象 Key）
-        if cached := await cache.redis_get(cache_key):
+        if cached := await cache.get(cache_key):
             cached   = json.loads(cached)
             r2_key   = cached["key"]
             filename = f"speech.{req.waver}"
@@ -79,7 +86,7 @@ class Azure(object):
 
         # 👉 如果 Cloudflare R2 已存在，生成签名 URL
         if r2.file_exists(r2_key):
-            await cache.redis_set(cache_key, json.dumps({"key": r2_key}), ex=86400)
+            await cache.set(cache_key, json.dumps({"key": r2_key}), ex=86400)
             logger.info(f"Redis cache -> {r2_key}")
 
             signed_url = r2.signed_url_for_stream(
@@ -147,7 +154,7 @@ class Azure(object):
             )
 
             # 👉 写入 Redis 缓存（只存 Key）
-            await cache.redis_set(cache_key, json.dumps({"key": r2_key}), ex=86400)
+            await cache.set(cache_key, json.dumps({"key": r2_key}), ex=86400)
             logger.info(f"Redis cache -> {r2_key}")
 
             # 👉 生成签名 URL（每次请求都重新生成）

@@ -6,9 +6,9 @@
 #
 
 import typing
-from loguru import logger
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from schemas.cognitive import Mix
+from schemas.errors import AuthorizationError
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
 from utils import const
@@ -20,13 +20,11 @@ async def jwt_auth_middleware(
 ) -> typing.Any:
     """鉴权中间件"""
 
-    cache_key = f"WhiteList"
-
     cache: UpStash = request.app.state.cache
 
-    public_paths = cached if (
-        cached := await cache.redis_get(cache_key)
-    ) else const.PUBLIC_PATHS
+    mix = Mix(**await cache.get(const.MIX))
+
+    public_paths = cached if (cached := mix.white_list) else const.PUBLIC_PATHS
 
     if request.url.path in public_paths:
         return await call_next(request)
@@ -37,27 +35,17 @@ async def jwt_auth_middleware(
     x_app_version = request.headers.get("X-App-Version")
 
     if not x_app_id or not x_app_token:
-        return JSONResponse(
-            content={
-                "error"    : "missing headers",
-                "trace_id" : getattr(request.state, "trace_id", None)
-            },
-            status_code=401
+        raise AuthorizationError(
+            status_code=401, detail="Unauthorized"
         )
 
     try:
-        payload = signature.verify_jwt(x_app_id, x_app_token)
+        signature.verify_jwt(x_app_id, x_app_token)
     except Exception as e:
-        logger.warning(f"[{getattr(request.state, 'trace_id', '-')}] ❌ JWT error: {e}")
-        return JSONResponse(
-            content={
-                "error"    : str(e),
-                "trace_id" : getattr(request.state, "trace_id", None)
-            },
-            status_code=403
+        raise AuthorizationError(
+            status_code=403, detail=str(e)
         )
 
-    request.state.jwt_payload   = payload
     request.state.x_app_id      = x_app_id
     request.state.x_app_token   = x_app_token
     request.state.x_app_region  = x_app_region

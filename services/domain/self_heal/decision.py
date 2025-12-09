@@ -236,6 +236,7 @@ class Decision(object):
 
         except Exception as e:
             yield f"\033[31m[FATAL ERROR] ❌ {e}\033[0m\n"
+            raise e
 
 
 if __name__ == '__main__':

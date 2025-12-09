@@ -1,11 +1,11 @@
-#  _  __                     _ _
-# | |/ /___  ___ _ __   __ _| (_)_   _____
-# | ' // _ \/ _ \ '_ \ / _` | | \ \ / / _ \
-# | . \  __/  __/ |_) | (_| | | |\ V /  __/
-# |_|\_\___|\___| .__/ \__,_|_|_| \_/ \___|
-#               |_|
+#   ____
+#  / ___|___  _ __ ___  _ __ ___   ___  _ __
+# | |   / _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \
+# | |__| (_) | | | | | | | | | | | (_) | | | |
+#  \____\___/|_| |_| |_|_| |_| |_|\___/|_| |_|
 #
 
+import json
 import math
 import time
 import httpx
@@ -16,12 +16,104 @@ from loguru import logger
 from fastapi import (
     Request, HTTPException
 )
+from schemas.errors import BizError
 from services.domain.standard import signature
-from services.infrastructure.db import supabase
-from utils import const
+from services.infrastructure.cache.upstash import UpStash
+from services.infrastructure.db.supabase import Supabase
+from utils import (
+    const, toolset
+)
 
 
-async def cpu_heavy_work() -> dict:
+# workflow: bootstrap
+async def resolve_bootstrap(
+    request: Request,
+    a: str,
+    t: int,
+    n: str
+) -> dict:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    x_app_region  = request.state.x_app_region
+    x_app_version = request.state.x_app_version
+
+    cache_key = f"{app_desc}:Activation"
+
+    cache: UpStash = request.app.state.cache
+
+    if cached := await cache.get(cache_key):
+        logger.success(f"下发缓存激活配置 -> {cache_key}")
+        return json.loads(cached)
+
+    ttl = 86400
+
+    license_info = {
+        "configuration" : {},
+        "url"           : "https://api.appserverx.com/sign",
+        "ttl"           : ttl,
+        "region"        : x_app_region,
+        "version"       : x_app_version,
+        "message"       : "Use activation node"
+    }
+
+    signed_data = signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
+    await cache.set(cache_key, json.dumps(signed_data), ex=ttl)
+    logger.info(f"Redis cache -> {cache_key}")
+
+    logger.success(f"下发激活配置 -> Use activation node")
+    return signed_data
+
+
+# workflow: configuration
+async def resolve_configuration(
+    request: Request,
+    a: str,
+    t: int,
+    n: str
+) -> dict:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    x_app_region  = request.state.x_app_region
+    x_app_version = request.state.x_app_version
+
+    cache_key = f"{app_desc}:Configuration"
+
+    cache: UpStash = request.app.state.cache
+
+    if cached := await cache.get(cache_key):
+        logger.info(f"下发缓存全局配置 -> {cache_key}")
+        return json.loads(cached)
+
+    config      = toolset.resolve_template("data", const.CONFIGURATION)
+    config_dict = json.loads(config.read_text(encoding=const.CHARSET))
+
+    ttl = 86400
+
+    license_info = {
+        "configuration" : config_dict.get(app_desc, {}),
+        "url"           : "",
+        "ttl"           : ttl,
+        "region"        : x_app_region,
+        "version"       : x_app_version,
+        "message"       : "Use global configuration"
+    }
+
+    signed_data = signature.signature_license(
+        license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+    )
+    await cache.set(cache_key, json.dumps(signed_data), ex=ttl)
+    logger.info(f"Redis cache -> {cache_key}")
+
+    logger.success(f"下发全局配置 -> Use global configuration")
+    return signed_data
+
+
+# workflow: keepalive render
+async def keepalive_render() -> dict:
     """Render 保活"""
 
     def calc_primes() -> int:
@@ -71,22 +163,17 @@ async def cpu_heavy_work() -> dict:
     }
 
 
-async def single_query(request: Request) -> dict:
+# workflow: keepalive supabase
+async def keepalive_supabase(request: Request) -> dict:
     """Supabase 保活"""
 
-    apikey        = request.headers.get("apikey")
-    authorization = f"Bearer {apikey}"
+    supabase: Supabase = request.app.state.supabase
 
-    url     = f"{supabase.supabase_url}/rest/v1/{const.LICENSE_CODES}"
     params  = {"select": "id", "limit": 1}
-    headers = {
-        "apikey"        : apikey,
-        "Authorization" : authorization
-    }
 
     try:
-        async with httpx.AsyncClient(headers=headers, timeout=90) as client:
-            resp = await client.request("GET", url, params=params)
+        async with httpx.AsyncClient(headers=supabase.headers, timeout=90) as client:
+            resp = await client.request("GET", supabase.url, params=params)
             resp.raise_for_status()
 
             logger.info("🟢 Supabase online")
@@ -99,26 +186,25 @@ async def single_query(request: Request) -> dict:
 
     except httpx.HTTPStatusError as e:
         logger.warning(f"🟡 Supabase offline: {e.response.status_code}")
-        raise HTTPException(
+        raise BizError(
             status_code=503,
             detail=f"Supabase offline ({e.response.status_code}): {e.response.text}"
         )
 
     except httpx.ConnectError as e:
         logger.error(f"🔴 Supabase connection error: {e}")
-        raise HTTPException(
+        raise BizError(
             status_code=502,
             detail=f"Supabase unreachable: {str(e)}"
         )
 
 
-async def predict_warmup(a: str, t: int, n: str) -> dict:
-    """Modal 预热"""
-
-    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+# workflow: keepalive modal
+async def keepalive_modal() -> dict:
+    """Modal 保活"""
 
     expire_at = int(time.time()) + 86400
-    token     = signature.sign_token(app_desc, expire_at)
+    token     = signature.sign_token("Modal", expire_at)
     headers   = {const.TOKEN_FORMAT: token}
 
     try:

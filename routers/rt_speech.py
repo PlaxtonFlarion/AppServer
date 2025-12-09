@@ -6,7 +6,6 @@
 #       |_|
 #
 
-from loguru import logger
 from fastapi import (
     APIRouter, Request, Query
 )
@@ -19,9 +18,9 @@ speech_router = APIRouter(tags=["Speech"])
 
 @speech_router.get(
     path="/speech-meta",
-    operation_id="speech_meta"
+    operation_id="api_speech_meta"
 )
-async def speech_meta(
+async def api_speech_meta(
     request: Request,
     a: str = Query(..., alias="a"),
     t: int = Query(..., alias="t"),
@@ -34,16 +33,16 @@ async def speech_meta(
     """
 
     return await request.app.state.azure.tts_meta(
-        a, t, n
+        request, a, t, n
     )
 
 
 @speech_router.post(
     path="/speech-voice",
     response_model=SpeechResponse,
-    operation_id="speech_voice"
+    operation_id="api_speech_voice"
 )
-async def speech_voice(
+async def api_speech_voice(
     req: SpeechRequest,
     request: Request
 ):
@@ -52,7 +51,6 @@ async def speech_voice(
 
     提交语音内容与目标格式，返回可下载的音频文件或链接。
     """
-    logger.info(f"voice request: {req}")
 
     return await request.app.state.azure.tts_audio(
         req, request

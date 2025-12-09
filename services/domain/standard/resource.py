@@ -1,20 +1,23 @@
-#  ____                      _                 _
-# |  _ \  _____      ___ __ | | ___   __ _  __| |
-# | | | |/ _ \ \ /\ / / '_ \| |/ _ \ / _` |/ _` |
-# | |_| | (_) \ V  V /| | | | | (_) | (_| | (_| |
-# |____/ \___/ \_/\_/ |_| |_|_|\___/ \__,_|\__,_|
+#  ____
+# |  _ \ ___  ___  ___  _   _ _ __ ___ ___
+# | |_) / _ \/ __|/ _ \| | | | '__/ __/ _ \
+# |  _ <  __/\__ \ (_) | |_| | | | (_|  __/
+# |_| \_\___||___/\___/ \__,_|_|  \___\___|
 #
 
 import json
 from loguru import logger
 from fastapi import Request
+from schemas.errors import BizError
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
 from services.infrastructure.storage.r2_storage import R2Storage
-from utils import const
+from utils import (
+    const, toolset
+)
 
 
-async def resolve_stencil_download(
+async def resolve_template_download(
     request: Request,
     a: str,
     t: int,
@@ -26,13 +29,13 @@ async def resolve_stencil_download(
     x_app_region  = request.state.x_app_region
     x_app_version = request.state.x_app_version
 
-    cache_key = f"Template:{app_desc}"
+    cache_key = f"{app_desc}:Template"
 
     ttl = 86400
 
     cache: UpStash = request.app.state.cache
 
-    if cached := await cache.redis_get(cache_key):
+    if cached := await cache.get(cache_key):
         logger.success(f"下发缓存模版元信息 -> {cache_key}")
         license_info = json.loads(cached)
     else:
@@ -78,7 +81,7 @@ async def resolve_stencil_download(
             "version"  : x_app_version,
             "message"  : "Available templates for client to choose"
         }
-        await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
+        await cache.set(cache_key, json.dumps(license_info), ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
 
     signed_data = signature.signature_license(
@@ -103,14 +106,14 @@ async def resolve_toolkit_download(
     x_app_version = request.state.x_app_version
 
     group     = "MacOS" if platform == "darwin" else "Windows"
-    cache_key = f"Toolkit:{app_desc}:{group}"
+    cache_key = f"{app_desc}:{group}:Toolkit"
 
     ttl = 86400
 
     cache: UpStash = request.app.state.cache
     r2: R2Storage  = request.app.state.r2
 
-    if cached := await cache.redis_get(cache_key):
+    if cached := await cache.get(cache_key):
         logger.success(f"下发缓存工具元信息 -> {cache_key}")
         license_info = json.loads(cached)
     else:
@@ -193,7 +196,7 @@ async def resolve_toolkit_download(
             "version" : x_app_version,
             "message" : "Available toolkits for client to choose"
         }
-        await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
+        await cache.set(cache_key, json.dumps(license_info), ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
 
     # 每次都重新签名 URL
@@ -227,7 +230,7 @@ async def resolve_model_download(
     x_app_region  = request.state.x_app_region
     x_app_version = request.state.x_app_version
 
-    cache_key = f"Models:{app_desc}"
+    cache_key = f"{app_desc}:Models"
 
     ttl = 86400
 
@@ -238,7 +241,7 @@ async def resolve_model_download(
     cache: UpStash = request.app.state.cache
     r2: R2Storage  = request.app.state.r2
 
-    if cached := await cache.redis_get(cache_key):
+    if cached := await cache.get(cache_key):
         logger.success(f"下发缓存模型元信息 -> {cache_key}")
         license_info = json.loads(cached)
     else:
@@ -264,7 +267,7 @@ async def resolve_model_download(
             "version" : x_app_version,
             "message" : "Available models for client to choose"
         }
-        await cache.redis_set(cache_key, json.dumps(license_info), ex=ttl)
+        await cache.set(cache_key, json.dumps(license_info), ex=ttl)
         logger.info(f"Redis cache -> {cache_key}")
 
     # 每次都重新签名 URL
@@ -281,6 +284,23 @@ async def resolve_model_download(
 
     logger.success(f"下发模型元信息 -> Available models for client to choose")
     return signed_data
+
+
+async def stencil_case(
+    a: str,
+    t: int,
+    n: str,
+    case: str
+) -> str:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    try:
+        business_file = toolset.resolve_template("case", case)
+        return json.loads(business_file.read_text(encoding=const.CHARSET))
+
+    except FileNotFoundError:
+        raise BizError(status_code=404, detail=f"文件名不存在: {case}")
 
 
 if __name__ == '__main__':

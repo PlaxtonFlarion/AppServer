@@ -12,6 +12,7 @@ from loguru import logger
 from fastapi import (
     Request, HTTPException
 )
+from schemas.cognitive import Mix
 from services.infrastructure.cache.upstash import UpStash
 from utils import const
 
@@ -24,11 +25,9 @@ async def rate_limit_middleware(
 
     cache: UpStash = request.app.state.cache
 
-    cache_key = f"Rate:Config"
+    mix = Mix(**await cache.get(const.MIX))
 
-    config = cached if (
-        cached := await cache.redis_get(cache_key)
-    ) else const.RATE_CONFIG
+    config = cached if (cached := mix.rate_config) else const.RATE_CONFIG
 
     route = request.url.path
     ip    = request.client.host

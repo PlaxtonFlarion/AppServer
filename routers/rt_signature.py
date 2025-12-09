@@ -1,8 +1,9 @@
-#  ____                     _         _
-# |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __
-# | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \
-# |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | |
-# |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|
+#  ____  _                   _                    ____             _
+# / ___|(_) __ _ _ __   __ _| |_ _   _ _ __ ___  |  _ \ ___  _   _| |_ ___ _ __
+# \___ \| |/ _` | '_ \ / _` | __| | | | '__/ _ \ | |_) / _ \| | | | __/ _ \ '__|
+#  ___) | | (_| | | | | (_| | |_| |_| | | |  __/ |  _ < (_) | |_| | ||  __/ |
+# |____/|_|\__, |_| |_|\__,_|\__|\__,_|_|  \___| |_| \_\___/ \__,_|\__\___|_|
+#          |___/
 #
 
 from loguru import logger
@@ -14,15 +15,15 @@ from schemas.cognitive import (
 )
 from services.domain.standard import signature
 
-permission_router = APIRouter(tags=["Permission"])
+signature_router = APIRouter(tags=["Signature"])
 
 
-@permission_router.post(
+@signature_router.post(
     path="/sign",
     response_model=LicenseResponse,
-    operation_id="sign"
+    operation_id="api_sign"
 )
-async def sign(
+async def api_sign(
     req: LicenseRequest,
     request: Request,
 ):

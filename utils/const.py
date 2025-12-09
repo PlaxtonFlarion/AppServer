@@ -124,22 +124,29 @@ end
 # ---- Notes: 限流 ----
 RATE_CONFIG = {
     "default": {
-        "burst"    : 10,  # 令牌桶容量 （瞬时最大并发）
-        "rate"     : 2,   # 每秒恢复几个令牌（QPS限制）
-        "max_wait" : 1    # 超过等待秒数后直接报错
+        "burst"    : 10,
+        "rate"     : 2,
+        "max_wait" : 1
     },
     "routes": {
         "/sign": {
             "burst" : 2,
-            "rate"  : 0.2  # 5秒才能恢复1个令牌
+            "rate"  : 0.2
         },
-        "/healing": {
+        "/self-heal": {
             "burst" : 5,
             "rate"  : 1
+        },
+        "/self-heal-stream": {
+            "burst": 5,
+            "rate": 1
         }
     },
     "ip": {}
 }
+
+# ---- Notes: Redis Key ----
+MIX = "Mix"
 
 
 if __name__ == '__main__':

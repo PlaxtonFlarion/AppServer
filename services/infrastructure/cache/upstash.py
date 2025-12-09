@@ -7,12 +7,8 @@
 #
 
 import json
-import time
 import typing
 import redis.asyncio as aioredis
-from fastapi import (
-    Request, HTTPException
-)
 from utils import (
     const, toolset
 )
@@ -27,31 +23,27 @@ redis_cache_key = env[const.REDIS_CACHE_KEY]
 
 class UpStash(object):
 
-    def __init__(self, prefix: str = "app:"):
+    def __init__(self):
         self.client = aioredis.Redis.from_url(
             url=f"rediss://default:{redis_cache_key}@{redis_cache_url}",
             decode_responses=True,
             encoding=const.CHARSET
         )
-        self.prefix = prefix
 
-    def redis_make_key(self, key: str) -> str:
-        return f"{self.prefix}{key}"
-
-    async def redis_set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
-        val = json.dumps(value)
-        return bool(await self.client.set(self.redis_make_key(key), val, ex=ex))
-
-    async def redis_get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
-        if (val := await self.client.get(self.redis_make_key(key))) is None:
+    async def get(self, key: str) -> typing.Optional[typing.Union[dict, list, str, int, float]]:
+        if (val := await self.client.get(key)) is None:
             return None
         try:
             return json.loads(val)
         except (json.JSONDecodeError, TypeError):
             return val
 
-    async def redis_delete(self, key: str) -> typing.Optional[int]:
-        return await self.client.delete(self.redis_make_key(key))
+    async def set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
+        val = json.dumps(value)
+        return bool(await self.client.set(key, val, ex=ex))
+
+    async def delete(self, key: str) -> typing.Optional[int]:
+        return await self.client.delete(key)
 
 
 if __name__ == '__main__':
