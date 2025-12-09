@@ -172,7 +172,7 @@ class Decision(object):
             [float], str
         ] = lambda x: f"\033[38;5;141m time={time.time() - x:.2f}s\033[0m\n"
 
-        async def typewriter(text: str, speed: float = 0.02):
+        async def typewriter(text: str, speed: float = 0.5):
             """逐字符流式输出"""
             for ch in text:
                 yield ch; await asyncio.sleep(speed)  # 控制打字速度
