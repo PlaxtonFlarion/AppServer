@@ -5,7 +5,6 @@
 #  /_/   \_\/___|\__,_|_|  \___|
 #
 
-import json
 import httpx
 import typing
 import hashlib
@@ -73,7 +72,6 @@ class Azure(object):
 
         # 👉 优先读取 Redis（只存储对象 Key）
         if cached := await cache.get(cache_key):
-            cached   = json.loads(cached)
             r2_key   = cached["key"]
             filename = f"speech.{req.waver}"
 
@@ -89,7 +87,7 @@ class Azure(object):
 
         # 👉 如果 Cloudflare R2 已存在，生成签名 URL
         if r2.file_exists(r2_key):
-            await cache.set(cache_key, json.dumps({"key": r2_key}), ex=86400)
+            await cache.set(cache_key, {"key": r2_key}, ex=86400)
             logger.info(f"Redis cache -> {r2_key}")
 
             signed_url = r2.signed_url_for_stream(
@@ -157,7 +155,7 @@ class Azure(object):
             )
 
             # 👉 写入 Redis 缓存（只存 Key）
-            await cache.set(cache_key, json.dumps({"key": r2_key}), ex=86400)
+            await cache.set(cache_key, {"key": r2_key}, ex=86400)
             logger.info(f"Redis cache -> {r2_key}")
 
             # 👉 生成签名 URL（每次请求都重新生成）
