@@ -124,7 +124,7 @@ class Decision(object):
 
         logger.info(f"模型决策: {str(self.llm_groq)}")
         decision = await self.llm_groq.best_candidate(
-            self.request, self.req.old_locator, top_candidates
+            self.req.old_locator, top_candidates
         )
 
         index, reason = decision["index"], decision["reason"]
