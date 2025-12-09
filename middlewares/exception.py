@@ -37,7 +37,7 @@ async def exception_middleware(
         )
         return JSONResponse(
             content={
-                "error"    : "fatal",
+                "error"    : "FATAL",
                 "details"  : e.detail,
                 "type"     : e.__class__.__name__,
                 "trace_id" : trace_id
@@ -51,7 +51,7 @@ async def exception_middleware(
         )
         return JSONResponse(
             content={
-                "error"    : "http exception",
+                "error"    : "HTTP EXCEPTION",
                 "details"  : e.detail,
                 "type"     : e.__class__.__name__,
                 "trace_id" : trace_id
@@ -65,7 +65,7 @@ async def exception_middleware(
         )
         return JSONResponse(
             content={
-                "error"    : "validation error",
+                "error"    : "REQUEST VALIDATION ERROR",
                 "details"  : e.errors(),
                 "type"     : e.__class__.__name__,
                 "trace_id" : trace_id
@@ -79,7 +79,7 @@ async def exception_middleware(
         )
         return JSONResponse(
             content={
-                "error"    : "internal server error",
+                "error"    : "INTERNAL ERROR",
                 "details"  : str(e),
                 "type"     : e.__class__.__name__,
                 "trace_id" : trace_id

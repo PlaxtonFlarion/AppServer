@@ -8,10 +8,12 @@
 from fastapi import (
     APIRouter, Request, Query
 )
+from fastapi.responses import PlainTextResponse
 from services.domain.standard.resource import (
     resolve_template_download,
     resolve_toolkit_download,
     resolve_model_download,
+    stencil_viewer,
     stencil_case
 )
 
@@ -74,6 +76,26 @@ async def api_model_meta(
     """
 
     return await resolve_model_download(request, a, t, n)
+
+
+@resource_router.get(
+    path="/template-viewer",
+    response_class=PlainTextResponse,
+    operation_id="api_template_viewer"
+)
+async def api_template_viewer(
+    a: str = Query(..., alias="a"),
+    t: int = Query(..., alias="t"),
+    n: str = Query(..., alias="n"),
+    page: str = Query(..., alias="page")
+):
+    """
+    单个模板内容下载接口。
+
+    通过模板名获取其纯文本内容（如 HTML、JSON 模板等）。
+    """
+
+    return await stencil_viewer(a, t, n, page)
 
 
 @resource_router.get(

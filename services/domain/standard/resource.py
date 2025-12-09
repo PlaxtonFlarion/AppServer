@@ -43,33 +43,33 @@ async def resolve_template_download(
             "Framix": {
                 "template_atom_total.html": {
                     "filename" : "template_atom_total.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 },
                 "template_line_total.html": {
                     "filename" : "template_line_total.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 },
                 "template_main_share.html": {
                     "filename" : "template_main_share.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 },
                 "template_main_total.html": {
                     "filename" : "template_main_total.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 },
                 "template_view_share.html": {
                     "filename" : "template_view_share.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 },
                 "template_view_total.html": {
                     "filename" : "template_view_total.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 }
             },
             "Memrix": {
                 "unity_template.html": {
                     "filename" : "unity_template.html",
-                    "url"      : "https://appserver-u7hd.onrender.com/template-viewer"
+                    "url"      : "https://api.appserverx.com/template-viewer"
                 }
             }
         }
@@ -284,6 +284,23 @@ async def resolve_model_download(
 
     logger.success(f"下发模型元信息 -> Available models for client to choose")
     return signed_data
+
+
+async def stencil_viewer(
+    a: str,
+    t: int,
+    n: str,
+    page: str
+) -> str:
+
+    app_name, app_desc, *_ = a.lower().strip(), a, t, n
+
+    try:
+        html_template = toolset.resolve_template("html", page)
+        return html_template.read_text(encoding=const.CHARSET)
+
+    except FileNotFoundError:
+        raise BizError(status_code=404, detail=f"文件名不存在: {page}")
 
 
 async def stencil_case(

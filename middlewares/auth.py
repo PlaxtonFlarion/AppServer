@@ -6,6 +6,7 @@
 #
 
 import typing
+from loguru import logger
 from fastapi import Request
 from schemas.cognitive import Mix
 from schemas.errors import AuthorizationError
@@ -35,15 +36,21 @@ async def jwt_auth_middleware(
     x_app_version = request.headers.get("X-App-Version")
 
     if not x_app_id or not x_app_token:
+        logger.error(
+            f"🚫 Missing credentials — X-App-Id={x_app_id}, X-App-Token={x_app_token}"
+        )
         raise AuthorizationError(
-            status_code=401, detail="Unauthorized"
+            status_code=401, detail="Missing authentication credentials"
         )
 
     try:
         signature.verify_jwt(x_app_id, x_app_token)
     except Exception as e:
+        logger.error(
+            f"❗ Token verification failed, Reason={e}"
+        )
         raise AuthorizationError(
-            status_code=403, detail=str(e)
+            status_code=403, detail="Invalid token"
         )
 
     request.state.x_app_id      = x_app_id
