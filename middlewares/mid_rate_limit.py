@@ -29,7 +29,7 @@ async def rate_limit_middleware(
     else: mix = Mix(**const.V_MIX)
 
     config = mix.rate_config
-    logger.info(f"远程限流服务状态 -> {config}")
+    logger.info(f"远程限流配置表 -> {config}")
 
     route = request.url.path
     ip    = request.client.host
@@ -39,7 +39,7 @@ async def rate_limit_middleware(
     route_config   = config.get("routes", {}).get(route, {})
     ip_config      = config.get("ip", {}).get(ip, {})
 
-    # Notes: ==== 生成最终配置 (IP > route > default) ===
+    # ==== 生成最终配置 (IP > route > default) ===
     final = {**default_config, **route_config, **ip_config}
     logger.info(f"RateRule={final}")
 

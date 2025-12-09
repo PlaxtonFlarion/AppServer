@@ -255,6 +255,7 @@ class HealResponse(BaseModel):
 
 
 class ElementNode(BaseModel):
+
     id: typing.Optional[str] = None
     text: typing.Optional[str] = None
     content_desc: typing.Optional[str] = None
@@ -300,11 +301,16 @@ class ElementNode(BaseModel):
             "desc"         : self.ensure_desc(),
         }
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Mix(BaseModel):
+
     app: dict[str, typing.Any] = Field(default_factory=dict)
     white_list: list[str] = Field(default_factory=list)
     rate_config: dict[str, typing.Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 if __name__ == '__main__':
