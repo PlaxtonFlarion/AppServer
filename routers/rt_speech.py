@@ -10,7 +10,7 @@ from fastapi import (
     APIRouter, Request, Query
 )
 from schemas.cognitive import (
-    SpeechRequest, SpeechResponse
+    LicenseResponse, SpeechRequest, SpeechResponse
 )
 
 speech_router = APIRouter(tags=["Speech"])
@@ -18,6 +18,7 @@ speech_router = APIRouter(tags=["Speech"])
 
 @speech_router.get(
     path="/speech-meta",
+    response_model=LicenseResponse,
     operation_id="api_speech_meta"
 )
 async def api_speech_meta(

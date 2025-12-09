@@ -6,12 +6,11 @@
 #
 
 import httpx
-import typing
 import hashlib
 from loguru import logger
 from fastapi import Request
 from schemas.cognitive import (
-    SpeechRequest, Mix
+    LicenseResponse, SpeechRequest, Mix, SpeechResponse
 )
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
@@ -39,7 +38,7 @@ class Azure(object):
         }
 
     @staticmethod
-    async def tts_meta(request: Request, a: str, t: int, n: str) -> dict:
+    async def tts_meta(request: Request, a: str, t: int, n: str) -> LicenseResponse:
         app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
         cache: UpStash = request.app.state.cache
@@ -57,10 +56,9 @@ class Azure(object):
         signed_data = signature.signature_license(
             license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
         )
+        return LicenseResponse(**signed_data)
 
-        return signed_data
-
-    async def tts_audio(self, req: SpeechRequest, request: Request) -> typing.Any:
+    async def tts_audio(self, req: SpeechRequest, request: Request) -> SpeechResponse:
         logger.info(f"{req.voice} -> {req.speak}")
 
         cache_key = "speech:" + hashlib.md5(
@@ -79,7 +77,7 @@ class Azure(object):
                 key=r2_key, expires_in=3600, disposition_filename=filename
             )
             logger.info(f"下发缓存签名 URL -> {signed_url}")
-            return {"url": signed_url}
+            return SpeechResponse(url=signed_url)
 
         # 👉 构建 R2 Key 和文件名
         r2_key   = f"speech-cache/{cache_key}.{req.waver}"
@@ -94,7 +92,7 @@ class Azure(object):
                 key=r2_key, expires_in=3600, disposition_filename=filename
             )
             logger.info(f"下发 R2 签名 URL -> {signed_url}")
-            return {"url": signed_url}
+            return SpeechResponse(url=signed_url)
 
         # 👉 生成 SSML
         prosody = f"<prosody rate='{req.rater}' pitch='{req.pitch}' volume='{req.volume}'>{req.speak}</prosody>"
@@ -164,7 +162,7 @@ class Azure(object):
             )
 
             logger.info(f"上传并下发签名 URL -> {signed_url}")
-            return {"url": signed_url}
+            return SpeechResponse(url=signed_url)
 
 
 if __name__ == '__main__':
