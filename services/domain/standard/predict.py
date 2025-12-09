@@ -11,7 +11,7 @@ import base64
 from loguru import logger
 from fastapi import Request
 from schemas.cognitive import (
-    PredictResponse, Mix
+    LicenseResponse, Mix
 )
 from services.domain.standard import signature
 from services.infrastructure.cache.upstash import UpStash
@@ -23,7 +23,7 @@ async def resolve_proxy_predict(
     a: str,
     t: int,
     n: str
-) -> PredictResponse:
+) -> LicenseResponse:
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -41,10 +41,14 @@ async def resolve_proxy_predict(
     logger.info(f"远程推理服务状态 -> {cur}")
 
     if cached := await cache.get(cache_key):
-        cache_data = json.loads(base64.b64decode(json.loads(cached)["data"]))
-        if (previous := cache_data["available"]) == cur:
+        # cache_data = cached["data"]
+        # cache_data = json.loads(base64.b64decode(json.loads(cached)["data"]))
+        if (previous := cached["available"]) == cur:
             logger.success(f"下发缓存推理服务 -> {cache_key}")
-            return json.loads(cached)
+            signed_data = signature.signature_license(
+                cached, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
+            )
+            return LicenseResponse(**signed_data)
         logger.info(f"推理服务状态变更 -> Cached={previous} Remote={cur}")
         await cache.delete(cache_key)
     available = cur
@@ -73,12 +77,12 @@ async def resolve_proxy_predict(
     signed_data = signature.signature_license(
         license_info, private_key=f"{app_name}_{const.BASE_PRIVATE_KEY}"
     )
-    await cache.set(cache_key, signed_data, ex=ttl)
+    await cache.set(cache_key, license_info, ex=ttl)
     # await cache.set(cache_key, json.dumps(signed_data), ex=ttl)
     logger.info(f"Redis cache -> {cache_key}")
 
     logger.success(f"下发推理服务 -> Predict service online")
-    return PredictResponse(**signed_data)
+    return LicenseResponse(**signed_data)
 
 
 if __name__ == '__main__':

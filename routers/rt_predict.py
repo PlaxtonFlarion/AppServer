@@ -8,7 +8,7 @@
 from fastapi import (
     APIRouter, Request, Query
 )
-from schemas.cognitive import PredictResponse
+from schemas.cognitive import LicenseResponse
 from services.domain.standard.predict import resolve_proxy_predict
 
 predict_router = APIRouter(tags=["Predict"])
@@ -16,7 +16,7 @@ predict_router = APIRouter(tags=["Predict"])
 
 @predict_router.get(
     path="/proxy-predict",
-    response_model=PredictResponse,
+    response_model=LicenseResponse,
     operation_id="api_proxy_predict"
 )
 async def api_proxy_predict(

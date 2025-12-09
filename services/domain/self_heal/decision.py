@@ -116,7 +116,7 @@ class Decision(object):
     async def llm_decision(self, top_candidates: list[dict]) -> HealResponse:
         logger.info(f"模型决策: {str(self.llm_groq)}")
         decision = await self.llm_groq.best_candidate(
-            self.req.old_locator, self.request, top_candidates
+            self.request, self.req.old_locator, top_candidates
         )
 
         index, reason = decision["index"], decision["reason"]

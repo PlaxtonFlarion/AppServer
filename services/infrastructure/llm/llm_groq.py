@@ -34,7 +34,7 @@ class LLMGroq(object):
 
     def __init__(self):
         self.llm_groq_client: Groq = Groq(api_key=groq_llm_key)
-        self.llm_groq_model: typing.Optional[str] = "llama-3.1-8b-instant"
+        self.llm_groq_model: typing.Optional[str] = None
 
     def __str__(self) -> str:
         return f"<LLM Groq {self.llm_groq_model}>"
