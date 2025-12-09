@@ -172,7 +172,7 @@ class Decision(object):
             [float], str
         ] = lambda x: f"\033[38;5;141m time={time.time() - x:.2f}s\033[0m\n"
 
-        async def typewriter(text: str, speed: float = 0.5):
+        async def typewriter(text: str, speed: float = 0.1) -> typing.AsyncGenerator[str, None]:
             """逐字符流式输出"""
             for ch in text:
                 yield ch; await asyncio.sleep(speed)  # 控制打字速度
@@ -182,14 +182,11 @@ class Decision(object):
         try:
             # ===== Step 1 =====
             step += 1
-            async for line in typewriter(fmt(f"📩 [{step}/6] 解析页面结构中...\n")):
-                yield line
+            yield fmt(f"📩 [{step}/6] 解析页面结构中...\n")
             t = time.time()
             node_list = await self.parse_tree()
-            async for line in typewriter(ok(f"  └ done. nodes={len(node_list)},{stamp(t)}")):
-                yield line
-            async for line in typewriter(info("------------------------------------------------------------\n")):
-                yield line
+            yield ok(f"  └ done. nodes={len(node_list)},{stamp(t)}")
+            yield info("------------------------------------------------------------\n")
 
             # ===== Step 2 =====
             step += 1
@@ -244,7 +241,7 @@ class Decision(object):
 
         except Exception as e:
             yield f"\033[31m[FATAL ERROR] ❌ {e}\033[0m\n"
-            raise e
+            logger.error(f"[FATAL ERROR] ❌ {e}")
 
 
 if __name__ == '__main__':

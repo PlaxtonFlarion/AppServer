@@ -7,12 +7,12 @@
 
 from fastapi import FastAPI
 
-from .trace       import trace_middleware
-from .performance import performance_middleware
-from .logging     import logging_middleware
-from .rate_limit  import rate_limit_middleware
-from .auth        import jwt_auth_middleware
-from .exception   import exception_middleware
+from .mid_trace       import trace_middleware
+from .mid_performance import performance_middleware
+from .mid_logging     import logging_middleware
+from .mid_rate_limit  import rate_limit_middleware
+from .mid_auth        import jwt_auth_middleware
+from .mid_exception   import exception_middleware
 
 
 def register_middlewares(app: FastAPI) -> None:
