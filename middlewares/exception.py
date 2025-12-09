@@ -37,7 +37,7 @@ async def exception_middleware(
         )
         return JSONResponse(
             content={
-                "error"    : e.message,
+                "error"    : "fatal",
                 "details"  : e.detail,
                 "type"     : e.__class__.__name__,
                 "trace_id" : trace_id

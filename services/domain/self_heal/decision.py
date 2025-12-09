@@ -169,26 +169,34 @@ class Decision(object):
         info  : typing.Callable[[str], str] = lambda x: f"\033[38;5;245m• {x}\033[0m\n"
         block : typing.Callable[[str], str] = lambda x: f"\033[48;5;57;38;5;230m {x} \033[0m"
         stamp : typing.Callable[
-            [], str
-        ] = lambda: f"\033[38;5;141m time={time.time() - t:.2f}s\033[0m\n"
+            [float], str
+        ] = lambda x: f"\033[38;5;141m time={time.time() - x:.2f}s\033[0m\n"
 
-        t0, step =time.time(), 0
+        async def typewriter(text: str, speed: float = 0.02):
+            """逐字符流式输出"""
+            for ch in text:
+                yield ch; await asyncio.sleep(speed)  # 控制打字速度
+
+        t0, step = time.time(), 0
 
         try:
             # ===== Step 1 =====
             step += 1
-            yield fmt(f"📩 [{step}/6] 解析页面结构中...\n")
+            async for line in typewriter(fmt(f"📩 [{step}/6] 解析页面结构中...\n")):
+                yield line
             t = time.time()
             node_list = await self.parse_tree()
-            yield ok(f"  └ done. nodes={len(node_list)},{stamp()}")
-            yield info("------------------------------------------------------------\n")
+            async for line in typewriter(ok(f"  └ done. nodes={len(node_list)},{stamp(t)}")):
+                yield line
+            async for line in typewriter(info("------------------------------------------------------------\n")):
+                yield line
 
             # ===== Step 2 =====
             step += 1
             yield fmt(f"📩 [{step}/6] 生成语义向量 Embedding...\n")
             t = time.time()
             query, query_vec, page_vectors = await self.transform(node_list)
-            yield ok(f"  └ done. dim={len(query_vec)}, vectors={len(page_vectors)},{stamp()}")
+            yield ok(f"  └ done. dim={len(query_vec)}, vectors={len(page_vectors)},{stamp(t)}")
             yield info("------------------------------------------------------------\n")
 
             # ===== Step 3 =====
@@ -196,7 +204,7 @@ class Decision(object):
             yield fmt(f"📩 [{step}/6] 写入向量存储中...\n")
             t = time.time()
             await self.burning(node_list, page_vectors)
-            yield ok(f"  └ done. db_insert={len(page_vectors)},{stamp()}")
+            yield ok(f"  └ done. db_insert={len(page_vectors)},{stamp(t)}")
             yield info("------------------------------------------------------------\n")
 
             # ===== Step 4 =====
@@ -204,7 +212,7 @@ class Decision(object):
             yield fmt(f"📩 [{step}/6] 向量召回 K 查询中...\n")
             t = time.time()
             mapped_candidates, candidate = await self.recall(query_vec, node_list)
-            yield ok(f"  └ done. retrieved={len(mapped_candidates)},{stamp()}")
+            yield ok(f"  └ done. retrieved={len(mapped_candidates)},{stamp(t)}")
             yield info("------------------------------------------------------------\n")
 
             # ===== Step 5 =====
@@ -212,7 +220,7 @@ class Decision(object):
             yield fmt(f"📩 [{step}/6] CrossEncoder 重排中...\n")
             t = time.time()
             top_candidates = await self.rerank(query, candidate, mapped_candidates)
-            yield ok(f"  └ done. top_k={len(top_candidates)},{stamp()}")
+            yield ok(f"  └ done. top_k={len(top_candidates)},{stamp(t)}")
             yield info("------------------------------------------------------------\n")
 
             # ===== Step 6 =====
@@ -220,7 +228,7 @@ class Decision(object):
             yield fmt(f"📩 [{step}/6] LLM 参与最终决策中...\n")
             t = time.time()
             result = await self.llm_decision(top_candidates)
-            yield ok(f"  └ done. healed={result.healed}, confidence={result.confidence:.4f},{stamp()}")
+            yield ok(f"  └ done. healed={result.healed}, confidence={result.confidence:.4f},{stamp(t)}")
             yield info("============================================================\n\n")
 
             # ========= Result Block =========
