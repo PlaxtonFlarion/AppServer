@@ -25,9 +25,11 @@ async def rate_limit_middleware(
 
     cache: UpStash = request.app.state.cache
 
-    mix = Mix(**await cache.get(const.MIX))
+    if mixed := await cache.get(const.K_MIX): mix = Mix(**mixed)
+    else: mix = Mix(**const.V_MIX)
 
-    config = cached if (cached := mix.rate_config) else const.RATE_CONFIG
+    config = mix.rate_config
+    logger.info(f"远程限流服务状态 -> {config}")
 
     route = request.url.path
     ip    = request.client.host

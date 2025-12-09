@@ -7,13 +7,18 @@
 #
 
 import json
+import typing
 import asyncio
 from loguru import logger
+from fastapi import Request
 from groq import Groq
 from groq.types.chat import (
     ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 )
-from schemas.cognitive import Locator
+from schemas.cognitive import (
+    Locator, Mix
+)
+from services.infrastructure.cache.upstash import UpStash
 from utils import (
     const, toolset
 )
@@ -28,15 +33,15 @@ groq_llm_key = env[const.GROQ_LLM_KEY]
 class LLMGroq(object):
 
     def __init__(self):
-        self.llm_groq_client = Groq(api_key=groq_llm_key)
-        self.llm_groq_model  = "llama-3.1-8b-instant"
+        self.llm_groq_client: Groq = Groq(api_key=groq_llm_key)
+        self.llm_groq_model: typing.Optional[str] = "llama-3.1-8b-instant"
 
     def __str__(self) -> str:
         return f"<LLM Groq {self.llm_groq_model}>"
 
     __repr__ = __str__
 
-    async def best_candidate(self, old_locator: Locator, candidates: list[dict]) -> dict:
+    async def best_candidate(self, request: Request, old_locator: Locator, candidates: list[dict]) -> dict:
         if not candidates: return {"index": -1, "reason": "没有候选元素。"}
 
         cand_desc = ""
@@ -61,6 +66,15 @@ class LLMGroq(object):
 """
 
         logger.info(prompt)
+
+        cache: UpStash = request.app.state.cache
+
+        if mixed := await cache.get(const.K_MIX): mix = Mix(**mixed)
+        else: mix = Mix(**const.V_MIX)
+
+        cur = mix.app.get("Groq", {}).get("llm", {}).get("name", None)
+        self.llm_groq_model = cur
+        logger.info(f"远程大模型 -> {self.llm_groq_model}")
 
         resp = await asyncio.to_thread(
             self.llm_groq_client.chat.completions.create,

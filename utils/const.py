@@ -67,7 +67,7 @@ SHOW_LEVEL   = r"INFO"
 PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
 WRITE_FORMAT = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 
-# ---- Notes: 应用 ----
+# ---- Notes: Application ----
 SETTINGS = {
     "title": "AppServerX",
     "description": "AppServerX Application Server",
@@ -77,20 +77,7 @@ SETTINGS = {
     "redoc_url": None,
 }
 
-# ---- Notes: 白名单 ----
-PUBLIC_PATHS = {
-    "/",
-    "/status",
-    "/keepalive-render",
-    "/keepalive-supabase",
-    "/keepalive-modal",
-    "/openapi.json",
-    "/favicon.ico",
-    "/docs",
-    "/redoc"
-}
-
-# ---- Notes: 令牌桶 ----
+# ---- Notes: Redis Token Bucket ----
 TOKEN_BUCKET_LUA = """
 local key   = KEYS[1]
 local burst = tonumber(ARGV[1])
@@ -121,32 +108,62 @@ else
 end
 """
 
-# ---- Notes: 限流 ----
-RATE_CONFIG = {
+# ---- Notes: Redis Hot Key ----
+K_MIX = "Mix"
+V_MIX = {
+  "app": {
+    "Azure": {
+      "tts_engine": {
+        "enabled": False
+      }
+    },
+    "Modal": {
+      "inference": {
+        "enabled": True
+      }
+    },
+    "Groq": {
+      "llm": {
+        "name": "llama-3.1-8b-instant"
+    }
+  }
+  },
+  "white_list": [
+    "/",
+    "/status",
+    "/keepalive-render",
+    "/keepalive-supabase",
+    "/keepalive-modal",
+    "/openapi.json",
+    "/favicon.ico",
+    "/docs",
+    "/redoc",
+    "/self-heal",
+    "/self-heal-stream"
+  ],
+  "rate_config": {
     "default": {
-        "burst"    : 10,
-        "rate"     : 2,
-        "max_wait" : 1
+      "burst": 10,
+      "rate": 2,
+      "max_wait": 1
     },
     "routes": {
-        "/sign": {
-            "burst" : 2,
-            "rate"  : 0.2
-        },
-        "/self-heal": {
-            "burst" : 5,
-            "rate"  : 1
-        },
-        "/self-heal-stream": {
-            "burst": 5,
-            "rate": 1
-        }
+      "/sign": {
+        "burst": 2,
+        "rate": 0.2
+      },
+      "/self-heal": {
+        "burst": 5,
+        "rate": 1
+      },
+      "/self-heal-stream": {
+        "burst": 5,
+        "rate": 1
+      }
     },
     "ip": {}
+  }
 }
-
-# ---- Notes: Redis Key ----
-MIX = "Mix"
 
 
 if __name__ == '__main__':

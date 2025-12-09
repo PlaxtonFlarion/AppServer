@@ -45,8 +45,11 @@ class Azure(object):
 
         cache: UpStash = request.app.state.cache
 
-        mix = Mix(**await cache.get(const.MIX))
+        if mixed := await cache.get(const.K_MIX): mix = Mix(**mixed)
+        else: mix = Mix(**const.V_MIX)
+
         cur = mix.app.get("Azure", {}).get("tts_engine", {}).get("enabled", False)
+        logger.info(f"远程语音服务状态 -> {cur}")
 
         license_info = {
             "mode": {"enabled": cur, "formats": ["mp3"]}

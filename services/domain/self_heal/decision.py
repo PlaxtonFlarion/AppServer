@@ -27,7 +27,8 @@ from utils import const
 class Decision(object):
 
     def __init__(self, req: HealRequest, request: Request):
-        self.req: HealRequest  = req
+        self.req: HealRequest = req
+        self.request: Request = request
 
         self.store: Zilliz     = request.app.state.store
         self.llm_groq: LLMGroq = request.app.state.llm_groq
@@ -115,7 +116,7 @@ class Decision(object):
     async def llm_decision(self, top_candidates: list[dict]) -> HealResponse:
         logger.info(f"模型决策: {str(self.llm_groq)}")
         decision = await self.llm_groq.best_candidate(
-            self.req.old_locator, top_candidates
+            self.req.old_locator, self.request, top_candidates
         )
 
         index, reason = decision["index"], decision["reason"]

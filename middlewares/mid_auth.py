@@ -23,9 +23,11 @@ async def jwt_auth_middleware(
 
     cache: UpStash = request.app.state.cache
 
-    mix = Mix(**await cache.get(const.MIX))
+    if mixed := await cache.get(const.K_MIX): mix = Mix(**mixed)
+    else: mix = Mix(**const.V_MIX)
 
-    public_paths = cached if (cached := mix.white_list) else const.PUBLIC_PATHS
+    public_paths = mix.white_list
+    logger.info(f"远程鉴权白名单 -> {public_paths}")
 
     if request.url.path in public_paths:
         return await call_next(request)
