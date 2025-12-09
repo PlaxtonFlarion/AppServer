@@ -81,9 +81,9 @@ SETTINGS = {
 PUBLIC_PATHS = {
     "/",
     "/status",
-    "/keep-render-alive",
-    "/keep-supabase-alive",
-    "/keep-modal-alive",
+    "/keepalive-render",
+    "/keepalive-supabase",
+    "/keepalive-modal",
     "/openapi.json",
     "/favicon.ico",
     "/docs",
