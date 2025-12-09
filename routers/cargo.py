@@ -53,9 +53,7 @@ async def application_bootstrap(
 
     返回启动参数、区域设置、初始模板与缓存控制信息。
     """
-
-    await request.app.state.cache.enforce_rate_limit(request)
-
+    
     return await bootstrap.resolve_bootstrap(request, a, t, n)
 
 
