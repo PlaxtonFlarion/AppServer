@@ -24,6 +24,64 @@ async def resolve_template_download(
     t: int,
     n: str
 ) -> LicenseResponse:
+    """
+    📦 模板文件列表下发接口（带签名 License 元信息返回）
+
+    客户端可调用该接口获取可用的 HTML/业务模板清单，
+    用于后续通过 /template-viewer 拉取具体模版内容。
+    结果支持 Redis 缓存，加速多次访问。
+
+    Workflow
+    --------
+    1) 从请求头解析客户端 region/version 信息
+    2) 根据 app_desc 构建缓存 key，先尝试 Redis 命中
+    3) 若无缓存则动态生成模板元信息并写入 Redis (TTL=1天)
+    4) 使用私钥对返回内容进行签名，客户端可校验防篡改
+    5) 返回 `LicenseResponse` → { data(base64), signature(base64) }
+
+    Parameters
+    ----------
+    request : Request
+        FastAPI 请求对象，需携带 `x_app_region` 与 `x_app_version`
+        （在上游 Auth Middleware 中注入 request.state）
+    a : str
+        应用名称，如 "Framix" / "Memrix"，用于匹配模板资源
+    t : int
+        业务参数预留字段（版本/环境扩展）
+    n : str
+        预留扩展参数（业务 tag/渠道号 等）
+
+    ==== Notes: Caching ====
+    -------
+    Redis key - {app_desc}:Template
+    Cache TTL - 86400s (1 day)
+    命中直接返回，不再重复构建字典
+
+    Returns
+    -------
+    LicenseResponse
+        - data      : base64(encoded JSON)
+        - signature : base64(RSA signature)
+        JSON 内部实际结构示例:
+
+        {
+            "template": {
+                "template_atom_total.html": {
+                    "filename": "template_atom_total.html",
+                    "url": "https://api.appserverx.com/template-viewer"
+                },
+                ...
+            },
+            "ttl": 86400,
+            "region": "<client-region>",
+            "version": "<client-version>",
+            "message": "Available templates for client to choose"
+        }
+
+    Raises
+    ------
+    无显式业务异常，鉴权与 JSONError 将交给全局中间件处理
+    """
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -100,6 +158,75 @@ async def resolve_toolkit_download(
     n: str,
     platform: str
 ) -> LicenseResponse:
+    """
+    🛠 工具包下载索引元信息下发接口（含签名 License 返回）
+
+    根据应用标识与客户端平台（MacOS/Windows）返回对应可下载工具列表，
+    通过 R2 Cloudflare 存储提供临时有效签名下载链接。
+    接口支持 Redis 缓存，减少重复构建及提高响应性能。
+
+    Workflow
+    --------
+    1) 识别平台 → Windows / MacOS
+    2) 构建 Redis Key: {app}:{platform}:Toolkit
+    3) 若缓存存在直接返回；否则装载工具元数据并写入缓存
+    4) 生成临时下载链接（Cloudflare R2 Signed URL，有效期 1h）
+    5) 加签封装为 LicenseResponse → 客户端可验签防篡改
+
+    Parameters
+    ----------
+    request : Request
+        FastAPI 请求对象，上游 Auth Middleware 会注入：
+        - request.state.x_app_region
+        - request.state.x_app_version
+    a : str
+        App 名称，如 Framix/Memrix，用于匹配工具资源
+    t : int
+        时间戳/nonce 等业务字段（扩展保留）
+    n : str
+        业务扩展字段，例如渠道号或用户标识
+    platform : str
+        平台标识：`darwin` → MacOS，否则视为 Windows
+
+    ==== Notes: Caching ====
+    -------
+    Redis Key - {App}:{Windows|MacOS}:Toolkit
+    Cache TTL - 86400s (1 Day)
+    生成下载 URL 时不缓存，确保每次返回的是有效签名链接
+
+    Returns
+    -------
+    LicenseResponse (Base64 `data` + Base64 `signature`)
+        解码后实际结构示例:
+
+        {
+            "toolkit": {
+                "ffmpeg": {
+                    "filename": "ffmpeg.zip",
+                    "version": "7.0.2",
+                    "size": 52182661,
+                    "hash": "sha256...",
+                    "updated_at": "2025-06-30T21:56:48",
+                    "url": "https://r2-signed-url...."   # 自动生成
+                },
+                ...
+            },
+            "ttl": 86400,
+            "region": "<client-region>",
+            "version": "<client-version>",
+            "message": "Available toolkits for client to choose"
+        }
+
+    Notes
+    -----
+    - `filename` 必须存在才会生成 URL
+    - URL 有效期 1h，客户端需按需刷新
+    - 建议客户端比对 `hash/version` 判断是否需要更新
+
+    Raises
+    ------
+    - BizError/AuthorizationError → 走全局异常中间件统一返回
+    """
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
@@ -225,6 +352,76 @@ async def resolve_model_download(
     t: int,
     n: str
 ) -> LicenseResponse:
+    """
+    🤖 模型资源下载索引下发接口（带 License 签名）
+
+    向客户端返回当前可用推理模型列表（含大小/版本/哈希/更新时间），
+    并动态生成 Cloudflare R2 临时下载签名 URL，支持断点续传/直链下载。
+    结果使用 LicenseResponse 包装签名，保证链接元信息防篡改与授权校验稳定性。
+
+    Workflow
+    --------
+    1) 拼装缓存 Key → {App}:Models
+    2) 若 Redis 已缓存，直接读取返回
+    3) 若无缓存 → 载入模型元信息并写入缓存
+    4) 为每个模型生成 1 小时有效的签名下载 URL
+    5) 再对所有参数整体签名 → LicenseResponse 返回
+
+    Parameters
+    ----------
+    request : Request
+        FastAPI Request 实例，中间件注入:
+        - request.state.x_app_region   (客户端区域/节点)
+        - request.state.x_app_version  (客户端版本)
+    a : str
+        应用名 (如 Framix / Memrix) 用于构建私钥及缓存隔离
+    t : int
+        业务 use-case 字段，可作为 timestamp 或 nonce 保留使用
+    n : str
+        客户或 UserId 标识，可用于未来个性化模型分发控制
+
+    ==== Notes: Caching ====
+    -------
+    Redis Key - {App}:Models
+    Cache TTL - 86400s = 1day
+    ⚠ URL 不缓存，每次请求重新生成签名 URL，保证有效性
+
+    Returns
+    -------
+    LicenseResponse
+        Base64(data) + Base64(signature)
+
+        💡 解码后结构示例:
+
+        {
+            "models": {
+                "Keras_Gray_W256_H256": {
+                    "filename": "Keras_Gray_W256_H256.zip",
+                    "version": "1.0.0",
+                    "size": 361578087,
+                    "hash": "sha256...",
+                    "updated_at": "2025-06-27T03:24:24",
+                    "url": "https://r2.signed-download/..."  # 1h有效
+                },
+                ...
+            },
+            "ttl": 86400,
+            "region": "Global",
+            "version": "v1.0.0",
+            "message": "Available models for client to choose"
+        }
+
+    Notes
+    -----
+    - 可通过 hash/version 做客户端本地模型缓存校验
+    - 大模型下载场景建议搭配 Streaming / Range Header 断点续传
+    - License 与签名机制可接入授权/付费/灰度模型分发策略
+
+    Raises
+    ------
+    BizError / AuthorizationError
+        由全局中间件统一捕获返回 JSON
+    """
 
     app_name, app_desc, *_ = a.lower().strip(), a, t, n
 
