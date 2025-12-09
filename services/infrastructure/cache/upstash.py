@@ -53,18 +53,6 @@ class UpStash(object):
     async def redis_delete(self, key: str) -> typing.Optional[int]:
         return await self.client.delete(self.redis_make_key(key))
 
-    async def enforce_rate_limit(self, request: Request, limit: int = 5, window: int = 60) -> None:
-        ip        = request.client.host
-        timestamp = int(time.time())
-        key       = self.redis_make_key(f"rate_limit:{ip}:{timestamp // window}")
-
-        count = await self.client.incr(key)
-        if count == 1:
-            await self.client.expire(key, window)
-
-        if count > limit:
-            raise HTTPException(status_code=429, detail="Too many requests")
-
 
 if __name__ == '__main__':
     pass
