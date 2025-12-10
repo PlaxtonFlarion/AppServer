@@ -37,8 +37,8 @@ class Decision(object):
 
         self.k     = 5
         self.top_k = 3
-        self.alpha = 0.1
-        self.beta  = 1 - self.alpha
+        self.beta  = 0.9
+        self.alpha = 1 - self.beta
 
     @staticmethod
     async def delivery(url: str, json: dict, **kwargs) -> dict:
@@ -50,6 +50,13 @@ class Decision(object):
             resp.raise_for_status()
             return resp.json()
 
+    async def load_model_from_cache(self) -> None:
+        if mixed := await self.cache.get(const.K_MIX): mix = Mix(**mixed)
+        else: mix = Mix(**const.V_MIX)
+
+        cur = mix.app.get("Groq", {}).get("llm", {}).get("name", None)
+        self.llm_groq.llm_groq_model = cur
+
     async def parse_tree(self) -> list:
         logger.info(f"解析节点: {(app_platform := self.req.platform.strip().lower())}")
         match app_platform:
@@ -59,21 +66,37 @@ class Decision(object):
 
         return node_list
 
-    async def transform(self, node_list: list) -> tuple[str, list, list[list]]:
+    async def transform(self, node_list: list) -> tuple[dict, str, list, list[list]]:
         query     = f"by={self.req.old_locator.by}, value={self.req.old_locator.value}"
         desc_list = [n.ensure_desc() for n in node_list]
+
+        # 🔥 1) LLM智能路由决策
+        router = query + "\n" + "\n".join(desc_list[:10])
+        meta   = await self.llm_groq.route(router)
+
+        emb_mode   = meta.get("embedding")
+        self.beta  = meta.get("rerank_weight")
+        self.alpha = 1 - self.beta
+        logger.info(f"路由策略: {meta}")
+
+        # 🔥 2) 根据 router 输出动态选择 Emb
+        match emb_mode:
+            case "bge-en": embed_url, alt_embed_url = const.MODAL_TENSOR_EN, const.MODAL_TENSOR_ZH
+            case "bge-zh": embed_url, alt_embed_url = const.MODAL_TENSOR_ZH, const.MODAL_TENSOR_EN
+            case _: embed_url, alt_embed_url = const.MODAL_TENSOR_EN, const.MODAL_TENSOR_ZH
+        meta["alt_embed_url"] = alt_embed_url
 
         logger.info(f"修复定位: {query}")
         logger.info(f"节点数量: {len(desc_list)}")
         embedding_resp = await self.delivery(
-            const.MODAL_TENSOR, json={"query": query, "elements": desc_list}
+            embed_url, json={"query": query, "elements": desc_list}
         )
 
         logger.info(f"维度匹配: [[v1], [v2], ...]")
         query_vec    = embedding_resp["query_vec"]
         page_vectors = embedding_resp["page_vectors"]
 
-        return query, query_vec, page_vectors
+        return meta, query, query_vec, page_vectors
 
     async def burning(self, node_list: list, page_vectors: list[list]) -> None:
         logger.info(f"写入向量: {str(self.store)}")
@@ -82,9 +105,31 @@ class Decision(object):
               for node, vec in zip(node_list, page_vectors))
         )
 
-    async def recall(self, query_vec: list, node_list: list) -> tuple[list[dict], list[str]]:
-        logger.info(f"向量召回: K={self.k}")
-        retrieved = self.store.search(query_vec, k=self.k)
+    async def recall(self, query_vec: list, node_list: list, meta: dict) -> tuple[list[dict], list[str]]:
+
+        def merge_results(a: list[dict], b: list[dict]) -> list[dict]:
+            seen = set(); merged = []
+            for x in a + b:
+                if x["text"] not in seen:
+                    seen.add(x["text"])
+                merged.append(x)
+            return merged[:self.k]
+
+        if meta["search"] == "single":
+            retrieved = self.store.search(query_vec, k=self.k)
+        else:
+            # 第一路检索：使用主 embedding
+            res_begin = self.store.search(query_vec, k=self.k)
+
+            # 第二路检索：使用备用 embedding
+            alt_text       = node_list[0].ensure_desc()
+            embedding_resp = await self.delivery(
+                meta["alt_embed_url"], json={"query": alt_text, "elements": []}
+            )
+
+            alt_vec   = embedding_resp["query_vec"]
+            res_final = self.store.search(alt_vec, k=self.k)
+            retrieved = merge_results(res_begin, res_final)
 
         mapped_candidates: list[dict] = []
         for r in retrieved:
@@ -104,7 +149,7 @@ class Decision(object):
         logger.info(f"结果重排: Top-K={self.top_k}")
         logger.info(f"融合模式: 向量({self.alpha * 100:.0f}%), CrossEncoder({self.beta * 100:.0f}%)")
         rerank_resp = await self.delivery(
-            const.MODAL_RERANK, json={"query": query, "candidate": candidate}
+            const.MODAL_CROSS_ENC, json={"query": query, "candidate": candidate}
         )
 
         for c, s in zip(mapped_candidates, rerank_resp["scores"]):
@@ -116,12 +161,6 @@ class Decision(object):
         return sorted(mapped_candidates, key=lambda x: x["final_score"], reverse=True)[:self.top_k]
 
     async def llm_decision(self, top_candidates: list[dict]) -> HealResponse:
-        if mixed := await self.cache.get(const.K_MIX): mix = Mix(**mixed)
-        else: mix = Mix(**const.V_MIX)
-
-        cur = mix.app.get("Groq", {}).get("llm", {}).get("name", None)
-        self.llm_groq.llm_groq_model = cur
-
         logger.info(f"模型决策: {str(self.llm_groq)}")
         decision = await self.llm_groq.best_candidate(
             self.req.old_locator, top_candidates
@@ -160,13 +199,15 @@ class Decision(object):
         )
 
     async def heal_element(self) -> HealResponse:
+        await self.load_model_from_cache()
+
         node_list = await self.parse_tree()
 
-        query, query_vec, page_vectors = await self.transform(node_list)
+        meta, query, query_vec, page_vectors = await self.transform(node_list)
 
         await self.burning(node_list, page_vectors)
 
-        mapped_candidates, candidate = await self.recall(query_vec, node_list)
+        mapped_candidates, candidate = await self.recall(query_vec, node_list, meta)
 
         top_candidates = await self.rerank(query, candidate, mapped_candidates)
 
@@ -184,7 +225,9 @@ class Decision(object):
         async def typewriter(text: str, speed: float = 0.1) -> typing.AsyncGenerator[str, None]:
             """逐字符流式输出"""
             for ch in text:
-                yield ch; await asyncio.sleep(speed)  # 控制打字速度
+                yield ch; await asyncio.sleep(speed)
+
+        await self.load_model_from_cache()
 
         t0, step = time.time(), 0
 
@@ -201,7 +244,7 @@ class Decision(object):
             step += 1
             yield fmt(f"📩 [{step}/6] 生成语义向量 Embedding...\n")
             t = time.time()
-            query, query_vec, page_vectors = await self.transform(node_list)
+            meta, query, query_vec, page_vectors = await self.transform(node_list)
             yield ok(f"  └ done. dim={len(query_vec)}, vectors={len(page_vectors)},{stamp(t)}")
             yield info("------------------------------------------------------------\n")
 
@@ -217,7 +260,7 @@ class Decision(object):
             step += 1
             yield fmt(f"📩 [{step}/6] 向量召回 K 查询中...\n")
             t = time.time()
-            mapped_candidates, candidate = await self.recall(query_vec, node_list)
+            mapped_candidates, candidate = await self.recall(query_vec, node_list, meta)
             yield ok(f"  └ done. retrieved={len(mapped_candidates)},{stamp(t)}")
             yield info("------------------------------------------------------------\n")
 

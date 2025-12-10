@@ -57,10 +57,11 @@ SHARED_SECRET = r"SHARED_SECRET"
 TOKEN_FORMAT = r"X-Token"
 
 # ---- Notes: Modal Apps ----
-MODAL_TENSOR  = r"https://plaxtonflarion--apps-embeddingservice-tensor.modal.run"
-MODAL_RERANK  = r"https://plaxtonflarion--apps-embeddingservice-rerank.modal.run"
-MODAL_PREDICT = r"https://plaxtonflarion--apps-inferenceservice-predict.modal.run"
-MODAL_SERVICE = r"https://plaxtonflarion--apps-inferenceservice-service.modal.run"
+MODAL_CROSS_ENC = r"https://plaxtonflarion--apps-crossenc-rerank.modal.run"
+MODAL_TENSOR_EN = r"https://plaxtonflarion--apps-embeddingen-tensor-en.modal.run"
+MODAL_TENSOR_ZH = r"https://plaxtonflarion--apps-embeddingzh-tensor-zh.modal.run"
+MODAL_PREDICT   = r"https://plaxtonflarion--apps-inferencesv-predict.modal.run"
+MODAL_SERVICE   = r"https://plaxtonflarion--apps-inferencesv-service.modal.run"
 
 # ---- Notes: 日志 ----
 SHOW_LEVEL   = r"INFO"
@@ -164,6 +165,73 @@ V_MIX = {
     "ip": {}
   }
 }
+
+# ---- Notes: 提示词 ----
+R_PROMPT = """
+你是 RAG/Embedding 路由器，请根据【用户输入文本】判断最佳检索策略。务必严格按规则输出 JSON。
+
+=== 判断逻辑（必须严格遵守） ===
+1. 语言识别：
+   - 输入只包含英文字母/符号/数字/下划线/id/class/xpath/css → "en"
+   - 输入只包含中文或中文占多数 → "zh"
+   - 同时包含中英文比例明显混合 → "union"
+   【注意：上下文提示为中文不代表用户输入是中文，判断只依据用户输入文本】
+
+2. Embedding 模型：
+   zh → bge-zh
+   en → bge-en
+   union → bge-m3
+
+3. Search 策略：
+   - id/class/xpath/css/token 短字段 → "single"
+   - 描述型自然语言（句子形态）→ "dual"
+
+4. rerank_weight：
+   - token结构 + 短词 → 0.2~0.4
+   - 句子或含语义表达 → 0.7~0.95
+
+=== 用户输入文本（仅看这部分，不要参考其他文字）===
+{text}
+
+=== 输出（严格 JSON，不要多余字符）===
+{{
+  "lang": "...",
+  "embedding": "...",
+  "search": "...",
+  "rerank_weight": ...,
+  "reason": "一句话说明原因"
+}}
+
+=== 正例 ===
+输入: "submit_btn"
+输出: {{"lang":"en","embedding":"bge-en","search":"single","rerank_weight":0.3,"reason":"英文token定位词"}}
+
+输入: "支付失败，请重试"
+输出: {{"lang":"zh","embedding":"bge-zh","search":"dual","rerank_weight":0.8,"reason":"中文UI文案需要语义召回"}}
+
+输入: "付款失败 Payment Failed"
+输出: {{"lang":"union","embedding":"bge-en","search":"dual","rerank_weight":0.8,"reason":"中英文混合语义表达"}}
+
+=== 反例提醒 ===
+不要因为本Prompt是中文就判断为 zh
+输入包含 id/resource_id/token/xpath 时优先判断为 en
+"""
+F_PROMPT = """
+你是自动化测试中的元素自愈专家。
+
+旧定位：
+- by: {by}
+- value: {value}
+
+候选列表（已按相似度排序）：
+{cand_desc}
+
+请只返回 JSON:
+{{
+  "index": <整数, -1 表示不选>,
+  "reason": "<原因>"
+}}
+"""
 
 
 if __name__ == '__main__':
