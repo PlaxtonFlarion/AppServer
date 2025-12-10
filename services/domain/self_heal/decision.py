@@ -107,29 +107,34 @@ class Decision(object):
 
     async def recall(self, query_vec: list, node_list: list, meta: dict) -> tuple[list[dict], list[str]]:
 
+        # ---- 工具：合并召回结果（去重且保序） ----
         def merge_results(a: list[dict], b: list[dict]) -> list[dict]:
-            seen = set(); merged = []
+            seen = set()
+            merged = []
             for x in a + b:
                 if x["text"] not in seen:
                     seen.add(x["text"])
-                merged.append(x)
-            return merged[:self.k]
+                    merged.append(x)
+            return merged[:self.k]  # 截断 top-k
 
-        if meta["search"] == "single":
-            retrieved = self.store.search(query_vec, k=self.k)
+        # ---- 第一轮召回 ----
+        res_begin = self.store.search(query_vec, k=self.k)
+
+        # ---- 单路策略（无需 fallback）----
+        if meta.get("search") == "single":
+            retrieved = res_begin
         else:
-            # 第一路检索：使用主 embedding
-            res_begin = self.store.search(query_vec, k=self.k)
+            # ---- 双路 fallback：找语义最接近 query 的节点作为种子更合理 ----
+            seed = node_list[0].ensure_desc()
 
-            # 第二路检索：使用备用 embedding
-            alt_text       = node_list[0].ensure_desc()
             embedding_resp = await self.delivery(
-                meta["alt_embed_url"], json={"query": alt_text, "elements": []}
+                meta["alt_embed_url"],
+                json={"query": seed, "elements": []}
             )
+            alt_vec = embedding_resp["query_vec"]
+            res_alt = self.store.search(alt_vec, k=self.k)
 
-            alt_vec   = embedding_resp["query_vec"]
-            res_final = self.store.search(alt_vec, k=self.k)
-            retrieved = merge_results(res_begin, res_final)
+            retrieved = merge_results(res_begin, res_alt)
 
         mapped_candidates: list[dict] = []
         for r in retrieved:
