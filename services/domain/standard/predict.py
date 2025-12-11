@@ -38,6 +38,10 @@ async def resolve_proxy_predict(
     cur = mix.app.get("Modal", {}).get("inference", {}).get("enabled", False)
     logger.info(f"远程推理服务状态 -> {cur}")
 
+    dns = mix.app.get("Modal", {}).get("DNS") or const.DNS
+    url = dns + const.PREDICT_EP
+    logger.info(f"远程推理服务地址 -> {url}")
+
     if cached := await cache.get(cache_key):
         if (previous := cached["available"]) == cur:
             logger.success(f"下发缓存推理服务 -> {cache_key}")
@@ -65,7 +69,7 @@ async def resolve_proxy_predict(
         "auth_header"   : const.TOKEN_FORMAT,
         "token"         : token,
         "method"        : "POST",
-        "url"           : const.MODAL_PREDICT,
+        "url"           : url,
         "ttl"           : ttl,
         "region"        : x_app_region,
         "version"       : x_app_version,

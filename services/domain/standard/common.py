@@ -210,13 +210,14 @@ async def keepalive_supabase(request: Request) -> dict:
 async def keepalive_modal() -> dict:
     """Modal 保活"""
 
+    url       = const.DNS + const.SERVICE_EP
     expire_at = int(time.time()) + 86400
     token     = signature.sign_token("Modal", expire_at)
     headers   = {const.TOKEN_FORMAT: token}
 
     try:
         async with httpx.AsyncClient(headers=headers, timeout=90) as client:
-            resp = await client.request("GET", const.MODAL_SERVICE)
+            resp = await client.request("GET", url)
             resp.raise_for_status()
 
             logger.info("🟢 Modal online")
