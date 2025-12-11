@@ -57,7 +57,7 @@ SHARED_SECRET = r"SHARED_SECRET"
 TOKEN_FORMAT = r"X-Token"
 
 # ---- Notes: Modal Apps ----
-DNS          = r"inference.appserverx.com"
+DNS          = r"https://plaxtonflarion--web-app.modal.run"
 CROSS_ENC_EP = r"/rerank"
 TENSOR_EN_EP = r"/tensor/en"
 TENSOR_ZH_EP = r"/tensor/zh"
