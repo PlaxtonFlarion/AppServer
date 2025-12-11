@@ -57,11 +57,12 @@ SHARED_SECRET = r"SHARED_SECRET"
 TOKEN_FORMAT = r"X-Token"
 
 # ---- Notes: Modal Apps ----
-MODAL_CROSS_ENC = r"https://plaxtonflarion--web-app.modal.run/rerank"
-MODAL_TENSOR_EN = r"https://plaxtonflarion--web-app.modal.run/tensor/en"
-MODAL_TENSOR_ZH = r"https://plaxtonflarion--web-app.modal.run/tensor/zh"
-MODAL_PREDICT   = r"https://plaxtonflarion--web-app.modal.run/predict"
-MODAL_SERVICE   = r"https://plaxtonflarion--web-app.modal.run/service"
+DNS          = r"inference.appserverx.com"
+CROSS_ENC_EP = r"/rerank"
+TENSOR_EN_EP = r"/tensor/en"
+TENSOR_ZH_EP = r"/tensor/zh"
+PREDICT_EP   = r"/predict"
+SERVICE_EP   = r"/service"
 
 # ---- Notes: 日志 ----
 SHOW_LEVEL   = r"INFO"

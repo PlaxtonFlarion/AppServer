@@ -40,13 +40,18 @@ class Decision(object):
         self.beta  = 0.9
         self.alpha = 1 - self.beta
 
-    @staticmethod
-    async def delivery(url: str, json: dict, **kwargs) -> dict:
+    async def delivery(self, url: str, json: dict, **kwargs) -> dict:
+        if mixed := await self.cache.get(const.K_MIX): mix = Mix(**mixed)
+        else: mix = Mix(**const.V_MIX)
+
+        cur = mix.app.get("Modal", {}).get("DNS", const.DNS)
+        logger.info(f"远程域名服务地址 -> {cur}")
+
         expire_at = int(time.time()) + random.randint(3600, 86400)
         token     = signature.sign_token("Heal", expire_at)
         headers   = {const.TOKEN_FORMAT: token}
         async with httpx.AsyncClient(headers=headers, timeout=60) as client:
-            resp = await client.post(url, json=json, **kwargs)
+            resp = await client.post(cur + url, json=json, **kwargs)
             resp.raise_for_status()
             return resp.json()
 
@@ -81,9 +86,9 @@ class Decision(object):
 
         # 🔥 2) 根据 router 输出动态选择 Emb
         match emb_mode:
-            case "bge-en": embed_url, alt_embed_url = const.MODAL_TENSOR_EN, const.MODAL_TENSOR_ZH
-            case "bge-zh": embed_url, alt_embed_url = const.MODAL_TENSOR_ZH, const.MODAL_TENSOR_EN
-            case _: embed_url, alt_embed_url = const.MODAL_TENSOR_EN, const.MODAL_TENSOR_ZH
+            case "bge-en": embed_url, alt_embed_url = const.TENSOR_EN_EP, const.TENSOR_ZH_EP
+            case "bge-zh": embed_url, alt_embed_url = const.TENSOR_ZH_EP, const.TENSOR_EN_EP
+            case _: embed_url, alt_embed_url = const.TENSOR_EN_EP, const.TENSOR_ZH_EP
         meta["alt_embed_url"] = alt_embed_url
 
         logger.info(f"修复定位: {query}")
@@ -154,7 +159,7 @@ class Decision(object):
         logger.info(f"结果重排: Top-K={self.top_k}")
         logger.info(f"融合模式: 向量({self.alpha * 100:.0f}%), CrossEncoder({self.beta * 100:.0f}%)")
         rerank_resp = await self.delivery(
-            const.MODAL_CROSS_ENC, json={"query": query, "candidate": candidate}
+            const.CROSS_ENC_EP, json={"query": query, "candidate": candidate}
         )
 
         for c, s in zip(mapped_candidates, rerank_resp["scores"]):
