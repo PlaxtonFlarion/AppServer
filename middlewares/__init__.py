@@ -7,26 +7,20 @@
 
 from fastapi import FastAPI
 
-from .mid_trace       import trace_middleware
-from .mid_performance import performance_middleware
-from .mid_logging     import logging_middleware
-from .mid_rate_limit  import rate_limit_middleware
-from .mid_auth        import jwt_auth_middleware
-from .mid_exception   import exception_middleware
+from .mid_access     import access_middleware
+from .mid_auth       import jwt_auth_middleware
+from .mid_exception  import exception_middleware
+from .mid_rate_limit import rate_limit_middleware
 
 
 def register_middlewares(app: FastAPI) -> None:
     # inbound 1（最外层）
-    app.middleware("http")(trace_middleware        )
-    # inbound 2
-    app.middleware("http")(performance_middleware  )
-    # inbound 3
-    app.middleware("http")(logging_middleware      )
-    # inbound 4
     app.middleware("http")(rate_limit_middleware   )
-    # inbound 5（最内层）
+    # inbound 2
     app.middleware("http")(jwt_auth_middleware     )
-    # inbound 6（最内层）
+    # inbound 3
+    app.middleware("http")(access_middleware       )
+    # inbound 4（最内层）
     app.middleware("http")(exception_middleware    )
 
 
