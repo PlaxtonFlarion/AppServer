@@ -39,7 +39,7 @@ class UpStash(object):
             return val
 
     async def set(self, key: str, value: typing.Any, ex: int = 60) -> typing.Optional[bool]:
-        val = json.dumps(value)
+        val = json.dumps(value, ensure_ascii=False)
         return bool(await self.client.set(key, val, ex=ex))
 
     async def delete(self, key: str) -> typing.Optional[int]:
