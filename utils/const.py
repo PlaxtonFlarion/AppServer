@@ -5,37 +5,37 @@
 #   \____\___/|_| |_|___/\__|
 #
 
-# ---- Notes: 格式 ----
+# ==== Notes: 格式 ====
 CHARSET       = r"UTF-8"
 READ_KEY_MODE = r"rb"
 
-# ---- Notes: 密钥 ----
+# ==== Notes: 密钥 ====
 KEYS_DIR         = r"keys"
 BASE_PRIVATE_KEY = r"private_key.pem"
 BASE_PUBLIC_KEY  = r"public_key.pem"
 APP_PRIVATE_KEY  = f"app_{BASE_PRIVATE_KEY}"
 APP_PUBLIC_KEY   = f"app_{BASE_PUBLIC_KEY}"
 
-# ---- Notes: 模版 ----
+# ==== Notes: 模版 ====
 TEMPLATES = r"templates"
 
-# ---- Notes: 配置 ----
+# ==== Notes: 配置 ====
 CONFIGURATION = r"configuration.json"
 
-# ---- Notes: Supabase ----
+# ==== Notes: Supabase ====
 SUPABASE_URL  = r"SUPABASE_URL"
 SUPABASE_KEY  = r"SUPABASE_KEY"
 LICENSE_CODES = r"license_codes"
 
-# ---- Notes: Azure ----
+# ==== Notes: Azure ====
 AZURE_TTS_URL = r"AZURE_TTS_URL"
 AZURE_TTS_KEY = r"AZURE_TTS_KEY"
 
-# ---- Notes: Redis ----
+# ==== Notes: Redis ====
 REDIS_CACHE_URL = r"REDIS_CACHE_URL"
 REDIS_CACHE_KEY = r"REDIS_CACHE_KEY"
 
-# ---- Notes: Cloudflare ----
+# ==== Notes: Cloudflare ====
 BUCKET        = r"appserver-bucket"
 R2_BUCKET_KEY = r"R2_BUCKET_KEY"
 R2_BUCKET_USR = r"R2_BUCKET_USR"
@@ -43,20 +43,20 @@ R2_BUCKET_PWD = r"R2_BUCKET_PWD"
 R2_BUCKET_URL = r"R2_BUCKET_URL"
 R2_PUBLIC_URL = r"R2_PUBLIC_URL"
 
-# ---- Notes: Zilliz Cloud ----
+# ==== Notes: Zilliz Cloud ====
 ZILLIZ_URL = r"ZILLIZ_URL"
 ZILLIZ_KEY = r"ZILLIZ_KEY"
 
-# ---- Notes: GROQ ----
+# ==== Notes: GROQ ====
 GROQ_LLM_KEY = r"GROQ_LLM_KEY"
 
-# ---- Notes: 共享密钥 ----
+# ==== Notes: 共享密钥 ====
 SHARED_SECRET = r"SHARED_SECRET"
 
-# ---- Notes: 鉴权格式 ----
+# ==== Notes: 鉴权格式 ====
 TOKEN_FORMAT = r"X-Token"
 
-# ---- Notes: Modal Apps ----
+# ==== Notes: Modal Apps ====
 DNS          = r"https://plaxtonflarion--web-app.modal.run"
 CROSS_ENC_EP = r"/rerank"
 TENSOR_EN_EP = r"/tensor/en"
@@ -64,12 +64,12 @@ TENSOR_ZH_EP = r"/tensor/zh"
 PREDICT_EP   = r"/predict"
 SERVICE_EP   = r"/service"
 
-# ---- Notes: 日志 ----
+# ==== Notes: 日志 ====
 SHOW_LEVEL   = r"INFO"
 PRINT_FORMAT = r"<bold><level>{level}</level></bold>: <bold><cyan>{message}</cyan></bold>"
 WRITE_FORMAT = r"{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 
-# ---- Notes: Application ----
+# ==== Notes: Application ====
 SETTINGS = {
     "title": "AppServerX",
     "description": "AppServerX Application Server",
@@ -79,7 +79,7 @@ SETTINGS = {
     "redoc_url": None,
 }
 
-# ---- Notes: Redis Token Bucket ----
+# ==== Notes: Redis Token Bucket ====
 TOKEN_BUCKET_LUA = """
 local key   = KEYS[1]
 local burst = tonumber(ARGV[1])
@@ -110,7 +110,7 @@ else
 end
 """
 
-# ---- Notes: Redis Hot Key ----
+# ==== Notes: Redis Hot Key ====
 K_MIX = "Mix"
 V_MIX = {
   "app": {
@@ -167,7 +167,7 @@ V_MIX = {
   }
 }
 
-# ---- Notes: 提示词 ----
+# ==== Notes: 提示词 ====
 R_PROMPT = """
 你是 RAG/Embedding 路由器，请根据【用户输入文本】判断最佳检索策略。务必严格按规则输出 JSON。
 

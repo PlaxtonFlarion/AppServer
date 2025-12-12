@@ -39,7 +39,6 @@ async def rate_limit_middleware(
     route_config   = config.get("routes", {}).get(route, {})
     ip_config      = config.get("ip", {}).get(ip, {})
 
-    # ==== 生成最终配置 (IP > route > default) ===
     final = {**default_config, **route_config, **ip_config}
     logger.info(f"RateRule={final}")
 
@@ -62,8 +61,14 @@ async def rate_limit_middleware(
         if (wait := 1 / rate) > max_wait:
             raise HTTPException(
                 status_code=429,
-                detail={"error": "RATE_LIMIT_HIT", "rule": final, "retry": wait},
-                headers={"Retry-After": str(round(wait))}
+                detail={
+                    "error" : "RATE_LIMIT_HIT",
+                    "rule"  : final,
+                    "retry" : wait
+                },
+                headers={
+                    "Retry-After": str(round(wait))
+                }
             )
         await asyncio.sleep(wait)
 
